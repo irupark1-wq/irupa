@@ -1,0 +1,17 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {createWorkshopTrial} from '../src/contracts/game1-workshop.ts';
+import {deriveAxes,relationshipProjection} from '../src/contracts/game1-derived.ts';
+import {validateDesignFixture} from './game1_validate_design_assets.mjs';
+const design=JSON.parse(readFileSync(new URL('../fixtures/game1-workshop-design-v05.json',import.meta.url),'utf8'));
+const paths=design.nominal_paths.map(p=>{const t=createWorkshopTrial();const receipts=p.selection_code.split('-').map((c,i)=>t.step('command-'+i,c));return {id:p.id,expected_cost:p.nominal_cost_fixture_points,receipts,actual:t.project()};});
+const direction={from_pawn_id:'morae',to_pawn_id:'bam'};
+const input={resources:[{...direction,id:'resource-001',active:true,importance_permille:800,contribution_permille:750,irreplaceability_permille:900}],roles:[],commitments:[],conflicts:[]};
+const before=deriveAxes(direction,input);input.resources[0].irreplaceability_permille=400;const after=deriveAxes(direction,input);
+const scores={affection:100,trust:300,respect:300,reciprocity:500,...before};delete scores.basis_status;
+const own=relationshipProjection({requester_id:'user-a',observer_owner_id:'user-a',target_owner_id:'user-b'},{scores,basis_status:'no_active_basis',memories:[]});
+const restricted=relationshipProjection({requester_id:'user-a',observer_owner_id:'user-b',target_owner_id:'user-a'},null);
+const assets=validateDesignFixture(fileURLToPath(new URL('../fixtures/game1-design-v07',import.meta.url)));
+const output={fixture_version:'game1-garel-v05',balance_set:'A-test-only',status:'unit_tested',deployed:false,node:process.version,paths,structural:{input,before,after},projection_fixtures:{own,restricted},assets};
+writeFileSync(new URL('../docs/planning/evidence/game1-garel-v05-result.json',import.meta.url),JSON.stringify(output,null,2)+'\n');
+console.log('game1 G-A-REL: 27 trial paths replayed; structural/projection and six decoded PNG measurements written');

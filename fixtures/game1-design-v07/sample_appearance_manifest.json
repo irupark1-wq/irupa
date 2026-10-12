@@ -1,0 +1,216 @@
+{
+  "artifact_kind": "DEMONSTRATION_FIXTURE_ONLY",
+  "schema_version": 1,
+  "appearance_version": 1,
+  "sample_pawn_id": "non-production-sample",
+  "canvas": {
+    "width": 512,
+    "height": 512,
+    "format": "RGBA",
+    "pivot": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "base_shape": {
+    "kind": "circle",
+    "center_px": {
+      "x": 256,
+      "y": 256
+    },
+    "radius_px": 192,
+    "nonuniform_scale_allowed": false
+  },
+  "eyes_mode": "pair",
+  "layer_order": [
+    "back_hair",
+    "base",
+    "eyes_pair",
+    "mouth",
+    "front_hair",
+    "frame_accessory"
+  ],
+  "layers": [
+    {
+      "slot": "back_hair",
+      "expression": "neutral",
+      "asset_id": "sample-back_hair-neutral",
+      "path": "assets/six_layers/back_hair_neutral.png",
+      "width": 512,
+      "height": 512,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sort_order": 0,
+      "transform": {
+        "position": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "rotation_deg": 0,
+        "visible": true,
+        "mirror_x": false
+      },
+      "input_clip": "slot_policy",
+      "display_clip": "none",
+      "sha256": "1951bb7db99b0e6d8f1ddfdcda61ef22595feed9f58855897a093768c0513a05",
+      "bytes": 17053
+    },
+    {
+      "slot": "base",
+      "expression": "neutral",
+      "asset_id": "sample-base-neutral",
+      "path": "assets/six_layers/base_neutral.png",
+      "width": 512,
+      "height": 512,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sort_order": 1,
+      "transform": {
+        "position": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "rotation_deg": 0,
+        "visible": true,
+        "mirror_x": false
+      },
+      "input_clip": "slot_policy",
+      "display_clip": "circle_required",
+      "sha256": "15d0296be5c7159a6bc122a2c700963e34a78329501548b85002fba1061f3516",
+      "bytes": 27955
+    },
+    {
+      "slot": "eyes_pair",
+      "expression": "neutral",
+      "asset_id": "sample-eyes_pair-neutral",
+      "path": "assets/six_layers/eyes_pair_neutral.png",
+      "width": 512,
+      "height": 512,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sort_order": 2,
+      "transform": {
+        "position": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "rotation_deg": 0,
+        "visible": true,
+        "mirror_x": false
+      },
+      "input_clip": "none",
+      "display_clip": "pending_A_B_review",
+      "sha256": "2037ff2a03bb4cd71131c1d31440167714a292239146b194926be1f46a4662c8",
+      "bytes": 8135
+    },
+    {
+      "slot": "mouth",
+      "expression": "neutral",
+      "asset_id": "sample-mouth-neutral",
+      "path": "assets/six_layers/mouth_neutral.png",
+      "width": 512,
+      "height": 512,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sort_order": 3,
+      "transform": {
+        "position": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "rotation_deg": 0,
+        "visible": true,
+        "mirror_x": false
+      },
+      "input_clip": "none",
+      "display_clip": "pending_A_B_review",
+      "sha256": "8d23b045c92910bc29eb343f245a7bb141a743fd01b33df03c1910f3463171ff",
+      "bytes": 3402
+    },
+    {
+      "slot": "front_hair",
+      "expression": "neutral",
+      "asset_id": "sample-front_hair-neutral",
+      "path": "assets/six_layers/front_hair_neutral.png",
+      "width": 512,
+      "height": 512,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sort_order": 4,
+      "transform": {
+        "position": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "rotation_deg": 0,
+        "visible": true,
+        "mirror_x": false
+      },
+      "input_clip": "slot_policy",
+      "display_clip": "none",
+      "sha256": "b6faff89ead2d140e3bef4334f871688b7188a6ecb22d010947a7d02d47ca96d",
+      "bytes": 21698
+    },
+    {
+      "slot": "frame_accessory",
+      "expression": "neutral",
+      "asset_id": "sample-frame_accessory-neutral",
+      "path": "assets/six_layers/frame_accessory_neutral.png",
+      "width": 512,
+      "height": 512,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sort_order": 5,
+      "transform": {
+        "position": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "rotation_deg": 0,
+        "visible": true,
+        "mirror_x": false
+      },
+      "input_clip": "slot_policy",
+      "display_clip": "none",
+      "sha256": "b280d1d618fa6144e64905cd5405832ba572a5690e92bfcfc6878bbb8df16128",
+      "bytes": 8651
+    }
+  ],
+  "note": "Technical asset fixture only. No server acceptance or production schema is claimed."
+}

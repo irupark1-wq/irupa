@@ -1,0 +1,4776 @@
+{
+  "fixture_version": "game1-garel-v05",
+  "balance_set": "A-test-only",
+  "status": "unit_tested",
+  "deployed": false,
+  "node": "v24.19.0",
+  "paths": [
+    {
+      "id": "GAREL-PATH-CHP",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              },
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              },
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": true,
+        "knowledge_revision": 0,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-09",
+            "observer_id": "bam",
+            "target_id": "morae",
+            "contribution": {
+              "respect": 15,
+              "reciprocity": 18
+            }
+          },
+          {
+            "event_id": "EVT-04",
+            "observer_id": "morae",
+            "target_id": "bam",
+            "contribution": {
+              "affection": 10,
+              "trust": 6
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-CHS",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              },
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "separated",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              },
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": true,
+        "knowledge_revision": 0,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "separated",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-09",
+            "observer_id": "bam",
+            "target_id": "morae",
+            "contribution": {
+              "respect": 15,
+              "reciprocity": 18
+            }
+          },
+          {
+            "event_id": "EVT-04",
+            "observer_id": "morae",
+            "target_id": "bam",
+            "contribution": {
+              "affection": 10,
+              "trust": 6
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-CHE",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              },
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "exited",
+          "reason_key": "workshop.exited",
+          "allowed_actions": [
+            "workshop.view_record"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": true,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              },
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": true,
+        "knowledge_revision": 0,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": true,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-09",
+            "observer_id": "bam",
+            "target_id": "morae",
+            "contribution": {
+              "respect": 15,
+              "reciprocity": 18
+            }
+          },
+          {
+            "event_id": "EVT-04",
+            "observer_id": "morae",
+            "target_id": "bam",
+            "contribution": {
+              "affection": 10,
+              "trust": 6
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-CAP",
+      "expected_cost": {
+        "work_time": 4,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 1,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 1,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": true,
+        "knowledge_revision": 0,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 400
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-09",
+            "observer_id": "bam",
+            "target_id": "morae",
+            "contribution": {
+              "respect": 15,
+              "reciprocity": 18
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 241
+      }
+    },
+    {
+      "id": "GAREL-PATH-CAS",
+      "expected_cost": {
+        "work_time": 4,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 1,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "separated",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 1,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": true,
+        "knowledge_revision": 0,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 400
+        },
+        "accepted_role": "separated",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-09",
+            "observer_id": "bam",
+            "target_id": "morae",
+            "contribution": {
+              "respect": 15,
+              "reciprocity": 18
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 241
+      }
+    },
+    {
+      "id": "GAREL-PATH-CAE",
+      "expected_cost": {
+        "work_time": 4,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        },
+        {
+          "status": "exited",
+          "reason_key": "workshop.exited",
+          "allowed_actions": [
+            "workshop.view_record"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 1,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": true,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 1,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": true,
+        "knowledge_revision": 0,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 400
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": true,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-09",
+            "observer_id": "bam",
+            "target_id": "morae",
+            "contribution": {
+              "respect": 15,
+              "reciprocity": 18
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 241
+      }
+    },
+    {
+      "id": "GAREL-PATH-CRP",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 0
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 3
+            },
+            "status": "completed",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 3
+        },
+        "status": "completed",
+        "credit_corrected": true,
+        "knowledge_revision": 0,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "redefined",
+        "obligation": 700,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-09",
+            "observer_id": "bam",
+            "target_id": "morae",
+            "contribution": {
+              "respect": 15,
+              "reciprocity": 18
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-CRS",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 0
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 3
+            },
+            "status": "completed",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "separated",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 3
+        },
+        "status": "completed",
+        "credit_corrected": true,
+        "knowledge_revision": 0,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "separated",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-09",
+            "observer_id": "bam",
+            "target_id": "morae",
+            "contribution": {
+              "respect": 15,
+              "reciprocity": 18
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-CRE",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 0
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "exited",
+          "reason_key": "workshop.exited",
+          "allowed_actions": [
+            "workshop.view_record"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 3
+            },
+            "status": "completed",
+            "credit_corrected": true,
+            "knowledge_revision": 0,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": true,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-09",
+                "observer_id": "bam",
+                "target_id": "morae",
+                "contribution": {
+                  "respect": 15,
+                  "reciprocity": 18
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 3
+        },
+        "status": "completed",
+        "credit_corrected": true,
+        "knowledge_revision": 0,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "redefined",
+        "obligation": 700,
+        "own_exited": true,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-09",
+            "observer_id": "bam",
+            "target_id": "morae",
+            "contribution": {
+              "respect": 15,
+              "reciprocity": 18
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-DHP",
+      "expected_cost": {
+        "work_time": 2,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 5,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 4,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 3,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 0,
+        "progress": 1,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-04",
+            "observer_id": "morae",
+            "target_id": "bam",
+            "contribution": {
+              "affection": 10,
+              "trust": 6
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-DHS",
+      "expected_cost": {
+        "work_time": 2,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 5,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 4,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "separated",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 3,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 0,
+        "progress": 1,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "separated",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-04",
+            "observer_id": "morae",
+            "target_id": "bam",
+            "contribution": {
+              "affection": 10,
+              "trust": 6
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-DHE",
+      "expected_cost": {
+        "work_time": 2,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 5,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 4,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "exited",
+          "reason_key": "workshop.exited",
+          "allowed_actions": [
+            "workshop.view_record"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": true,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 3,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 0,
+        "progress": 1,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": true,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-04",
+            "observer_id": "morae",
+            "target_id": "bam",
+            "contribution": {
+              "affection": 10,
+              "trust": 6
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-DAP",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 5,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 0,
+        "progress": 1,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 400
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 241
+      }
+    },
+    {
+      "id": "GAREL-PATH-DAS",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 5,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "separated",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 0,
+        "progress": 1,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 400
+        },
+        "accepted_role": "separated",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 241
+      }
+    },
+    {
+      "id": "GAREL-PATH-DAE",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 5,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        },
+        {
+          "status": "exited",
+          "reason_key": "workshop.exited",
+          "allowed_actions": [
+            "workshop.view_record"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": true,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 0,
+        "progress": 1,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 400
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": true,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 241
+      }
+    },
+    {
+      "id": "GAREL-PATH-DRP",
+      "expected_cost": {
+        "work_time": 2,
+        "material": 0
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 5,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 3,
+              "material": 3
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 3,
+          "material": 3
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 0,
+        "progress": 1,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "redefined",
+        "obligation": 700,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-DRS",
+      "expected_cost": {
+        "work_time": 2,
+        "material": 0
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 5,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 3,
+              "material": 3
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "separated",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 3,
+          "material": 3
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 0,
+        "progress": 1,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "separated",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-DRE",
+      "expected_cost": {
+        "work_time": 2,
+        "material": 0
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 5,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "exited",
+          "reason_key": "workshop.exited",
+          "allowed_actions": [
+            "workshop.view_record"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 3,
+              "material": 3
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 0,
+            "progress": 1,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": true,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 3,
+          "material": 3
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 0,
+        "progress": 1,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "redefined",
+        "obligation": 700,
+        "own_exited": true,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-VHP",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 1,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-04",
+            "observer_id": "morae",
+            "target_id": "bam",
+            "contribution": {
+              "affection": 10,
+              "trust": 6
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-VHS",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "separated",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 1,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "separated",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-04",
+            "observer_id": "morae",
+            "target_id": "bam",
+            "contribution": {
+              "affection": 10,
+              "trust": 6
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-VHE",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "exited",
+          "reason_key": "workshop.exited",
+          "allowed_actions": [
+            "workshop.view_record"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": true,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [
+              {
+                "event_id": "EVT-04",
+                "observer_id": "morae",
+                "target_id": "bam",
+                "contribution": {
+                  "affection": 10,
+                  "trust": 6
+                }
+              }
+            ],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 1,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": true,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [
+          {
+            "event_id": "EVT-04",
+            "observer_id": "morae",
+            "target_id": "bam",
+            "contribution": {
+              "affection": 10,
+              "trust": 6
+            }
+          }
+        ],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-VAP",
+      "expected_cost": {
+        "work_time": 4,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 1,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 1,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 1,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 400
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 241
+      }
+    },
+    {
+      "id": "GAREL-PATH-VAS",
+      "expected_cost": {
+        "work_time": 4,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 1,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "separated",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 1,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 1,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 400
+        },
+        "accepted_role": "separated",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 241
+      }
+    },
+    {
+      "id": "GAREL-PATH-VAE",
+      "expected_cost": {
+        "work_time": 4,
+        "material": 1
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 2,
+              "material": 2
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        },
+        {
+          "status": "exited",
+          "reason_key": "workshop.exited",
+          "allowed_actions": [
+            "workshop.view_record"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 1,
+              "material": 2
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 400
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": true,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 241
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 1,
+          "material": 2
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 1,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 400
+        },
+        "accepted_role": "original",
+        "obligation": 1,
+        "own_exited": true,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 241
+      }
+    },
+    {
+      "id": "GAREL-PATH-VRP",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 0
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 3
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 3
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 1,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "redefined",
+        "obligation": 700,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-VRS",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 0
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 3
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "separated",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 3
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 1,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "separated",
+        "obligation": 1,
+        "own_exited": false,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    },
+    {
+      "id": "GAREL-PATH-VRE",
+      "expected_cost": {
+        "work_time": 3,
+        "material": 0
+      },
+      "receipts": [
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 2,
+            "test_balance": {
+              "work_time": 4,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "original",
+            "obligation": 1,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "committed",
+          "reason_key": "workshop.step_committed",
+          "allowed_actions": [
+            "workshop.continue",
+            "workshop.exit"
+          ],
+          "projection": {
+            "round": 3,
+            "test_balance": {
+              "work_time": 3,
+              "material": 3
+            },
+            "status": "running",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": false,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        },
+        {
+          "status": "exited",
+          "reason_key": "workshop.exited",
+          "allowed_actions": [
+            "workshop.view_record"
+          ],
+          "projection": {
+            "round": 4,
+            "test_balance": {
+              "work_time": 2,
+              "material": 3
+            },
+            "status": "completed",
+            "credit_corrected": false,
+            "knowledge_revision": 1,
+            "progress": 0,
+            "resource": {
+              "id": "resource-001",
+              "from_pawn_id": "morae",
+              "to_pawn_id": "bam",
+              "active": true,
+              "importance_permille": 800,
+              "contribution_permille": 750,
+              "irreplaceability_permille": 900
+            },
+            "accepted_role": "redefined",
+            "obligation": 700,
+            "own_exited": true,
+            "settlement_pending": false,
+            "emotion_penalty": 0,
+            "betrayal_memories": 0,
+            "effects": [],
+            "unit": "fixture_points",
+            "dependence": 540
+          }
+        }
+      ],
+      "actual": {
+        "round": 4,
+        "test_balance": {
+          "work_time": 2,
+          "material": 3
+        },
+        "status": "completed",
+        "credit_corrected": false,
+        "knowledge_revision": 1,
+        "progress": 0,
+        "resource": {
+          "id": "resource-001",
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 900
+        },
+        "accepted_role": "redefined",
+        "obligation": 700,
+        "own_exited": true,
+        "settlement_pending": false,
+        "emotion_penalty": 0,
+        "betrayal_memories": 0,
+        "effects": [],
+        "unit": "fixture_points",
+        "dependence": 540
+      }
+    }
+  ],
+  "structural": {
+    "input": {
+      "resources": [
+        {
+          "from_pawn_id": "morae",
+          "to_pawn_id": "bam",
+          "id": "resource-001",
+          "active": true,
+          "importance_permille": 800,
+          "contribution_permille": 750,
+          "irreplaceability_permille": 400
+        }
+      ],
+      "roles": [],
+      "commitments": [],
+      "conflicts": []
+    },
+    "before": {
+      "dependence": 540,
+      "power": 500,
+      "obligation": 1,
+      "conflict": 1,
+      "basis_status": "no_active_basis"
+    },
+    "after": {
+      "dependence": 241,
+      "power": 500,
+      "obligation": 1,
+      "conflict": 1,
+      "basis_status": "no_active_basis"
+    }
+  },
+  "projection_fixtures": {
+    "own": {
+      "visibility": "own_direction",
+      "scores": {
+        "affection": 100,
+        "trust": 300,
+        "respect": 300,
+        "reciprocity": 500,
+        "dependence": 540,
+        "power": 500,
+        "obligation": 1,
+        "conflict": 1
+      },
+      "basis_status": "no_active_basis",
+      "reason_key": "relationship.no_active_basis",
+      "memories": [],
+      "allowed_actions": []
+    },
+    "restricted": {
+      "visibility": "restricted",
+      "scores": null,
+      "reason_key": "relationship.restricted",
+      "allowed_actions": []
+    }
+  },
+  "assets": {
+    "fixture_version": "design-v07",
+    "status": "file_validated",
+    "runtime_composited": false,
+    "total_bytes": 86894,
+    "decoded_rgba_bytes": 6291456,
+    "layers": [
+      {
+        "slot": "back_hair",
+        "bytes": 17053,
+        "sha256": "1951bb7db99b0e6d8f1ddfdcda61ef22595feed9f58855897a093768c0513a05",
+        "width": 512,
+        "height": 512,
+        "format": "RGBA",
+        "decoded_bytes": 1048576,
+        "transparent_pixels": 221260,
+        "visible_pixels": 40884
+      },
+      {
+        "slot": "base",
+        "bytes": 27955,
+        "sha256": "15d0296be5c7159a6bc122a2c700963e34a78329501548b85002fba1061f3516",
+        "width": 512,
+        "height": 512,
+        "format": "RGBA",
+        "decoded_bytes": 1048576,
+        "transparent_pixels": 144167,
+        "visible_pixels": 117977
+      },
+      {
+        "slot": "eyes_pair",
+        "bytes": 8135,
+        "sha256": "2037ff2a03bb4cd71131c1d31440167714a292239146b194926be1f46a4662c8",
+        "width": 512,
+        "height": 512,
+        "format": "RGBA",
+        "decoded_bytes": 1048576,
+        "transparent_pixels": 257905,
+        "visible_pixels": 4239
+      },
+      {
+        "slot": "mouth",
+        "bytes": 3402,
+        "sha256": "8d23b045c92910bc29eb343f245a7bb141a743fd01b33df03c1910f3463171ff",
+        "width": 512,
+        "height": 512,
+        "format": "RGBA",
+        "decoded_bytes": 1048576,
+        "transparent_pixels": 261493,
+        "visible_pixels": 651
+      },
+      {
+        "slot": "front_hair",
+        "bytes": 21698,
+        "sha256": "b6faff89ead2d140e3bef4334f871688b7188a6ecb22d010947a7d02d47ca96d",
+        "width": 512,
+        "height": 512,
+        "format": "RGBA",
+        "decoded_bytes": 1048576,
+        "transparent_pixels": 241800,
+        "visible_pixels": 20344
+      },
+      {
+        "slot": "frame_accessory",
+        "bytes": 8651,
+        "sha256": "b280d1d618fa6144e64905cd5405832ba572a5690e92bfcfc6878bbb8df16128",
+        "width": 512,
+        "height": 512,
+        "format": "RGBA",
+        "decoded_bytes": 1048576,
+        "transparent_pixels": 258164,
+        "visible_pixels": 3980
+      }
+    ]
+  }
+}
