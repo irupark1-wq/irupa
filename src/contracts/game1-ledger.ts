@@ -4,14 +4,15 @@ import type { AuthorityPosition, TraitSnapshot } from './game1-traits.ts';
 export const EMOTION_AXES = ['affection', 'trust', 'respect', 'reciprocity'] as const;
 type EmotionAxis = typeof EMOTION_AXES[number];
 export type Scores = Record<EmotionAxis, number>;
-type EventKind = 'EVT-07' | 'EVT-08' | 'EVT-09' | 'EVT-10' | 'EVT-12';
+type EventKind = 'EVT-04' | 'EVT-07' | 'EVT-08' | 'EVT-09' | 'EVT-10' | 'EVT-12';
 export type TestEvent = {
   source_event_id: string; scope_id: string; observer_id: string; target_id: string;
   event_id: EventKind; position: AuthorityPosition; trait_snapshot: TraitSnapshot;
   rule_version: 'game1-rel-test-v041'; seed: string; repeat_multiplier: 1;
   evidence: { action_id?: string; independent_action?: boolean; monopoly_proven?: boolean;
     record_corrected?: boolean; delivery_committed?: boolean; conflict_id?: string; topic?: string;
-    repair_scope_id?: string; repair_plan_id?: string; repair_executed?: boolean; repair_accepted?: boolean };
+    repair_scope_id?: string; repair_plan_id?: string; repair_executed?: boolean; repair_accepted?: boolean;
+    role_accepted?: boolean; help_completed?: boolean };
 };
 export type Knowledge = { revision: number; known: boolean; delay_reason: 'unconfirmed' | 'proven_concealment'; reason_evidence_id?: string };
 type Slot = { event: TestEvent; knowledge: Knowledge };
@@ -26,13 +27,13 @@ function validateKnowledge(value: Knowledge): Knowledge {
 function copyEvent(input: TestEvent): TestEvent {
   const value = structuredClone(input);
   for (const key of ['source_event_id','scope_id','observer_id','target_id','seed'] as const) id(value[key]);
-  if (value.observer_id === value.target_id || !['EVT-07','EVT-08','EVT-09','EVT-10','EVT-12'].includes(value.event_id) || value.rule_version !== 'game1-rel-test-v041' || value.repeat_multiplier !== 1) throw new Error('ledger.unsupported_event');
+  if (value.observer_id === value.target_id || !['EVT-04','EVT-07','EVT-08','EVT-09','EVT-10','EVT-12'].includes(value.event_id) || value.rule_version !== 'game1-rel-test-v041' || value.repeat_multiplier !== 1) throw new Error('ledger.unsupported_event');
   value.position = validatePosition(value.position);
   if (value.trait_snapshot.schema_version !== TRAIT_SCHEMA_VERSION) throw new Error('ledger.unsupported_snapshot');
   value.trait_snapshot = snapshot(value.trait_snapshot.profile_version, value.trait_snapshot.axis_values, value.trait_snapshot.fixed_at);
   if (comparePosition(value.trait_snapshot.fixed_at, value.position) > 0) throw new Error('ledger.future_snapshot');
   if (!value.evidence || typeof value.evidence !== 'object' || Array.isArray(value.evidence)) throw new Error('ledger.invalid_evidence');
-  for (const key of ['independent_action','monopoly_proven','record_corrected','delivery_committed','repair_executed','repair_accepted'] as const) {
+  for (const key of ['independent_action','monopoly_proven','record_corrected','delivery_committed','repair_executed','repair_accepted','role_accepted','help_completed'] as const) {
     if (Object.hasOwn(value.evidence, key) && typeof value.evidence[key] !== 'boolean') throw new Error('ledger.invalid_evidence');
   }
   if (value.evidence.action_id !== undefined) id(value.evidence.action_id);
@@ -47,7 +48,8 @@ function baseContribution(slot: Slot): Scores {
   const { event, knowledge } = slot;
   const result: Scores = { affection: 0, trust: 0, respect: 0, reciprocity: 0 };
   if (!knowledge.known) return result;
-  if (event.event_id === 'EVT-07') {
+  if (event.event_id === 'EVT-04') { result.affection = 10; result.trust = 6; }
+  else if (event.event_id === 'EVT-07') {
     result.trust = knowledge.delay_reason === 'proven_concealment' ? -32 : -12;
     result.reciprocity = knowledge.delay_reason === 'proven_concealment' ? -18 : 0;
   } else if (event.event_id === 'EVT-08') { result.trust = -32; result.reciprocity = -18; }
@@ -97,6 +99,7 @@ export function createTestLedger(input: {
       }
       if ([...slots.values()].some(s => comparePosition(s.event.position,event.position) === 0)) throw new Error('ledger.order_collision');
       const evidence = event.evidence;
+      if (event.event_id === 'EVT-04' && (evidence.role_accepted !== true || evidence.help_completed !== true || !evidence.action_id)) throw new Error('ledger.help_evidence_required');
       if (event.event_id === 'EVT-08' && (evidence.independent_action !== true || !evidence.action_id || [...slots.values()].some(s => s.event.evidence.action_id === evidence.action_id))) throw new Error('ledger.independent_action_required');
       if (event.event_id === 'EVT-10' && evidence.monopoly_proven !== true) throw new Error('ledger.monopoly_evidence_required');
       if (event.event_id === 'EVT-09' && (evidence.record_corrected !== true || evidence.delivery_committed !== true || !evidence.action_id)) throw new Error('ledger.correction_delivery_required');

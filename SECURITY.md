@@ -47,3 +47,6 @@ DB 변경 후 Supabase security advisors와 실제 anon/authenticated 역할 권
 
 ## 2026-10-13 파생축·공방·자산 시험
 입력범위/중복ID 검사, restricted 응답 allowlist, 시험 명령 receipt,PNG경로·CRC·해시·크기·제한된inflate검사를 추가했다. 로컬61개 검사를 통과했다. 메모리시험 입력의 승인/소유권은 실제 인증이 아니며 프런트엔드 입력을 신뢰하는 서버로 배포해서는 안 된다. 운영DB/Auth/배포변경 없음. 전체태그와 알림/preview/서버권한은 후속 검증이다.
+
+## 2026-10-13 로컬 시제품 연결
+127.0.0.1 전용서버,Host/경로/실제파일 경계,CSP를 적용했다. 내부원장은공개allowlist로변환한다. localStorage는로컬시험기록이며운영권한/증거로믿지않는다. 단일레코드저장실패·receipt·순차버전충돌을검증했지만다중탭동시CAS/온라인동시성은미검증이다. 운영DB/Auth/배포변경은없다.
