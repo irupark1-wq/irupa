@@ -44,6 +44,12 @@ export function createLocalStore(storage){
    if(next.pawns.length>=3)throw Error('pawn.limit');const id='pawn-'+commandId;const checked=validateAxes(axes);
    next.pawns.push({id,name:name.trim().slice(0,20)||['모래','밤','노을'][next.pawns.length],owner:'local-owner',appearance:structuredClone(appearance),appearance_version:1,trait:snapshot(1,checked,position(++next.authority))});return {status:'applied',pawn_id:id};
   },expected);},
+  updatePawn(commandId,pawnId,name,appearance,axes,expected){return commit(commandId,{kind:'appearance',pawnId,name,appearance,axes},next=>{
+   const p=next.pawns.find(p=>p.id===pawnId);if(!p)throw Error('pawn.missing');
+   p.name=name.trim().slice(0,20)||p.name;p.appearance=structuredClone(appearance);p.appearance_version++;
+   if(JSON.stringify(p.trait.axis_values)!==JSON.stringify(validateAxes(axes)))p.trait=snapshot(p.trait.profile_version+1,axes,position(++next.authority));
+   return {status:'applied',pawn_id:p.id};
+  },expected);},
   saveTraits(commandId,pawnId,axes,expected){return commit(commandId,{kind:'traits',pawnId,axes},next=>{const p=next.pawns.find(p=>p.id===pawnId);if(!p)throw Error('pawn.missing');p.trait=snapshot(p.trait.profile_version+1,axes,position(++next.authority));return {status:'applied',reason_key:'traits.saved_future_only'};},expected);},
   begin(commandId){return commit(commandId,{kind:'begin'},next=>{
    if(next.pawns.length!==3)throw Error('workshop.requires_three');if(next.sessions.some(s=>!s.completed))throw Error('workshop.already_active');

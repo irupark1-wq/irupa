@@ -63,3 +63,17 @@ test('eight basic tag enter thresholds and two-source emotional exit',()=>{
  const c=ctx(),bad=ctx({a:{...sc,trust:400}}),h=history(c);h.push({source_event_id:'bad-1',tick:4,positive:false,context:bad});assert.ok(evaluateBasicTags(h,bad).tags.some(t=>t.tag_id==='comfortable_friend'));
  h.push({source_event_id:'bad-2',tick:5,positive:false,context:bad});assert.equal(evaluateBasicTags(h,bad).tags.some(t=>t.tag_id==='comfortable_friend'),false);
 });
+
+test('appearance edit preserves pawn identity, relations and traits across reopen',()=>{
+ const {s,disk}=prepare();s.submit('prior-event','C');const before=s.read(),p=before.pawns[1];
+ const edited=structuredClone(appearance);edited.layers.eyes_pair='data:image/png;base64,ZXllcw==';
+ s.updatePawn('edit-face',p.id,'밤',edited,p.trait.axis_values);
+ const restored=createLocalStore(disk).read();assert.equal(restored.pawns.length,3);assert.equal(restored.pawns[1].id,p.id);assert.equal(restored.pawns[1].appearance_version,2);assert.deepEqual(restored.pawns[1].appearance,edited);assert.deepEqual(restored.pawns[1].trait,p.trait);assert.deepEqual(restored.events,before.events);assert.deepEqual(restored.sessions,before.sessions);
+ s.updatePawn('edit-face',p.id,'밤',edited,p.trait.axis_values);assert.deepEqual(s.read(),restored);
+ assert.throws(()=>s.updatePawn('edit-face',p.id,'changed',edited,p.trait.axis_values),/payload_conflict/);
+});
+test('failed appearance write is atomic and same command can retry',()=>{
+ const {s,disk}=prepare(),before=s.read(),p=before.pawns[0],write=disk.setItem;const edited=structuredClone(appearance);edited.layers.mouth='data:image/png;base64,bW91dGg=';
+ disk.setItem=()=>{throw Error('quota');};assert.throws(()=>s.updatePawn('edit-retry',p.id,'모래',edited,p.trait.axis_values),/quota/);assert.deepEqual(s.read(),before);
+ disk.setItem=write;s.updatePawn('edit-retry',p.id,'모래',edited,p.trait.axis_values);assert.deepEqual(createLocalStore(disk).read().pawns[0].appearance,edited);
+});
