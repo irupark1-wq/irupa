@@ -1,0 +1,12 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { createTestLedger } from '../src/contracts/game1-ledger.ts';
+const fixture = JSON.parse(readFileSync(new URL('../fixtures/game1-ledger-v041.json',import.meta.url),'utf8'));
+const ledger = createTestLedger(fixture.config);
+const applied = ledger.append(fixture.event,fixture.initial_knowledge);
+const revised = ledger.revise(fixture.event.source_event_id,fixture.revision);
+const duplicate = ledger.revise(fixture.event.source_event_id,fixture.revision);
+const corrected = ledger.recordCorrection(fixture.correction.correction_id,fixture.event.source_event_id,fixture.correction.evidence_id);
+const duplicateCorrection = ledger.recordCorrection(fixture.correction.correction_id,fixture.event.source_event_id,fixture.correction.evidence_id);
+const output = { fixture_version:fixture.fixture_version, status:'unit_tested', deployed:false, environment:{node:process.version}, applied, revised, duplicate, corrected, duplicateCorrection };
+writeFileSync(new URL('../docs/planning/evidence/game1-ledger-v041-result.json',import.meta.url),JSON.stringify(output,null,2)+'\n');
+console.log('game1 ledger fixture replay written; one source slot, revision and correction retries recorded');

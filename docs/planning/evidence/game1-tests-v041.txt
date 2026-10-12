@@ -1,0 +1,32 @@
+
+> test
+> node --test tests/*.test.mjs
+
+✔ trait-dev:PERS-QA01 all 27 combinations and exact six presets (1.2898ms)
+✔ trait-dev:PERS-QA02 malformed, inherited, extra axes and levels rejected (0.2784ms)
+✔ trait-ui:TR-UI-01 manual override never overwritten by preset label (0.1465ms)
+✔ consent:canonical wire strict and document-only aliases (0.2006ms)
+✔ authority:distinct streams cannot be numerically ordered (0.2265ms)
+✔ trait-dev:PERS-QA04 snapshot persists old values after live profile changes (0.2695ms)
+✔ rel-v04:REL-V04-02 exact fairness, only EVT09/10 reciprocity (0.2098ms)
+✔ rounding:negative and positive ties away from zero, overflow rejected (0.1157ms)
+✔ domain:DEV-05 boundary replay differs from naive delta subtraction (0.1825ms)
+✔ design:DEV-CHECK-03 three UI fixtures and no private or forecast scores (0.7128ms)
+✔ REL-NEXT-01 unseen event contributes zero in internal trace; public DTO pending (2.5229ms)
+✔ REL-NEXT-02/03 evidence-gated exact fairness and unaffected respect/trust (1.861ms)
+✔ REL-NEXT-04 knowledge replaces original slot, duplicates no-op, fixed snapshot persists (0.4714ms)
+✔ REL-NEXT-05 checkpoint clamp replay after revision and late arrival (0.3307ms)
+✔ REL-NEXT-06 independent EVT08 requires distinct action evidence (0.2936ms)
+✔ REL-NEXT-07/08 distinct repair evidence and exact target; rejected append atomic (0.4173ms)
+✔ correction_id idempotency and defensive copies (0.5469ms)
+✔ authority and invalid knowledge/evidence fail without state mutation (0.3182ms)
+✔ design-v06 GetTraitOptions stable ordering, label keys and exact presets (0.7114ms)
+✔ REL-NEXT-04 serialized fixture expected scores and idempotent correction (0.5994ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 120.2437

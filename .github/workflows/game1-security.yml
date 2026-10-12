@@ -16,4 +16,4 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
-      - run: node --test tests/game1-contracts.test.mjs
+      - run: npm test

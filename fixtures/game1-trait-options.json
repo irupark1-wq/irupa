@@ -1,0 +1,146 @@
+{
+  "fixture_version": "game1-trait-options-v06",
+  "fixture_only": true,
+  "production_import_allowed": false,
+  "schema_version": "game1-traits-a1",
+  "axes": [
+    {
+      "axis_id": "fairness_sensitivity",
+      "display_order": 0,
+      "label_key": "traits.axis.fairness_sensitivity",
+      "description_key": "traits.description.fairness_sensitivity",
+      "default_value": "medium",
+      "levels": [
+        {
+          "value": "low",
+          "display_order": 0,
+          "label_key": "traits.level.low"
+        },
+        {
+          "value": "medium",
+          "display_order": 1,
+          "label_key": "traits.level.medium"
+        },
+        {
+          "value": "high",
+          "display_order": 2,
+          "label_key": "traits.level.high"
+        }
+      ]
+    },
+    {
+      "axis_id": "closeness_orientation",
+      "display_order": 1,
+      "label_key": "traits.axis.closeness_orientation",
+      "description_key": "traits.description.closeness_orientation",
+      "default_value": "medium",
+      "levels": [
+        {
+          "value": "low",
+          "display_order": 0,
+          "label_key": "traits.level.low"
+        },
+        {
+          "value": "medium",
+          "display_order": 1,
+          "label_key": "traits.level.medium"
+        },
+        {
+          "value": "high",
+          "display_order": 2,
+          "label_key": "traits.level.high"
+        }
+      ]
+    },
+    {
+      "axis_id": "risk_aversion",
+      "display_order": 2,
+      "label_key": "traits.axis.risk_aversion",
+      "description_key": "traits.description.risk_aversion",
+      "default_value": "medium",
+      "levels": [
+        {
+          "value": "low",
+          "display_order": 0,
+          "label_key": "traits.level.low"
+        },
+        {
+          "value": "medium",
+          "display_order": 1,
+          "label_key": "traits.level.medium"
+        },
+        {
+          "value": "high",
+          "display_order": 2,
+          "label_key": "traits.level.high"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "preset_id": "cautious_mediator",
+      "label": "신중한 조율자",
+      "axis_values": {
+        "fairness_sensitivity": "high",
+        "closeness_orientation": "medium",
+        "risk_aversion": "high"
+      },
+      "display_order": 0
+    },
+    {
+      "preset_id": "warm_explorer",
+      "label": "다정한 탐험가",
+      "axis_values": {
+        "fairness_sensitivity": "medium",
+        "closeness_orientation": "high",
+        "risk_aversion": "low"
+      },
+      "display_order": 1
+    },
+    {
+      "preset_id": "quiet_crafter",
+      "label": "조용한 공방인",
+      "axis_values": {
+        "fairness_sensitivity": "high",
+        "closeness_orientation": "low",
+        "risk_aversion": "medium"
+      },
+      "display_order": 2
+    },
+    {
+      "preset_id": "relaxed_neighbor",
+      "label": "느긋한 이웃",
+      "axis_values": {
+        "fairness_sensitivity": "low",
+        "closeness_orientation": "high",
+        "risk_aversion": "medium"
+      },
+      "display_order": 3
+    },
+    {
+      "preset_id": "independent_pioneer",
+      "label": "독립적인 개척자",
+      "axis_values": {
+        "fairness_sensitivity": "medium",
+        "closeness_orientation": "low",
+        "risk_aversion": "low"
+      },
+      "display_order": 4
+    },
+    {
+      "preset_id": "balanced",
+      "label": "균형형",
+      "axis_values": {
+        "fairness_sensitivity": "medium",
+        "closeness_orientation": "medium",
+        "risk_aversion": "medium"
+      },
+      "display_order": 5
+    }
+  ],
+  "allowed_actions": [
+    "traits.preview",
+    "pawn.create"
+  ]
+}

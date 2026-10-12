@@ -41,3 +41,6 @@ python scripts/game1_check_secrets.py
 DB 변경 후 Supabase security advisors와 실제 anon/authenticated 역할 권한 검사를 수행한다. 의존성을 추가하면 해당 생태계의 취약점 검사를 CI에 추가한다.
 
 근거: [Supabase API 보안](https://supabase.com/docs/guides/api/securing-your-api), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security).
+
+## 2026-10-13 관계 원장 시험 모델
+입력 식별자/버전/순서/인지 타입을 검사하고 payload 재사용 충돌과 잘못된 근거를 거절하는 메모리 원장을 추가했다. 총20개 단위검사 및 시크릿검사를 실행했다. 원장 trace는 내부 감사용이며 사용자 DTO로 노출하지 않는다. 실제 증거 진위·Auth·권한·DB 동시 transaction·outbox는 미구현이고 운영 변경은 없다.

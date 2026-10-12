@@ -1,0 +1,417 @@
+{
+  "fixture_version": "game1-ledger-v041",
+  "status": "unit_tested",
+  "deployed": false,
+  "environment": {
+    "node": "v24.19.0"
+  },
+  "applied": {
+    "status": "applied",
+    "projection": {
+      "direction": {
+        "observer_id": "bam",
+        "target_id": "morae"
+      },
+      "scope_id": "order-001",
+      "checkpoint": {
+        "position": {
+          "authority_stream_id": "game1-order-001",
+          "authority_order_id": 1
+        },
+        "scores": {
+          "affection": 500,
+          "trust": 500,
+          "respect": 500,
+          "reciprocity": 500
+        }
+      },
+      "scores": {
+        "affection": 500,
+        "trust": 488,
+        "respect": 500,
+        "reciprocity": 500
+      },
+      "trace": [
+        {
+          "source_event_id": "delay-001",
+          "event_id": "EVT-07",
+          "position": {
+            "authority_stream_id": "game1-order-001",
+            "authority_order_id": 2
+          },
+          "knowledge": {
+            "revision": 1,
+            "known": true,
+            "delay_reason": "unconfirmed"
+          },
+          "trait_snapshot": {
+            "schema_version": "game1-traits-a1",
+            "profile_version": 1,
+            "axis_values": {
+              "fairness_sensitivity": "medium",
+              "closeness_orientation": "medium",
+              "risk_aversion": "medium"
+            },
+            "fixed_at": {
+              "authority_stream_id": "game1-order-001",
+              "authority_order_id": 1
+            }
+          },
+          "rule_version": "game1-rel-test-v041",
+          "seed": "seed-a",
+          "repeat_multiplier": 1,
+          "before": {
+            "affection": 500,
+            "trust": 500,
+            "respect": 500,
+            "reciprocity": 500
+          },
+          "contribution": {
+            "affection": 0,
+            "trust": -12,
+            "respect": 0,
+            "reciprocity": 0
+          },
+          "after": {
+            "affection": 500,
+            "trust": 488,
+            "respect": 500,
+            "reciprocity": 500
+          }
+        }
+      ],
+      "correction_count": 0,
+      "reward_reexecutions": 0,
+      "action_reexecutions": 0,
+      "push_reexecutions": 0
+    }
+  },
+  "revised": {
+    "status": "revised",
+    "projection": {
+      "direction": {
+        "observer_id": "bam",
+        "target_id": "morae"
+      },
+      "scope_id": "order-001",
+      "checkpoint": {
+        "position": {
+          "authority_stream_id": "game1-order-001",
+          "authority_order_id": 1
+        },
+        "scores": {
+          "affection": 500,
+          "trust": 500,
+          "respect": 500,
+          "reciprocity": 500
+        }
+      },
+      "scores": {
+        "affection": 500,
+        "trust": 468,
+        "respect": 500,
+        "reciprocity": 482
+      },
+      "trace": [
+        {
+          "source_event_id": "delay-001",
+          "event_id": "EVT-07",
+          "position": {
+            "authority_stream_id": "game1-order-001",
+            "authority_order_id": 2
+          },
+          "knowledge": {
+            "revision": 2,
+            "known": true,
+            "delay_reason": "proven_concealment",
+            "reason_evidence_id": "conceal-proof-001"
+          },
+          "trait_snapshot": {
+            "schema_version": "game1-traits-a1",
+            "profile_version": 1,
+            "axis_values": {
+              "fairness_sensitivity": "medium",
+              "closeness_orientation": "medium",
+              "risk_aversion": "medium"
+            },
+            "fixed_at": {
+              "authority_stream_id": "game1-order-001",
+              "authority_order_id": 1
+            }
+          },
+          "rule_version": "game1-rel-test-v041",
+          "seed": "seed-a",
+          "repeat_multiplier": 1,
+          "before": {
+            "affection": 500,
+            "trust": 500,
+            "respect": 500,
+            "reciprocity": 500
+          },
+          "contribution": {
+            "affection": 0,
+            "trust": -32,
+            "respect": 0,
+            "reciprocity": -18
+          },
+          "after": {
+            "affection": 500,
+            "trust": 468,
+            "respect": 500,
+            "reciprocity": 482
+          }
+        }
+      ],
+      "correction_count": 0,
+      "reward_reexecutions": 0,
+      "action_reexecutions": 0,
+      "push_reexecutions": 0
+    }
+  },
+  "duplicate": {
+    "status": "duplicate",
+    "projection": {
+      "direction": {
+        "observer_id": "bam",
+        "target_id": "morae"
+      },
+      "scope_id": "order-001",
+      "checkpoint": {
+        "position": {
+          "authority_stream_id": "game1-order-001",
+          "authority_order_id": 1
+        },
+        "scores": {
+          "affection": 500,
+          "trust": 500,
+          "respect": 500,
+          "reciprocity": 500
+        }
+      },
+      "scores": {
+        "affection": 500,
+        "trust": 468,
+        "respect": 500,
+        "reciprocity": 482
+      },
+      "trace": [
+        {
+          "source_event_id": "delay-001",
+          "event_id": "EVT-07",
+          "position": {
+            "authority_stream_id": "game1-order-001",
+            "authority_order_id": 2
+          },
+          "knowledge": {
+            "revision": 2,
+            "known": true,
+            "delay_reason": "proven_concealment",
+            "reason_evidence_id": "conceal-proof-001"
+          },
+          "trait_snapshot": {
+            "schema_version": "game1-traits-a1",
+            "profile_version": 1,
+            "axis_values": {
+              "fairness_sensitivity": "medium",
+              "closeness_orientation": "medium",
+              "risk_aversion": "medium"
+            },
+            "fixed_at": {
+              "authority_stream_id": "game1-order-001",
+              "authority_order_id": 1
+            }
+          },
+          "rule_version": "game1-rel-test-v041",
+          "seed": "seed-a",
+          "repeat_multiplier": 1,
+          "before": {
+            "affection": 500,
+            "trust": 500,
+            "respect": 500,
+            "reciprocity": 500
+          },
+          "contribution": {
+            "affection": 0,
+            "trust": -32,
+            "respect": 0,
+            "reciprocity": -18
+          },
+          "after": {
+            "affection": 500,
+            "trust": 468,
+            "respect": 500,
+            "reciprocity": 482
+          }
+        }
+      ],
+      "correction_count": 0,
+      "reward_reexecutions": 0,
+      "action_reexecutions": 0,
+      "push_reexecutions": 0
+    }
+  },
+  "corrected": {
+    "status": "recorded",
+    "projection": {
+      "direction": {
+        "observer_id": "bam",
+        "target_id": "morae"
+      },
+      "scope_id": "order-001",
+      "checkpoint": {
+        "position": {
+          "authority_stream_id": "game1-order-001",
+          "authority_order_id": 1
+        },
+        "scores": {
+          "affection": 500,
+          "trust": 500,
+          "respect": 500,
+          "reciprocity": 500
+        }
+      },
+      "scores": {
+        "affection": 500,
+        "trust": 468,
+        "respect": 500,
+        "reciprocity": 482
+      },
+      "trace": [
+        {
+          "source_event_id": "delay-001",
+          "event_id": "EVT-07",
+          "position": {
+            "authority_stream_id": "game1-order-001",
+            "authority_order_id": 2
+          },
+          "knowledge": {
+            "revision": 2,
+            "known": true,
+            "delay_reason": "proven_concealment",
+            "reason_evidence_id": "conceal-proof-001"
+          },
+          "trait_snapshot": {
+            "schema_version": "game1-traits-a1",
+            "profile_version": 1,
+            "axis_values": {
+              "fairness_sensitivity": "medium",
+              "closeness_orientation": "medium",
+              "risk_aversion": "medium"
+            },
+            "fixed_at": {
+              "authority_stream_id": "game1-order-001",
+              "authority_order_id": 1
+            }
+          },
+          "rule_version": "game1-rel-test-v041",
+          "seed": "seed-a",
+          "repeat_multiplier": 1,
+          "before": {
+            "affection": 500,
+            "trust": 500,
+            "respect": 500,
+            "reciprocity": 500
+          },
+          "contribution": {
+            "affection": 0,
+            "trust": -32,
+            "respect": 0,
+            "reciprocity": -18
+          },
+          "after": {
+            "affection": 500,
+            "trust": 468,
+            "respect": 500,
+            "reciprocity": 482
+          }
+        }
+      ],
+      "correction_count": 1,
+      "reward_reexecutions": 0,
+      "action_reexecutions": 0,
+      "push_reexecutions": 0
+    }
+  },
+  "duplicateCorrection": {
+    "status": "duplicate",
+    "projection": {
+      "direction": {
+        "observer_id": "bam",
+        "target_id": "morae"
+      },
+      "scope_id": "order-001",
+      "checkpoint": {
+        "position": {
+          "authority_stream_id": "game1-order-001",
+          "authority_order_id": 1
+        },
+        "scores": {
+          "affection": 500,
+          "trust": 500,
+          "respect": 500,
+          "reciprocity": 500
+        }
+      },
+      "scores": {
+        "affection": 500,
+        "trust": 468,
+        "respect": 500,
+        "reciprocity": 482
+      },
+      "trace": [
+        {
+          "source_event_id": "delay-001",
+          "event_id": "EVT-07",
+          "position": {
+            "authority_stream_id": "game1-order-001",
+            "authority_order_id": 2
+          },
+          "knowledge": {
+            "revision": 2,
+            "known": true,
+            "delay_reason": "proven_concealment",
+            "reason_evidence_id": "conceal-proof-001"
+          },
+          "trait_snapshot": {
+            "schema_version": "game1-traits-a1",
+            "profile_version": 1,
+            "axis_values": {
+              "fairness_sensitivity": "medium",
+              "closeness_orientation": "medium",
+              "risk_aversion": "medium"
+            },
+            "fixed_at": {
+              "authority_stream_id": "game1-order-001",
+              "authority_order_id": 1
+            }
+          },
+          "rule_version": "game1-rel-test-v041",
+          "seed": "seed-a",
+          "repeat_multiplier": 1,
+          "before": {
+            "affection": 500,
+            "trust": 500,
+            "respect": 500,
+            "reciprocity": 500
+          },
+          "contribution": {
+            "affection": 0,
+            "trust": -32,
+            "respect": 0,
+            "reciprocity": -18
+          },
+          "after": {
+            "affection": 500,
+            "trust": 468,
+            "respect": 500,
+            "reciprocity": 482
+          }
+        }
+      ],
+      "correction_count": 1,
+      "reward_reexecutions": 0,
+      "action_reexecutions": 0,
+      "push_reexecutions": 0
+    }
+  }
+}
