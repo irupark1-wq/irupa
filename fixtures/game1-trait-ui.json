@@ -1,0 +1,29 @@
+{
+  "fixture_only": true,
+  "production_import_allowed": false,
+  "schema_version": "game1-traits-a1",
+  "cases": {
+    "default": {
+      "ui_state": "selecting",
+      "profile_version": null,
+      "axis_values": { "fairness_sensitivity": "medium", "closeness_orientation": "medium", "risk_aversion": "medium" },
+      "allowed_actions": ["traits.preview", "pawn.create"]
+    },
+    "dirty_save": {
+      "ui_state": "dirty",
+      "request": { "command_id": "00000000-0000-4000-8000-000000000001", "pawn_id": "game1-test-pawn", "expected_profile_version": 1, "axis_values": { "fairness_sensitivity": "high", "closeness_orientation": "medium", "risk_aversion": "medium" }, "preset_id": null },
+      "response": { "status": "applied", "reason_key": "traits.saved_future_only", "profile_version": 2, "effective_from": { "authority_stream_id": "game1-authority-test", "authority_order_id": 8 }, "allowed_actions": ["traits.edit", "traits.preview"] }
+    },
+    "version_conflict": {
+      "ui_state": "conflict",
+      "draft": { "expected_profile_version": 1, "axis_values": { "fairness_sensitivity": "medium", "closeness_orientation": "medium", "risk_aversion": "high" } },
+      "response": { "status": "conflict", "reason_key": "traits.version_conflict", "profile_version": 2, "allowed_actions": ["traits.compare_latest", "traits.reapply_draft"] }
+    }
+  },
+  "preview": {
+    "example_only": true,
+    "uncertainty_key": "traits.example_not_guaranteed",
+    "sample_context_id": "game1-neutral-credit-example",
+    "candidates": [ { "action_id": "verify_attribution_records", "reason_key": "traits.example_check_records" } ]
+  }
+}

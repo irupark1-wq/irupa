@@ -1,0 +1,7 @@
+{
+  "name": "game1-domain-prototype",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": { "test": "node --test tests/game1-contracts.test.mjs" }
+}

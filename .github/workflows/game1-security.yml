@@ -12,3 +12,8 @@ jobs:
           persist-credentials: false
       - run: python3 -m unittest discover -s tests
       - run: python3 scripts/game1_check_secrets.py
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: node --test tests/game1-contracts.test.mjs
