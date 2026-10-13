@@ -13,8 +13,8 @@
 | `migrations/0002_game1_core.sql` | `game1_profiles`(소유자 1행), `game1_worlds`(월드 저장본 jsonb + 서버 버전), RLS 6정책, 트리거 2개(`game1_private`), 저장 함수 `public.game1_save_world(jsonb, integer)` | **적용됨 2026-10-13** (김PO 가 SQL Editor 에서 실행, "Success. No rows returned") |
 | `tests/0002_rls_check.sql` | 0002 거부·허용 테스트 31건(anon 거부, 타인 행 차단, 버전 충돌, 입력 검증). BEGIN…ROLLBACK 이라 흔적 없음 | **실행 완료 2026-10-13: 31/31 PASS, fail_total 0** |
 | `0003_auth_setup.md` | v1.1 로그인 설정 안내(Google OAuth·이메일+비밀번호·SMTP·URL·한국어 메일 문구·익명 로그인 끄기). SQL 없음 | **입력 완료 2026-10-13** (김PO, Resend Verified, 익명 끔. 실제 로그인 시험은 코드 후) |
-| `migrations/0004_game1_account_worlds.sql` | 계정 월드 저장(SB-0004): `game1_account_worlds`(계정당 최대 3, 로컬 계보 1개 = 계정 월드 1개), RLS 4정책(조회·추가·수정·삭제 본인만), 트리거(버전·소유자·계보 고정, 사용자 잠금으로 3개 상한), RPC 3개(`game1_create_account_world` 멱등 생성 / `game1_update_account_world` 낙관적 잠금·멱등 재전송 / `game1_list_account_worlds` 요약 목록). 기존 `game1_worlds` 는 그대로 두고 쓰지 않음 | **적용 대기** (PO-AUTH-001 §4, PO-DEC-006 §4) |
-| `tests/0004_account_worlds_check.sql` | 0004 시험 24건(anon 거부, 생성·재전송 복제 0, 같은 계보 다른 지문 거절, 갱신·재전송·충돌, 3개 상한, 지원 안 하는 형식·잘못된 저장본 거절, user_id 위조 거부, 다른 사용자 조회·갱신·삭제 불가, 계정 분리). BEGIN…ROLLBACK | **실행 대기** |
+| `migrations/0004_game1_account_worlds.sql` | 계정 월드 저장(SB-0004): `game1_account_worlds`(계정당 최대 3, 로컬 계보 1개 = 계정 월드 1개), RLS 4정책(조회·추가·수정·삭제 본인만), 트리거(버전·소유자·계보 고정, 사용자 잠금으로 3개 상한), RPC 3개(`game1_create_account_world` 멱등 생성 / `game1_update_account_world` 낙관적 잠금·멱등 재전송 / `game1_list_account_worlds` 요약 목록). 기존 `game1_worlds` 는 그대로 두고 쓰지 않음 | **적용됨 2026-10-13** (김PO 실행. 적용 후 anon 의 목록 함수 호출은 42501 로 거부됨을 공개 API 로 확인) |
+| `tests/0004_account_worlds_check.sql` | 0004 시험 28건(anon 거부, 생성·재전송 복제 0, 같은 계보 다른 지문 거절, 갱신·재전송·충돌, 3개 상한, 지원 안 하는 형식·잘못된 저장본 거절, user_id 위조 거부, 다른 사용자 조회·갱신·삭제 불가, 계정 분리). BEGIN…ROLLBACK | **실행 완료 2026-10-13: 28/28 PASS, fail_total 0** (증거 `docs/evidence/auth/sb0004-test-28-pass.png`) |
 
 ## 0002 적용 순서 (김PO) — 2026-10-13 전부 완료 (Advisors Security 경고 0건, Anonymous sign-ins 켬, Site URL neinom.com 확인. Email provider 는 이메일 연결 기능 구현 전에 재확인)
 
