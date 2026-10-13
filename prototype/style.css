@@ -384,3 +384,21 @@ legend { font-size: 12px; color: var(--ink-3); padding: 0 6px; }
 .log-more { margin-top: 3px; padding: 1px 8px; border: 1.5px solid #d8c6a4; border-radius: 999px; background: #fffaf0; color: #6b5338; font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
 .log-sub { opacity: 0.85; padding-left: 18px; }
 .log-sub small { font-size: 12px; }
+/* 계정(PO-AUTH-001): 로그인 상태 줄과 월드 저장 위치 줄을 따로. Google 버튼은 흰 바탕·공식 G 로고 */
+.account-block h4 { margin-bottom: 6px; }
+.account-lines { display: grid; gap: 4px; margin-bottom: 8px; padding: 8px 10px; border-radius: 12px; background: #f6eedc; }
+.account-line { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.account-line span { color: var(--ink-2); font-weight: 700; }
+.account-line b { text-align: right; overflow-wrap: anywhere; }
+.auth-msg { margin: 0 0 8px; padding: 8px 10px; border-radius: 10px; font-size: 13px; font-weight: 700; background: #eef2f7; }
+.auth-msg.ok { background: #e3f1df; color: #3c6a35; }
+.auth-msg.warn { background: #fbe9e3; color: #8a3a2c; }
+.google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 40px; margin-bottom: 10px; padding: 8px 14px; border: 1px solid #747775; border-radius: 999px; background: #fff; color: #1f1f1f; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.google-btn svg { width: 18px; height: 18px; flex: none; }
+.google-btn:disabled { opacity: 0.55; cursor: default; }
+.auth-form { display: grid; gap: 8px; }
+.auth-form label { display: grid; gap: 4px; font-size: 13px; font-weight: 800; color: var(--ink-2); }
+.auth-form input { padding: 9px 12px; border: 2px solid var(--line-2); border-radius: 12px; background: #fff; font: inherit; color: var(--ink); }
+.auth-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.link-btn { padding: 2px 0; border: 0; background: none; color: #3f6fa8; font: inherit; font-size: 13px; font-weight: 800; text-decoration: underline; cursor: pointer; }
+.link-btn:disabled { opacity: 0.5; }

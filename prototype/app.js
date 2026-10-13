@@ -1,6 +1,7 @@
 import { t as T, tLife, applyStatic, setLang, getLang, LANGS } from "./i18n.js";
 applyStatic();
 import { mountLifeUI } from "./life-ui.js";
+import { mountAccountUI } from "./account-ui.js";
 import { renderSpaceComparison } from "./space-comparison.js";
 import { createLocalStore, STORE_KEY } from "./store.js";
 import { memoryText, AXES as REL_AXES } from "./relation-text.js";
@@ -848,6 +849,14 @@ lifeUI = mountLifeUI({
   closeSheets,
 });
 await lifeUI.render();
+// 계정(PO-AUTH-001): 로그인 과정 중에는 생활을 멈춘다. 다시 시작은 사용자가 ▶ 로(자동 재개 없음)
+mountAccountUI({
+  pauseLife: () => {
+    try {
+      if (!store.life().paused) store.lifePause(crypto.randomUUID(), true);
+    } catch {}
+  },
+});
 $("artCompare").onclick = async () => {
   show("comparePanel");
   await renderSpaceComparison($("compareCanvas"), store.read(), paint, image);
