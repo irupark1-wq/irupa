@@ -44,7 +44,7 @@ const STATUS_LINE = {
  * @param {() => void} o.pauseLife  로그인 과정 중 생활을 멈춘다(초안은 각 화면이 보존)
  */
 export function mountAccountUI({ pauseLife }) {
-  let account = createAccount({ client: null, returnUrl: null }),
+  let account = createAccount({ client: null, returnUrl: authReturnUrl(), lazy: authConfigured() }),
     started = null;
   const render = (s) => {
     $("authLine").textContent = STATUS_LINE[s.status](s);

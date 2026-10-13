@@ -42,8 +42,9 @@ export function errorKey(error) {
  * @param {object|null} o.client  supabase client(없으면 unavailable)
  * @param {string|null} o.returnUrl  로그인·메일 확인·재설정 후 돌아올 정확한 주소(SB-0003 의 두 주소 중 하나)
  */
-export function createAccount({ client, returnUrl }) {
-  let state = { status: client && returnUrl ? "guest" : "unavailable", email: null, providers: [], message: null, user_id: null };
+export function createAccount({ client, returnUrl, lazy = false }) {
+  // lazy: 설정은 됐지만 라이브러리를 아직 안 불러온 상태(게스트로 보이고, 첫 동작 때 실제 클라이언트로 바뀐다)
+  let state = { status: (client || lazy) && returnUrl ? "guest" : "unavailable", email: null, providers: [], message: null, user_id: null };
   let signingOut = false;
   const listeners = new Set();
   const set = (patch) => {
@@ -52,7 +53,7 @@ export function createAccount({ client, returnUrl }) {
   };
   const snapshot = () => ({ ...state, providers: [...state.providers], email_masked: maskEmail(state.email) });
   const fromUser = (user) => ({ status: "signed_in", email: user?.email || null, providers: [...(user?.app_metadata?.providers || [])], user_id: user?.id || null });
-  const ready = () => state.status !== "unavailable";
+  const ready = () => state.status !== "unavailable" && !!client;
   /** 같은 버튼을 두 번 눌러도 요청은 하나(중복 요청 차단) */
   async function run(fn) {
     if (!ready()) return { ok: false, key: "unavailable" };

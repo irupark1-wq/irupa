@@ -1,7 +1,7 @@
 // 동그란 사이 전용 Supabase 연결(프로젝트 yvsqivhdwzbshpapfcsy). 다른 프로젝트 주소·키를 넣지 않는다.
 // publishable 키는 브라우저용 공개 키다(비밀 아님). service_role 키는 절대 넣지 않는다.
 export const GAME1_SUPABASE_URL = "https://yvsqivhdwzbshpapfcsy.supabase.co";
-export const GAME1_SUPABASE_PUBLISHABLE_KEY = ""; // 김PO 제공 대기(Project Settings → API Keys → Publishable key)
+export const GAME1_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_iOqbNcQvm0PxvenZsVdGjA_D3DkMIeM"; // 공개용(브라우저) 키, 김PO 제공 2026-10-13. 비밀 키 아님
 const LIB = "./vendor/supabase-js-2.117.2.js";
 
 /** SB-0003 에 등록한 정확한 복귀 주소만 쓴다. 그 밖의 주소(미리보기 등)에서는 로그인을 열지 않는다. */
