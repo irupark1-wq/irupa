@@ -27,14 +27,36 @@ const pic = (src, className) => {
 const LOG_ICON = { move: "i-steps", completed: "i-check", declined: "i-x", blocked: "i-block", accepted: "i-chat", cancelled: "i-refresh", limited: "i-eye-off", activity: "i-sparkle" };
 const AXIS_NAMES = { fairness_sensitivity: T("공정성 민감도"), closeness_orientation: T("친밀 지향"), risk_aversion: T("위험 회피") };
 const TOPIC = { conversation: T("이야기를 나눴어요"), help: T("도움을 주고받았어요"), credit_attribution: T("공로를 확인했어요") };
-/* 방향별 배경과 그 안에서 12×8 바닥이 차지하는 비율(디자이너 회신 v1.3 의 규격).
-   파일이 아직 없으면 temp(기존 가로 그림)로 자동 대체한다. 배경을 바꾸면 여기만 맞춘다. */
+/* 방향별 빈 방 배경과 12×8 이동 바닥 사각형(DES-04 asset-manifest 의 walkableFloorRect, 픽셀 → 비율).
+   가구는 그림에 없고 칸 위에 따로 놓는다. 파일이 없으면 temp(기존 그림)로 대체한다. */
+const floorRect = (iw, ih, x, y, w, h) => ({ x: x / iw, y: y / ih, w: w / iw, h: h / ih });
 const BACKGROUNDS = {
-  portrait: { src: "./assets/background/room-portrait.png", floor: { x: 0.06, y: 0.3, w: 0.88, h: 0.46 } },
-  landscape: { src: "./assets/background/room-landscape.png", floor: { x: 0.06, y: 0.34, w: 0.66, h: 0.44 } },
+  portrait: { src: "./assets/background/room-portrait-empty.png", floor: floorRect(941, 1672, 140, 660, 660, 840) },
+  landscape: { src: "./assets/background/room-landscape-empty.png", floor: floorRect(1672, 941, 138, 560, 1392, 304) },
   temp: { src: "./assets/game1-cozy-room-v1.png", floor: { x: 0.07, y: 0.38, w: 0.86, h: 0.55 } },
 };
 
+/* 가구 조각: 160×192 로 자른 사본, 바닥 접점 앵커 (80,180), 명목 바닥폭 138px (DES-04 D2) */
+const FURNITURE = { w: 160, h: 192, ax: 80, ay: 180, foot: 138 };
+/* PO-14 §4 안내 문구. 키 = layout.js 판정 이유 */
+const LAYOUT_TEXT = {
+  ok: T("여기에 놓을 수 있어요."),
+  remove: T("이 장애물을 치울 수 있어요."),
+  same: T("지금 있는 자리예요."),
+  out_of_bounds: T("방 안에 놓아 주세요."),
+  overlap: T("여기는 다른 물건이 있어요. 다른 칸을 골라 주세요."),
+  pawn_cell: T("폰이 있는 칸이에요. 다른 칸을 골라 주세요."),
+  path_blocked: T("길이 막혀요. 폰이 지나갈 칸을 남겨 주세요."),
+  wall_limit: T("장애물은 30칸까지 놓을 수 있어요. 다른 장애물을 먼저 지워 주세요."),
+  place_closed: T("이 장소는 지금 닫혀 있어요."),
+  not_owner: T("이 월드는 주인만 배치를 바꿀 수 있어요."),
+  save_failed: T("배치를 저장하지 못했어요. 다시 시도하거나 취소해 주세요."),
+  version_conflict: T("배치가 다른 곳에서 바뀌었어요. 최신 배치를 확인해 주세요."),
+};
+const LAYOUT_ICON = { ok: "place-ok", remove: "place-ok", same: "place-ok", out_of_bounds: "place-overlap", overlap: "place-overlap", pawn_cell: "place-overlap", path_blocked: "place-blocked", wall_limit: "place-blocked" };
+/* 로컬 시험용 시점: ?viewer=visitor 이면 방문자 시점(A1-11). 온라인 권한 검증이 아니다. */
+const VIEWER = new URLSearchParams(location.search).get("viewer") === "visitor" ? "local-visitor-owner" : "local-owner";
+const DRAFT_KEY = "game1-layout-draft";
 const node = (tag, className, text) => {
   const e = document.createElement(tag);
   if (className) e.className = className;
@@ -72,10 +94,13 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     rendering = false,
     faulted = false,
     layout = false,
-    wallMode = false,
+    tool = null, // 'game1-rest' | 'game1-work' | 'game1-social' | 'wall'
+    draft = null, // 확정 전 미리보기 {tool,x,y,version,verdict,error}
+    hover = null,
     tab = "now",
     showAllLogs = false,
     detailOpen = !isMobile();
+  let lastReserve = "";
   const cache = new Map(),
     previousPositions = new Map();
   let lastSeq = null;
@@ -133,36 +158,48 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       return; // load/error 뒤에 다시 들어온다
     }
     if (!art.complete || !art.naturalWidth) return;
-    const iw = art.naturalWidth || 1536,
-      ih = art.naturalHeight || 1024;
+    const iw = art.naturalWidth,
+      ih = art.naturalHeight;
     art.style.width = iw + "px";
     art.style.height = ih + "px";
-    const topRoom = 64,
-      bottomRoom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--dock-h")) + 40;
-    const availH = Math.max(120, H - topRoom - bottomRoom);
-    // 바닥이 가로로 들어가고, 세로로는 HUD·독 사이에 들어가는 가장 큰 배율
-    let scale;
-    if (key === "temp") {
-      scale = Math.min((W * 0.98) / (FLOOR.w * iw), availH / (FLOOR.h * ih));
-      scale = Math.max(scale, Math.min(W / iw, H / ih));
-      if (FLOOR.w * iw * scale > W) scale = (W * 0.98) / (FLOOR.w * iw);
-    } else scale = Math.max(W / iw, H / ih); // 디자이너 배경은 무대와 같은 비율이라 그대로 덮는다
+    /* 바닥 12×8 전체가 HUD 와 독(배치 중이면 트레이) 사이에 들어오는 가장 큰 배율.
+       바닥이 잘리지 않는 것이 먼저, 배경이 화면을 덮는 것은 그다음이다. */
+    const dock = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--dock-h")) || 96,
+      hudTop = 64;
+    let right = 0,
+      bottom = dock + 28;
+    // 배치 트레이·폰 상세 패널이 떠 있으면 그 자리를 비켜서 바닥 전체가 보이게 한다
+    for (const panel of [$("arrangePanel"), $("pawnDetails")]) {
+      if (panel.hidden || !panel.offsetParent) continue;
+      if (panel.offsetWidth < W * 0.6) right = Math.max(right, W - panel.offsetLeft + 8);
+      else bottom = Math.max(bottom, H - panel.offsetTop + 8);
+    }
+    const availW = Math.max(120, W - right - 16),
+      availH = Math.max(120, H - hudTop - bottom),
+      scale = Math.min(availW / (FLOOR.w * iw), availH / (FLOOR.h * ih), 1.25);
     const imgW = iw * scale,
-      imgH = ih * scale;
-    let left = W / 2 - (FLOOR.x + FLOOR.w / 2) * imgW;
-    let top = topRoom + availH / 2 - (FLOOR.y + FLOOR.h / 2) * imgH;
-    if (imgW >= W) left = Math.min(0, Math.max(W - imgW, left));
-    else left = (W - imgW) / 2;
-    if (imgH >= H) top = Math.min(0, Math.max(H - imgH, top));
-    else top = H - imgH > H * 0.35 ? topRoom + 6 : topRoom + (availH - imgH) / 2;
-    scene.classList.toggle("diorama", imgH < H - 40 || imgW < W - 40);
+      imgH = ih * scale,
+      clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+    let left = (W - right) / 2 - (FLOOR.x + FLOOR.w / 2) * imgW;
+    if (imgW >= W) left = clamp(left, W - imgW, 0);
+    left = clamp(left, 8 - FLOOR.x * imgW, W - right - 8 - (FLOOR.x + FLOOR.w) * imgW);
+    const top = clamp(0, hudTop - FLOOR.y * imgH, H - bottom - (FLOOR.y + FLOOR.h) * imgH);
+    scene.classList.toggle("diorama", imgW < W - 40 || top > 4 || top + imgH < H - dock);
     art.style.transform = "translate(" + left + "px," + top + "px) scale(" + scale + ")";
     stage.style.left = left + FLOOR.x * imgW + "px";
     stage.style.top = top + FLOOR.y * imgH + "px";
     stage.style.width = FLOOR.w * imgW + "px";
     stage.style.height = FLOOR.h * imgH + "px";
-    const cell = (FLOOR.w * imgW) / GRID.width;
-    stage.style.setProperty("--pawn", Math.round(Math.max(60, Math.min(132, cell * 1.8))) + "px");
+    // 폰 크기: 칸 너비의 1.8배, 단 행 높이의 3.2배를 넘지 않게(납작한 가로 바닥에서 위 행 폰이 HUD 를 덮지 않게). 48~132px
+    const cell = (FLOOR.w * imgW) / GRID.width,
+      row = (FLOOR.h * imgH) / GRID.height,
+      pawn = Math.round(Math.max(48, Math.min(132, cell * 1.8, row * 3.2)));
+    stage.style.setProperty("--pawn", pawn + "px");
+    // 가구 표시 배율: 바닥폭 138px 을 칸 너비에 맞추되, 폰보다 지나치게 작아지지 않게(충돌은 1칸 그대로)
+    stage.style.setProperty("--fs", (Math.max(cell, pawn * 0.8) / FURNITURE.foot).toFixed(4));
+    stage.dataset.cell = cell.toFixed(1);
+    stage.dataset.row = row.toFixed(1);
+    stage.classList.toggle("compact", row < 24);
     previousPositions.clear();
   }
   new ResizeObserver(frameScene).observe(scene);
@@ -255,9 +292,117 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
   const actorName = (s, id) => T(allOf(s).find((p) => p.id === id)?.name || T("폰"));
   const modeOf = (a) => MODE[a?.mode] || MODE.idle;
 
+  /* 최근 6tick 안의 거절(대상 폰 쪽)·길막(이동하던 폰 쪽)을 말풍선으로. 관계 효과와 무관한 표시다. */
+  const SIGN_TEXT = { declined: T("지금은 혼자 있고 싶어요"), blocked: T("길이 막혔어요") };
+  function recentSign(life, id) {
+    for (let i = life.logs.length - 1; i >= 0; i--) {
+      const l = life.logs[i];
+      if (life.tick - l.tick > 6) break;
+      if (l.kind === "declined" && l.target === id) return "declined";
+      if (l.kind === "blocked" && l.actor === id) return "blocked";
+    }
+    return null;
+  }
+
+  /* ───────── 공간: 가구·장애물·배치 미리보기 (A1) ───────── */
+  const cellPos = (el, x, y) => {
+    el.style.left = ((x + 0.5) / GRID.width) * 100 + "%";
+    el.style.top = ((y + 0.5) / GRID.height) * 100 + "%";
+    el.style.zIndex = 4 + y; // 앵커(바닥 접점) y 로 가림 순서
+  };
+  const furnitureArt = (kind, cls = "") => pic(A + "furniture/stage-" + kind + ".png", "stage-art " + cls);
+  function unreachablePlaces(life) {
+    const standing = Object.values(life.actors);
+    if (!standing.length) return new Set();
+    return new Set(isolatedOf(life, standing));
+  }
+  function isolatedOf(life, standing) {
+    const walls = new Set(life.walls.map((w) => w.x + "," + w.y)),
+      seen = new Set([standing[0].x + "," + standing[0].y]),
+      queue = [standing[0]];
+    while (queue.length) {
+      const p = queue.shift();
+      for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+        const n = { x: p.x + dx, y: p.y + dy },
+          k = n.x + "," + n.y;
+        if (n.x < 0 || n.y < 0 || n.x >= GRID.width || n.y >= GRID.height || walls.has(k) || seen.has(k)) continue;
+        seen.add(k);
+        queue.push(n);
+      }
+    }
+    return life.places.filter((p) => !p.blocked && !seen.has(p.x + "," + p.y)).map((p) => p.id);
+  }
+  function renderSpace(life) {
+    const root = $("lifePlaces");
+    root.replaceChildren();
+    const moving = draft && draft.tool !== "wall" ? draft.tool : null,
+      isolated = unreachablePlaces(life);
+    for (const p of life.places) {
+      const b = node("button", "life-place " + p.kind + (p.blocked ? " blocked" : "") + (layout && tool === p.id ? " selected" : "") + (moving === p.id && draft.verdict?.ok && draft.verdict.action === "move" ? " moving-from" : ""));
+      b.type = "button";
+      b.append(furnitureArt(p.kind), node("span", "label", T(p.label)));
+      if (p.blocked) b.append(node("span", "state-chip", T("닫힘")));
+      else if (isolated.has(p.id)) {
+        const chip = node("span", "state-chip blocked");
+        chip.append(pic(A + "ui/icon/place-blocked.png"), node("span", "", T("길 막힘")));
+        b.append(chip);
+      }
+      cellPos(b, p.x, p.y);
+      b.title = T(p.label) + (p.blocked ? " · " + LAYOUT_TEXT.place_closed : isolated.has(p.id) ? " · " + T("길 막힘") : "");
+      b.setAttribute("aria-label", b.title);
+      b.onclick = () => {
+        if (!layout) return startLayout(p.id);
+        chooseTool(p.id);
+      };
+      root.append(b);
+    }
+    for (const w of life.walls) {
+      const removing = draft?.tool === "wall" && draft.verdict?.action === "remove_wall" && draft.x === w.x && draft.y === w.y;
+      const b = node("button", "life-wall" + (removing ? " removing" : ""));
+      b.type = "button";
+      b.append(furnitureArt("wall"));
+      b.setAttribute("aria-label", T("장애물 ") + w.x + "," + w.y);
+      cellPos(b, w.x, w.y);
+      b.onclick = () => {
+        if (!layout) return;
+        tool = "wall";
+        previewAt("wall", w.x, w.y, true);
+      };
+      root.append(b);
+    }
+    const show = draft || (hover && tool ? { tool, ...hover, verdict: store.previewLayout(editOf(tool, hover.x, hover.y)) } : null);
+    if (!layout || !show) return;
+    const v = show.verdict,
+      state = show.error ? show.error : v.ok ? (v.action === "remove_wall" ? "remove" : v.action === "same" ? "same" : "ok") : v.reason,
+      good = !show.error && v.ok;
+    const outline = node("i", "cell-preview " + (good ? "ok" : "bad"));
+    cellPos(outline, show.x, show.y);
+    outline.style.zIndex = 30;
+    root.append(outline);
+    if (show.tool !== "wall" && good && v.action === "move") {
+      const ghost = node("span", "life-place ghost");
+      ghost.append(furnitureArt(life.places.find((p) => p.id === show.tool).kind));
+      cellPos(ghost, show.x, show.y);
+      root.append(ghost);
+    } else if (show.tool === "wall" && good && v.action === "add_wall") {
+      const ghost = node("span", "life-wall ghost");
+      ghost.append(furnitureArt("wall"));
+      cellPos(ghost, show.x, show.y);
+      root.append(ghost);
+    }
+    const badge = pic(A + "ui/icon/" + (LAYOUT_ICON[state] || "place-blocked") + ".png", "cell-badge");
+    cellPos(badge, show.x, show.y);
+    badge.style.zIndex = 31;
+    root.append(badge);
+  }
+
   /* ───────── 장면 ───────── */
+  let rerender = false;
   async function render() {
-    if (rendering) return;
+    if (rendering) {
+      rerender = true; // 그리는 도중 들어온 요청은 버리지 않고 끝난 뒤 한 번 더 그린다
+      return;
+    }
     rendering = true;
     try {
       const state = store.read(),
@@ -289,52 +434,11 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       pause.setAttribute("aria-label", life.paused ? T("생활 재개") : T("일시정지"));
       pause.title = life.paused ? T("생활 재개") : T("일시정지");
       stage.classList.toggle("placing", layout);
-      $("arrangeLegend").hidden = !layout;
+      stage.classList.toggle("tool", layout && !!tool);
       $("arrangePanel").hidden = !layout;
       $("arrangeLife").classList.toggle("on", layout);
-
-      $("lifePlaces").replaceChildren();
-      for (const p of life.places) {
-        const b = node("button", "life-place " + p.kind + (p.blocked ? " blocked" : "") + (layout && $("placeSelect").value === p.id ? " selected" : ""));
-        b.type = "button";
-        b.append(pic(A + "furniture/" + p.kind + ".png", "mat"), node("span", "label", T(p.label)));
-        b.style.left = ((p.x + 0.5) / GRID.width) * 100 + "%";
-        b.style.top = ((p.y + 0.5) / GRID.height) * 100 + "%";
-        b.title = T(p.label) + (p.blocked ? T(T(" · 잠시 닫힘")) : "");
-        b.onclick = () => {
-          $("placeSelect").value = p.id;
-          updatePlaceControls();
-          if (!layout) toggleLayout(true);
-          else render();
-        };
-        $("lifePlaces").append(b);
-      }
-      for (const w of life.walls) {
-        const b = node("button", "life-wall");
-        b.type = "button";
-        b.append(pic(A + "furniture/wall.png"));
-        b.setAttribute("aria-label", T("장애물 ") + w.x + "," + w.y);
-        b.style.left = ((w.x + 0.5) / GRID.width) * 100 + "%";
-        b.style.top = ((w.y + 0.5) / GRID.height) * 100 + "%";
-        b.onclick = () => {
-          if (layout) {
-            store.wall(crypto.randomUUID(), w.x, w.y);
-            render();
-          }
-        };
-        $("lifePlaces").append(b);
-      }
-      if (layout) {
-        const occupied = new Set([...life.places.map((p) => p.x + "," + p.y), ...life.walls.map((w) => w.x + "," + w.y), ...Object.values(life.actors).map((a) => a.x + "," + a.y)]);
-        for (const key of occupied) {
-          const [x, y] = key.split(",").map(Number);
-          const h = node("i", "cell-hint no");
-          h.style.left = ((x + 0.5) / GRID.width) * 100 + "%";
-          h.style.top = ((y + 0.5) / GRID.height) * 100 + "%";
-          $("lifePlaces").append(h);
-        }
-      }
-
+      pause.disabled = layout;
+      renderSpace(life);
       $("lifeActors").replaceChildren();
       for (const p of all) {
         const a = life.actors[p.id] || { x: 3 + state.pawns.indexOf(p) * 2, y: 6, mode: "idle" },
@@ -344,12 +448,16 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
         b.dataset.id = p.id;
         b.style.left = ((a.x + 0.5) / GRID.width) * 100 + "%";
         b.style.top = ((a.y + 0.5) / GRID.height) * 100 + "%";
-        b.style.zIndex = 4 + a.y;
+        // 가구 칸에서 활동 중이면 가구 바로 뒤(한 단계 낮은 z)로, 조금 위로 올려 가구가 보이게 한다
+        const atPlace = life.places.some((q) => q.x === a.x && q.y === a.y);
+        b.classList.toggle("at-place", atPlace);
+        b.style.zIndex = atPlace ? 3 + a.y : 4 + a.y;
         const c = node("canvas");
         c.width = c.height = 160;
         paint(c, art.imgs, art.transforms);
-        const bubble = pic(A + "bubbles/" + (BUBBLE_KEY[a.mode] || (MODE[a.mode] ? a.mode : "idle")) + ".png", "bubble " + a.mode);
-        bubble.title = modeOf(a).text;
+        const recent = a.mode === "idle" ? recentSign(life, p.id) : null;
+        const bubble = pic(A + "bubbles/" + (recent || BUBBLE_KEY[a.mode] || (MODE[a.mode] ? a.mode : "idle")) + ".png", "bubble " + (recent || a.mode));
+        bubble.title = recent ? SIGN_TEXT[recent] : modeOf(a).text;
         b.append(node("span", "say", modeOf(a).text), bubble, c, node("span", "name", T(p.name)));
         b.setAttribute("aria-label", T(p.name) + " · " + modeOf(a).text + T(" · 상세 보기"));
         b.onclick = () => {
@@ -383,12 +491,21 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       }
       spawnEffects(state);
       await renderDetails(state, all);
+      const reserve = $("pawnDetails").hidden + "|" + $("arrangePanel").hidden;
+      if (reserve !== lastReserve) {
+        lastReserve = reserve;
+        frameScene();
+      }
       renderLogs(state);
       await renderChange(state);
       await renderRelationList(state, all);
       await renderVisit(state, all);
     } finally {
       rendering = false;
+      if (rerender) {
+        rerender = false;
+        render();
+      }
     }
   }
 
@@ -739,46 +856,164 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     }
   }
 
-  /* ───────── 조작 ───────── */
+  /* ───────── 배치 조작 (A1 · PO-14 §3): 고르기 → 미리보기 → 놓기/취소 ───────── */
+  const editOf = (t, x, y) => (t === "wall" ? { kind: "wall", x, y } : { kind: "move", id: t, x, y });
+  const reasonOf = (e) => {
+    const m = String(e?.message || "");
+    if (m.startsWith("layout.")) return m.slice(7);
+    if (m === "save.version_conflict") return "version_conflict";
+    return "save_failed";
+  };
+  function saveDraftForReload() {
+    try {
+      if (draft) sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ tool: draft.tool, x: draft.x, y: draft.y }));
+    } catch {}
+  }
+  function startLayout(placeId) {
+    if (VIEWER !== "local-owner") {
+      notify(LAYOUT_TEXT.not_owner);
+      return;
+    }
+    layout = true;
+    if (!store.life().paused) {
+      try {
+        store.lifePause(crypto.randomUUID(), true);
+      } catch {
+        faulted = true;
+      }
+    }
+    notify(T("배치하는 동안 생활을 멈춰요. 끝낸 뒤 ▶ 를 눌러 다시 시작해 주세요."));
+    chooseTool(placeId || null);
+  }
+  function endLayout() {
+    layout = false;
+    tool = null;
+    draft = null;
+    hover = null;
+    render().then(frameScene);
+    notify(T("배치를 마쳤어요. ▶ 를 누르면 생활이 다시 시작돼요."));
+  }
   function toggleLayout(force) {
-    layout = typeof force === "boolean" ? force : !layout;
-    wallMode = false;
-    $("wallMode").checked = false;
-    $("wallTile").classList.remove("on");
-    markTray();
+    const next = typeof force === "boolean" ? force : !layout;
+    if (next && !layout) startLayout();
+    else if (!next && layout) endLayout();
+  }
+  function chooseTool(t) {
+    tool = t;
+    draft = null;
+    hover = null;
+    syncPanel();
+    render().then(frameScene);
+  }
+  function previewAt(t, x, y, pin) {
+    const verdict = store.previewLayout(editOf(t, x, y));
+    if (pin) draft = { tool: t, x, y, version: store.layoutVersion(), verdict, error: null };
+    else hover = { x, y };
+    syncPanel();
     render();
   }
-  function markTray() {
-    document.querySelectorAll("#placeTray [data-place]").forEach((b) => b.classList.toggle("on", !wallMode && b.dataset.place === $("placeSelect").value));
-    $("wallTile").classList.toggle("on", wallMode);
+  function syncPanel() {
+    const life = store.life(),
+      place = life.places.find((p) => p.id === tool);
+    document.querySelectorAll("#placeTray [data-place]").forEach((b) => {
+      b.classList.toggle("on", b.dataset.place === tool);
+      b.setAttribute("aria-pressed", String(b.dataset.place === tool));
+    });
+    $("placeBlockedRow").hidden = !place;
+    if (place) $("placeBlocked").checked = place.blocked;
+    $("arrangeHint").textContent = !tool
+      ? T("옮길 가구나 장애물을 고른 뒤 바닥 칸을 누르세요. 놓기 전에 미리 보여 드려요.")
+      : tool === "wall"
+        ? T("장애물을 놓을 칸이나 치울 장애물을 누르세요.")
+        : T("{name}을(를) 옮길 칸을 누르세요.", { name: T(place.label) }) + (place.blocked ? " " + LAYOUT_TEXT.place_closed : "");
+    const show = draft;
+    $("arrangePreview").hidden = !show;
+    $("previewConfirm").disabled = !show || !!(!show.error && !show.verdict.ok) || show.verdict?.action === "same";
+    $("previewCancel").disabled = !show;
+    $("previewConfirm").querySelector("span").textContent = show?.error === "save_failed" ? T("다시 시도") : show?.error === "version_conflict" ? T("최신 배치 보기") : show?.verdict?.action === "remove_wall" ? T("치우기") : T("여기에 놓기");
+    if (!show) return;
+    const v = show.verdict,
+      state = show.error || (v.ok ? (v.action === "remove_wall" ? "remove" : v.action === "same" ? "same" : "ok") : v.reason);
+    $("previewIcon").src = A + "ui/icon/" + (LAYOUT_ICON[state] || "place-blocked") + ".png";
+    $("previewText").textContent = LAYOUT_TEXT[state] || LAYOUT_TEXT.save_failed;
+    $("arrangePreview").className = "arrange-preview " + (!show.error && v.ok ? "ok" : "bad");
   }
-  function updatePlaceControls() {
-    const p = store.life().places.find((p) => p.id === $("placeSelect").value);
-    $("placeX").value = p.x;
-    $("placeY").value = p.y;
-    $("placeBlocked").checked = p.blocked;
-    markTray();
+  function confirmDraft() {
+    if (!draft) return;
+    if (draft.error === "version_conflict") {
+      saveDraftForReload();
+      location.reload();
+      return;
+    }
+    try {
+      const result = store.applyLayout(draft.commandId || (draft.commandId = crypto.randomUUID()), editOf(draft.tool, draft.x, draft.y), draft.version, VIEWER);
+      draft = null;
+      hover = null;
+      notify(result.action === "remove_wall" ? T("장애물을 치웠어요.") : T("배치를 바꿨어요. 생활을 다시 시작하면 폰들이 새 길을 찾아요."));
+    } catch (e) {
+      const reason = reasonOf(e);
+      if (["save_failed", "version_conflict"].includes(reason)) draft.error = reason;
+      else {
+        // 그사이 상태가 바뀌어 판정이 달라졌다: 최신 판정으로 다시 보여 준다(저장은 하지 않았다)
+        draft.verdict = store.previewLayout(editOf(draft.tool, draft.x, draft.y));
+        draft.version = store.layoutVersion();
+        draft.commandId = null;
+        if (reason === "not_owner") notify(LAYOUT_TEXT.not_owner);
+      }
+    }
+    syncPanel();
+    render();
   }
-  document.querySelectorAll("#placeTray [data-place]").forEach((b) => {
-    b.onclick = () => {
-      $("placeSelect").value = b.dataset.place;
-      wallMode = false;
-      $("wallMode").checked = false;
-      updatePlaceControls();
-      render();
+  document.querySelectorAll("#placeTray [data-place]").forEach((b) => (b.onclick = () => chooseTool(tool === b.dataset.place ? null : b.dataset.place)));
+  $("previewConfirm").onclick = confirmDraft;
+  $("previewCancel").onclick = () => {
+    draft = null;
+    syncPanel();
+    render();
+  };
+  $("placeApply").onclick = () => {
+    if (!tool) return notify(T("먼저 옮길 가구나 장애물을 골라 주세요."));
+    previewAt(tool, Number($("placeX").value), Number($("placeY").value), true);
+  };
+  $("placeBlocked").onchange = () => {
+    const place = store.life().places.find((p) => p.id === tool);
+    if (!place) return;
+    try {
+      store.applyLayout(crypto.randomUUID(), { kind: "close", id: place.id, blocked: $("placeBlocked").checked }, store.layoutVersion(), VIEWER);
+      notify($("placeBlocked").checked ? LAYOUT_TEXT.place_closed : T("이 장소를 다시 열었어요."));
+    } catch (e) {
+      $("placeBlocked").checked = place.blocked;
+      notify(LAYOUT_TEXT[reasonOf(e)] || LAYOUT_TEXT.save_failed);
+    }
+    syncPanel();
+    render();
+  };
+  $("arrangeDone").onclick = () => endLayout();
+  const cellAt = (e) => {
+    const r = stage.getBoundingClientRect();
+    return {
+      x: Math.floor(((e.clientX - r.left) / r.width) * GRID.width),
+      y: Math.floor(((e.clientY - r.top) / r.height) * GRID.height),
     };
+  };
+  stage.addEventListener("pointermove", (e) => {
+    if (!layout || !tool || draft || e.pointerType !== "mouse") return;
+    const c = cellAt(e);
+    if (hover && hover.x === c.x && hover.y === c.y) return;
+    hover = c;
+    render();
   });
-  $("wallTile").onclick = () => {
-    wallMode = !wallMode;
-    $("wallMode").checked = wallMode;
-    markTray();
-    notify(wallMode ? T("바닥을 누르면 장애물을 놓거나 치워요.") : T("활동 지점을 골라 바닥을 눌러 옮겨요."));
+  stage.addEventListener("pointerleave", () => {
+    if (hover) {
+      hover = null;
+      render();
+    }
+  });
+  stage.onclick = (e) => {
+    if (!layout || !tool) return;
+    const c = cellAt(e);
+    previewAt(tool, c.x, c.y, true);
   };
-  $("wallMode").onchange = () => {
-    wallMode = $("wallMode").checked;
-    markTray();
-  };
-  $("arrangeDone").onclick = () => toggleLayout(false);
   $("pauseLife").onclick = () => {
     try {
       store.lifePause(crypto.randomUUID(), !store.life().paused);
@@ -795,36 +1030,6 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       document.querySelectorAll(".plate-speed [data-speed]").forEach((x) => x.classList.toggle("on", x === b));
     };
   });
-  $("placeSelect").onchange = updatePlaceControls;
-  updatePlaceControls();
-  $("placeApply").onclick = () => {
-    try {
-      store.place(crypto.randomUUID(), $("placeSelect").value, Number($("placeX").value), Number($("placeY").value), $("placeBlocked").checked);
-      notify(T("배치를 저장했어요. 폰이 바뀐 공간에서 새 경로를 찾아요."));
-      render();
-    } catch {
-      notify(T("다른 가구나 장애물과 겹쳐 배치할 수 없어요."));
-    }
-  };
-  $("placeBlocked").onchange = () => $("placeApply").click();
-  stage.onclick = (e) => {
-    if (!layout || e.target.closest("button")) return;
-    const r = stage.getBoundingClientRect(),
-      x = Math.min(GRID.width - 1, Math.max(0, Math.floor(((e.clientX - r.left) / r.width) * GRID.width))),
-      y = Math.min(GRID.height - 1, Math.max(0, Math.floor(((e.clientY - r.top) / r.height) * GRID.height)));
-    if (wallMode) {
-      try {
-        store.wall(crypto.randomUUID(), x, y);
-        render();
-      } catch {
-        notify(T("폰이나 활동 지점이 있는 칸에는 장애물을 둘 수 없어요."));
-      }
-    } else {
-      $("placeX").value = x;
-      $("placeY").value = y;
-      $("placeApply").click();
-    }
-  };
   for (const [id, action] of [["visitEnter", "enter"], ["visitLeave", "leave"], ["visitDisconnect", "disconnect"], ["visitReconnect", "reconnect"]])
     $(id).onclick = () => {
       try {
@@ -860,5 +1065,13 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     }
   });
   window.addEventListener("pagehide", () => clearInterval(timer), { once: true });
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "null");
+    sessionStorage.removeItem(DRAFT_KEY);
+    if (saved && VIEWER === "local-owner") {
+      startLayout(saved.tool);
+      previewAt(saved.tool, saved.x, saved.y, true);
+    }
+  } catch {}
   return { render, renderList, toggleLayout };
 }

@@ -4,6 +4,7 @@ import {deriveAxes,relationshipProjection} from './core/game1-derived.js';
 import {evaluateBasicTags} from './core/game1-tags.js';
 import {createWorkshopTrial,TEST_READY} from './core/game1-workshop.js';
 import {initialLife,advanceLife,validateLife,actorsFor,GRID} from './life.js';
+import {evaluateLayout,releasePlace,standingCells,LAYOUT_OWNER} from './layout.js';
 export const STORE_KEY='game1-local-a-v1';
 const initial=()=>({schema_version:1,version:0,authority:1,pawns:[],events:[],sessions:[],structures:{resources:[],roles:[],commitments:[],conflicts:[]},memories:[],tag_history:{},receipts:{}});
 const position=n=>({authority_stream_id:'game1-local-authority',authority_order_id:n});
@@ -26,7 +27,7 @@ function validateState(state){
 }
 export function createLocalStore(storage){
  const raw=storage.getItem(STORE_KEY);let state=raw?validateState(JSON.parse(raw)):initial();
- const previouslyLiving=!!state.life;state.life??=initialLife();if(previouslyLiving&&state.life.tick>0)state.life.paused=true;
+ const previouslyLiving=!!state.life;state.life??=initialLife();if(previouslyLiving&&state.life.tick>0)state.life.paused=true;state.life.layout_version??=0;
  function commit(commandId,command,change,expected=state.version){
   if(typeof commandId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(commandId))throw Error('command.invalid_id');
   const fingerprint=JSON.stringify(command),old=state.receipts[commandId];if(old){if(old.fingerprint!==fingerprint)throw Error('command.payload_conflict');return structuredClone(old.result);}
@@ -72,8 +73,26 @@ export function createLocalStore(storage){
     return {status:'applied',tick:next.life.tick,completed:completed.length};
    });
   },
-  place(commandId,id,x,y,blocked){if(!Number.isInteger(x)||x<0||x>=GRID.width||!Number.isInteger(y)||y<0||y>=GRID.height||typeof blocked!=='boolean')throw Error('life.invalid_place');return commit(commandId,{kind:'place',id,x,y,blocked},next=>{const p=next.life.places.find(p=>p.id===id);if(!p)throw Error('life.missing_place');if(next.life.places.some(q=>q.id!==id&&q.x===x&&q.y===y)||next.life.walls.some(q=>q.x===x&&q.y===y))throw Error('life.occupied_place');Object.assign(p,{x,y,blocked});return {status:'applied'};});},
-  wall(commandId,x,y){if(!Number.isInteger(x)||x<0||x>=GRID.width||!Number.isInteger(y)||y<0||y>=GRID.height)throw Error('life.invalid_wall');return commit(commandId,{kind:'wall',x,y},next=>{const index=next.life.walls.findIndex(p=>p.x===x&&p.y===y);if(index>=0)next.life.walls.splice(index,1);else{if(next.life.places.some(p=>p.x===x&&p.y===y)||Object.values(next.life.actors).some(p=>p.x===x&&p.y===y)||next.life.walls.length>=30)throw Error('life.occupied_wall');next.life.walls.push({x,y});}return {status:'applied'};});},
+  /* A1(PO-14): 배치는 판정(layout.js) 통과 + 배치 버전 일치 + 월드 주인일 때만 한 commit 으로 반영한다.
+     실패하면 저장본은 그대로이고, 화면은 미리보기 초안을 보존한다. */
+  layoutVersion:()=>state.life.layout_version||0,
+  previewLayout(edit){return evaluateLayout(state.life,edit,standingCells(state));},
+  applyLayout(commandId,edit,expectedLayout,viewer=LAYOUT_OWNER){
+   if(!edit||!['move','wall','close'].includes(edit.kind))throw Error('layout.out_of_bounds');
+   return commit(commandId,{kind:'layout',edit,expectedLayout,viewer},next=>{
+    if(viewer!==LAYOUT_OWNER)throw Error('layout.not_owner');
+    const current=next.life.layout_version||0;if(expectedLayout!==current)throw Error('layout.version_conflict');
+    const verdict=evaluateLayout(next.life,edit,standingCells(next));if(!verdict.ok)throw Error('layout.'+verdict.reason);
+    next.life.places=structuredClone(verdict.places);next.life.walls=structuredClone(verdict.walls);
+    const stopped=edit.kind==='move'&&verdict.action==='move'?releasePlace(next.life,edit.id,false):edit.kind==='close'&&edit.blocked?releasePlace(next.life,edit.id,true):[];
+    for(const id of stopped){next.life.logs.push({id:'life-log-'+(++next.life.sequence),tick:next.life.tick,actor:id,target:null,text:'장소가 바뀌어 하던 일을 멈췄어요',kind:'cancelled'});next.life.logs=next.life.logs.slice(-120);}
+    next.life.layout_version=current+1;
+    return {status:'applied',action:verdict.action,layout_version:next.life.layout_version,stopped};
+   });
+  },
+  // 이전 호출 형태 유지(테스트·좌표 입력). 같은 판정을 거친다.
+  place(commandId,id,x,y,blocked){if(!Number.isInteger(x)||x<0||x>=GRID.width||!Number.isInteger(y)||y<0||y>=GRID.height||typeof blocked!=='boolean')throw Error('life.invalid_place');const place=state.life.places.find(p=>p.id===id);if(!place)throw Error('life.missing_place');let result=null;if(place.x!==x||place.y!==y)result=this.applyLayout(commandId+'-move',{kind:'move',id,x,y},this.layoutVersion());if(place.blocked!==blocked)result=this.applyLayout(commandId+'-close',{kind:'close',id,blocked},this.layoutVersion());return result||{status:'applied',action:'same'};},
+  wall(commandId,x,y){if(!Number.isInteger(x)||x<0||x>=GRID.width||!Number.isInteger(y)||y<0||y>=GRID.height)throw Error('life.invalid_wall');return this.applyLayout(commandId,{kind:'wall',x,y},this.layoutVersion());},
   visit(commandId,action){if(!['enter','leave','disconnect','reconnect'].includes(action))throw Error('visit.invalid_action');return commit(commandId,{kind:'local-visit',action},next=>{
    if(action==='enter'){if(!next.life.host_access||!next.life.owner_scopes.activity_participation||!next.life.owner_scopes.light_auto_events)throw Error('visit.owner_scope_denied');if(next.life.guest?.present)throw Error('visit.already_present');next.life.guest??={id:'game1-local-visitor',name:'루미',owner:'local-visitor-owner',local_double:true,trait:snapshot(1,{fairness_sensitivity:'medium',closeness_orientation:'high',risk_aversion:'low'},position(++next.authority))};next.life.guest.present=true;next.life.guest.connected=true;next.life.actors[next.life.guest.id]={x:0,y:6,tired:15,social:85,activity:45,mode:'idle',goal:null,until:0,cooldown:0,reason:'방문한 공간을 둘러봐요',last_place:null};}
    else{if(!next.life.guest?.present)throw Error('visit.not_present');if(action==='leave'){next.life.guest.present=false;delete next.life.actors[next.life.guest.id];}else next.life.guest.connected=action==='reconnect';}

@@ -1,0 +1,21 @@
+✔ A1-01 initial layout: three open places reachable, pawns on free floor, no overlap (3.7961ms)
+✔ A1-02 preview then cancel leaves layout, save, relations and memories unchanged (27.5118ms)
+✔ A1-03 moving the workbench applies the new route, stops work at the old spot without a completed event (12.7875ms)
+✔ A1-04 out of bounds, overlap and pawn cell are rejected with reasons and the save is unchanged (3.1361ms)
+✔ A1-05 a wall that closes the passage is rejected; a wall that leaves a detour is accepted and changes the route (3.9905ms)
+✔ A1-05b trapping a pawn or isolating an open place is rejected; a pawn standing in a gap is not a wall (3.9176ms)
+✔ A1-06 closing a place stops the activity there without completion or penalty; reopening restores it (21.5817ms)
+✔ A1-07 wall count matches collisions, the 31st wall is rejected, removal restores the route (10.323ms)
+✔ A1-08 storage failure keeps the original, retry applies once; stale layout version is a conflict, never an overwrite (1.3327ms)
+✔ A1-09 saved layout restores after reopening, paused, without replaying events (10.4241ms)
+✔ A1-11 a non-owner cannot change the layout through the state function (0.6168ms)
+✔ layout evaluator is pure and old saves without layout_version still load (0.928ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 175.2488
+v24.19.0

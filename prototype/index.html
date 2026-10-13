@@ -88,37 +88,39 @@
       </div>
     </div>
 
-    <!-- 배치 모드 범례 -->
-    <div class="legend" id="arrangeLegend" hidden>
-      <span><i class="sw ok"></i>배치 가능</span><span><i class="sw no"></i>막힘</span><span><i class="sw spot"></i>활동 지점</span><span><i class="sw sel"></i>선택 중</span>
-    </div>
 
     <!-- 폰 상세 패널 (데스크톱: 오른쪽 떠 있는 패널 / 모바일: 바텀시트) -->
     <aside id="pawnDetails" class="panel detail-panel" hidden></aside>
 
-    <!-- 배치 트레이 -->
+    <!-- 배치 트레이 (A1 · PO-14): 고르기 → 미리보기 → 놓기/취소 -->
     <div id="arrangePanel" class="panel tray-panel" hidden>
       <div class="panel-head">
         <h3><svg><use href="#i-chair"/></svg>가구 배치 <small>12×8</small></h3>
         <button id="arrangeDone" class="gbtn gbtn-sm gbtn-blue" type="button"><svg><use href="#i-check"/></svg>끝내기</button>
       </div>
-      <p class="hint">활동 지점을 고른 뒤 바닥을 누르면 그 칸으로 옮겨요.</p>
+      <p class="hint" id="arrangeHint">옮길 가구나 장애물을 고른 뒤 바닥 칸을 누르세요. 놓기 전에 미리 보여 드려요.</p>
       <div class="tray" id="placeTray">
-        <button type="button" class="tile" data-place="game1-rest"><img class="" src="./assets/furniture/rest.png" alt="" draggable="false"><span>쉼터</span></button>
-        <button type="button" class="tile" data-place="game1-work"><img class="" src="./assets/furniture/work.png" alt="" draggable="false"><span>작업대</span></button>
-        <button type="button" class="tile" data-place="game1-social"><img class="" src="./assets/furniture/social.png" alt="" draggable="false"><span>이야기 자리</span></button>
-        <button type="button" class="tile" id="wallTile"><img class="" src="./assets/furniture/wall.png" alt="" draggable="false"><span>장애물</span></button>
+        <button type="button" class="tile" data-place="game1-rest"><img src="./assets/furniture/stage-rest.png" alt="" draggable="false"><span>쉼터</span></button>
+        <button type="button" class="tile" data-place="game1-work"><img src="./assets/furniture/stage-work.png" alt="" draggable="false"><span>작업대</span></button>
+        <button type="button" class="tile" data-place="game1-social"><img src="./assets/furniture/stage-social.png" alt="" draggable="false"><span>이야기 자리</span></button>
+        <button type="button" class="tile" id="wallTile" data-place="wall"><img src="./assets/furniture/stage-wall.png" alt="" draggable="false"><span>장애물</span></button>
       </div>
-      <div class="arrange-fields">
-        <label class="sr-only">활동 지점<select id="placeSelect">
-          <option value="game1-rest">쉼터</option><option value="game1-work">작업대</option><option value="game1-social">이야기 자리</option>
-        </select></label>
+      <div id="arrangePreview" class="arrange-preview" role="status" aria-live="polite" hidden>
+        <img id="previewIcon" src="./assets/ui/icon/place-ok.png" alt="" draggable="false">
+        <span id="previewText"></span>
+      </div>
+      <div class="arrange-actions">
+        <button id="previewConfirm" class="gbtn gbtn-sm gbtn-blue" type="button" disabled><svg><use href="#i-check"/></svg><span>여기에 놓기</span></button>
+        <button id="previewCancel" class="gbtn gbtn-sm" type="button" disabled>취소</button>
+        <label class="check" id="placeBlockedRow"><input id="placeBlocked" type="checkbox">이 장소 잠시 닫기</label>
+      </div>
+      <details class="arrange-fields">
+        <summary>칸 번호로 고르기</summary>
         <label>가로 <input id="placeX" type="number" min="0" max="11" value="2"></label>
         <label>세로 <input id="placeY" type="number" min="0" max="7" value="2"></label>
-        <label class="check"><input id="placeBlocked" type="checkbox">잠시 닫기</label>
-        <label class="check"><input id="wallMode" type="checkbox">장애물 모드</label>
-        <button id="placeApply" class="gbtn gbtn-sm" type="button">좌표로 저장</button>
-      </div>
+        <button id="placeApply" class="gbtn gbtn-sm" type="button">미리 보기</button>
+      </details>
+      <p class="hint small">배치하는 동안 생활을 멈춰요. 끝낸 뒤 ▶ 를 눌러 다시 시작해 주세요.</p>
     </div>
 
     <!-- 하단 독 -->

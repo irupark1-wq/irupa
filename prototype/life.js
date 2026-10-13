@@ -5,7 +5,7 @@ export const DEFAULT_PLACES=[
  {id:'game1-work',kind:'work',label:'함께 만드는 작업대',x:9,y:2,blocked:false},
  {id:'game1-social',kind:'social',label:'이야기 자리',x:6,y:5,blocked:false},
 ];
-export function initialLife(){return {schema:1,epoch:'game1-life-a1',seed:'game1-auto-v06-seed-a',definition_version:'game1-life-test-v06',tick:0,paused:false,host_access:true,owner_scopes:{activity_participation:true,light_auto_events:true,role_commitment:false,public_relation_declaration:false,major_transition:false},places:structuredClone(DEFAULT_PLACES),walls:[],actors:{},guest:null,logs:[],trace:[],cooldowns:{},effects:{},sequence:0};}
+export function initialLife(){return {schema:1,epoch:'game1-life-a1',seed:'game1-auto-v06-seed-a',definition_version:'game1-life-test-v06',tick:0,paused:false,host_access:true,owner_scopes:{activity_participation:true,light_auto_events:true,role_commitment:false,public_relation_declaration:false,major_transition:false},places:structuredClone(DEFAULT_PLACES),walls:[],actors:{},guest:null,logs:[],trace:[],cooldowns:{},effects:{},sequence:0,layout_version:0};}
 const cell=p=>p.x+','+p.y;
 const distance=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
 const clamp=n=>Math.max(0,Math.min(100,n));
@@ -13,6 +13,7 @@ const level=n=>n==='high'?1:n==='low'?-1:0;
 export function actorState(index){return {x:3+index*2,y:6,tired:12+index*10,social:50+index*7,activity:55-index*8,mode:'idle',goal:null,until:0,cooldown:0,reason:'살펴보는 중',last_place:null};}
 export function actorsFor(state){return [...state.pawns,...(state.life?.guest?.present&&state.life.guest.connected&&state.life.host_access&&state.life.owner_scopes.activity_participation&&state.life.owner_scopes.light_auto_events?[state.life.guest]:[])];}
 export function validateLife(life){
+ if(life?.layout_version!==undefined&&(!Number.isSafeInteger(life.layout_version)||life.layout_version<0))throw Error('life.invalid_state');
  if(typeof life?.host_access!=='boolean'||!life.owner_scopes||['activity_participation','light_auto_events','role_commitment','public_relation_declaration','major_transition'].some(k=>typeof life.owner_scopes[k]!=='boolean')||typeof life.seed!=='string'||life.seed.length>128||!Array.isArray(life.trace)||life.trace.length>80||!Number.isSafeInteger(life.sequence)||life.sequence<0)throw Error('life.invalid_state');
  if(!life||life.schema!==1||life.epoch!=='game1-life-a1'||!Number.isSafeInteger(life.tick)||life.tick<0||typeof life.paused!=='boolean'||!Array.isArray(life.places)||life.places.length!==3||!Array.isArray(life.walls)||life.walls.length>30||!Array.isArray(life.logs)||life.logs.length>120)throw Error('life.invalid_state');
  const inside=p=>Number.isInteger(p.x)&&p.x>=0&&p.x<GRID.width&&Number.isInteger(p.y)&&p.y>=0&&p.y<GRID.height;

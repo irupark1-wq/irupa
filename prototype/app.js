@@ -18,7 +18,23 @@ const say = (text) => {
 let lifeUI = null;
 let store;
 try {
-  store = createLocalStore(localStorage);
+  /* 시험용(A1-08): 주소에 ?debug=1 이 있을 때만 다음 저장 1회를 일부러 실패시킬 수 있다. 평소에는 localStorage 그대로. */
+  let failNextSave = false;
+  const debug = new URLSearchParams(location.search).get("debug") === "1";
+  const storage = debug
+    ? {
+        getItem: (k) => localStorage.getItem(k),
+        setItem: (k, v) => {
+          if (failNextSave) {
+            failNextSave = false;
+            throw Error("debug.injected_save_failure");
+          }
+          localStorage.setItem(k, v);
+        },
+      }
+    : localStorage;
+  if (debug) window.game1Debug = { failNextSave: () => (failNextSave = true) };
+  store = createLocalStore(storage);
 } catch (e) {
   say(T("저장 기록을 읽지 못했습니다. 기존 데이터를 덮어쓰지 않습니다. ") + e.message);
   throw e;
