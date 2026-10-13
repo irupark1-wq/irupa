@@ -211,8 +211,10 @@ export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
     for (const id of busyIds) $(id).disabled = false;
     worldNote = r.ok ? null : r.key === "version_conflict" || r.key === "world_exists" ? "계정 저장 충돌 · 기존 저장본 유지" : "계정 저장 실패 · 이 기기 사본 유지";
     renderWorldLine();
-    say(r.key);
-    if (r.key === "version_conflict" || r.key === "world_exists") {
+    const conflict = r.key === "version_conflict" || r.key === "world_exists";
+    if (conflict) $("authMsg").hidden = true; // 충돌 안내는 아래 선택 칸에 한 번만(같은 문장 두 번 X)
+    else say(r.key);
+    if (conflict) {
       conflictWorld = r.world_id;
       $("worldConflictText").textContent = T(WORLD_MESSAGES[r.key]);
       $("worldUseAccount").hidden = !conflictWorld;
