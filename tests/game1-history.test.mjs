@@ -7,6 +7,7 @@ const AT=40,KEEP=20;configureHistory({foldAt:AT,foldKeep:KEEP});
 test('game defaults: fold above 300 live events down to 150 (two Days of corrections fit easily)',()=>{assert.equal(FOLD_AT,300);assert.equal(FOLD_KEEP,150);});
 import {emptyCredit} from '../prototype/credit.js';
 import {memoryText} from '../prototype/relation-text.js';
+import {t as T} from '../prototype/i18n.js';
 import {DEFAULT_AXES} from '../prototype/core/game1-traits.js';
 const art={layers:{base:'',eyes_pair:'',mouth:'',back_hair:'',front_hair:'',frame_accessory:''},transforms:{}};
 const disk=(init)=>{const m=new Map(init?[[STORE_KEY,init]]:[]);return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,v),m};};
@@ -95,6 +96,6 @@ test('§3-6 corrector unknown: issue, memory and the public card all say "correc
  step(st,140,{kind:'correct',from:C,issue_id:issue.issue_id,action_id:act(140)});st.credit.records[record].corrected_by_visible=false;step(st,150,{kind:'read',from:B,record_id:record,action_id:act(150)});
  assert.equal(issue.state,'resolved_record');assert.equal(issue.corrector_known,false);
  const mem=st.memories.find(m=>m.id===record+'-'+B);assert.equal(mem.resolution,'resolved');assert.equal(mem.corrector_known,false);
- const view=reopen(st).projection(B,C).memory_views.find(v=>v.id===mem.id);assert.match(memoryText(view,()=>'노을').resolution,/누가 고쳤는지는 아직 몰라요/);
+ const view=reopen(st).projection(B,C).memory_views.find(v=>v.id===mem.id);assert.equal(view.resolution,'corrected_by_unknown');assert.equal(memoryText(view,()=>'노을').resolution,T('기록은 고쳐졌어요. 누가 고쳤는지는 아직 몰라요.'),'same sentence in every language (CI runs in English)');
  assert.equal(st.events.some(e=>e.event.event_id==='EVT-09'),false);
 });
