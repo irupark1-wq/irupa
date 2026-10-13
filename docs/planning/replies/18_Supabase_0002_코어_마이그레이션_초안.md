@@ -40,4 +40,4 @@
 
 - 0002 적용: Success. No rows returned.
 - `tests/0002_rls_check.sql`: 31건 전부 pass, fail_total 0. anon 거부·sub 없는 토큰 거부·타인 행 차단·FK·버전 충돌·입력 검증 모두 기대대로.
-- 남은 확인: Advisors → Security 경고 수, Auth 설정(Anonymous sign-ins·Email·Site URL neinom.com). README 4~6단계.
+- 2026-10-13 추가 확인(김PO): Advisors → Security 경고 0건, Anonymous sign-ins 켬, Site URL neinom.com 설정됨. Email provider 는 이메일 연결 구현 전에 재확인.

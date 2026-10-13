@@ -13,7 +13,7 @@
 | `migrations/0002_game1_core.sql` | `game1_profiles`(소유자 1행), `game1_worlds`(월드 저장본 jsonb + 서버 버전), RLS 6정책, 트리거 2개(`game1_private`), 저장 함수 `public.game1_save_world(jsonb, integer)` | **적용됨 2026-10-13** (김PO 가 SQL Editor 에서 실행, "Success. No rows returned") |
 | `tests/0002_rls_check.sql` | 0002 거부·허용 테스트 31건(anon 거부, 타인 행 차단, 버전 충돌, 입력 검증). BEGIN…ROLLBACK 이라 흔적 없음 | **실행 완료 2026-10-13: 31/31 PASS, fail_total 0** |
 
-## 0002 적용 순서 (김PO) — 1~3 완료 2026-10-13, 4~6 남음
+## 0002 적용 순서 (김PO) — 2026-10-13 전부 완료 (Advisors Security 경고 0건, Anonymous sign-ins 켬, Site URL neinom.com 확인. Email provider 는 이메일 연결 기능 구현 전에 재확인)
 
 1. **0001 확인**: 아래 "현재 상태 확인 SQL" 을 실행해 결과에 `schema | game1_private` 행이 있는지 본다. 없으면 `migrations/0001_game1_security_baseline.sql` 을 먼저 실행한다(0002 는 `game1_private` 스키마가 있어야 한다).
 2. **0002 적용**: 대시보드 → SQL Editor → New query → `migrations/0002_game1_core.sql` 전체를 붙여 넣고 Run. 파일 안에 `begin; … commit;` 이 있어서 중간에 실패하면 아무것도 남지 않는다. 성공하면 "Success. No rows returned" 류의 메시지만 나온다.
