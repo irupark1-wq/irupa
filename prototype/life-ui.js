@@ -458,7 +458,8 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     for (let i = life.logs.length - 1; i >= 0; i--) {
       const l = life.logs[i];
       if (life.tick - l.tick > 6) break;
-      if (l.kind === "declined" && l.target === id) return "declined";
+      // DES-10/12: 거절 아이콘(혼자 있고 싶음)은 공개된 사유가 정말 그것일 때만. 다른 거절은 아이콘 없이 대사·일지 글로만 보인다
+      if (l.kind === "declined" && l.target === id && String(l.text).startsWith("잠깐 혼자 있고 싶어요")) return "declined";
       if (l.kind === "blocked" && l.actor === id) return "blocked";
     }
     return null;
