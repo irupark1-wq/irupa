@@ -27,13 +27,13 @@ function validateKnowledge(value           )            {
 function copyEvent(input           )            {
   const value = structuredClone(input);
   for (const key of ['source_event_id','scope_id','observer_id','target_id','seed']         ) id(value[key]);
-  if (value.observer_id === value.target_id || !['EVT-04','EVT-07','EVT-08','EVT-09','EVT-10','EVT-12'].includes(value.event_id) || value.rule_version !== 'game1-rel-test-v041' || value.repeat_multiplier !== 1) throw new Error('ledger.unsupported_event');
+  if (value.observer_id === value.target_id || !['EVT-01','EVT-04','EVT-07','EVT-08','EVT-09','EVT-10','EVT-12'].includes(value.event_id) || value.rule_version !== 'game1-rel-test-v041' || value.repeat_multiplier !== 1) throw new Error('ledger.unsupported_event');
   value.position = validatePosition(value.position);
   if (value.trait_snapshot.schema_version !== TRAIT_SCHEMA_VERSION) throw new Error('ledger.unsupported_snapshot');
   value.trait_snapshot = snapshot(value.trait_snapshot.profile_version, value.trait_snapshot.axis_values, value.trait_snapshot.fixed_at);
   if (comparePosition(value.trait_snapshot.fixed_at, value.position) > 0) throw new Error('ledger.future_snapshot');
   if (!value.evidence || typeof value.evidence !== 'object' || Array.isArray(value.evidence)) throw new Error('ledger.invalid_evidence');
-  for (const key of ['independent_action','monopoly_proven','record_corrected','delivery_committed','repair_executed','repair_accepted','role_accepted','help_completed']         ) {
+  for (const key of ['independent_action','monopoly_proven','record_corrected','delivery_committed','repair_executed','repair_accepted','role_accepted','help_completed','mutual_acceptance','greeting_completed']         ) {
     if (Object.hasOwn(value.evidence, key) && typeof value.evidence[key] !== 'boolean') throw new Error('ledger.invalid_evidence');
   }
   if (value.evidence.action_id !== undefined) id(value.evidence.action_id);
@@ -48,7 +48,8 @@ function baseContribution(slot      )         {
   const { event, knowledge } = slot;
   const result         = { affection: 0, trust: 0, respect: 0, reciprocity: 0 };
   if (!knowledge.known) return result;
-  if (event.event_id === 'EVT-04') { result.affection = 10; result.trust = 6; }
+  if (event.event_id === 'EVT-01') { result.affection = 4; } // Existing A test balance: completed greeting, not generic conversation reward.
+  else if (event.event_id === 'EVT-04') { result.affection = 10; result.trust = 6; }
   else if (event.event_id === 'EVT-07') {
     result.trust = knowledge.delay_reason === 'proven_concealment' ? -32 : -12;
     result.reciprocity = knowledge.delay_reason === 'proven_concealment' ? -18 : 0;
@@ -60,6 +61,8 @@ function baseContribution(slot      )         {
   return result;
 }
 export function createTestLedger(input
+
+
 
 
  ) {
@@ -88,7 +91,7 @@ export function createTestLedger(input
   return {
     append(inputEvent           , inputKnowledge           ) {
       const event = copyEvent(inputEvent), knowledge = validateKnowledge(inputKnowledge);
-      if (event.observer_id !== config.observer_id || event.target_id !== config.target_id || event.scope_id !== config.scope_id) throw new Error('ledger.wrong_direction_or_scope');
+      if (event.observer_id !== config.observer_id || event.target_id !== config.target_id || (event.scope_id !== config.scope_id && !config.allowed_scope_ids?.includes(event.scope_id))) throw new Error('ledger.wrong_direction_or_scope');
       if (comparePosition(event.position, config.checkpoint.position) <= 0) throw new Error('ledger.before_checkpoint');
       const existing = slots.get(event.source_event_id);
       if (existing) {
@@ -99,13 +102,14 @@ export function createTestLedger(input
       }
       if ([...slots.values()].some(s => comparePosition(s.event.position,event.position) === 0)) throw new Error('ledger.order_collision');
       const evidence = event.evidence;
+      if (event.event_id === 'EVT-01' && (evidence.mutual_acceptance !== true || evidence.greeting_completed !== true || !evidence.action_id)) throw new Error('ledger.greeting_evidence_required');
       if (event.event_id === 'EVT-04' && (evidence.role_accepted !== true || evidence.help_completed !== true || !evidence.action_id)) throw new Error('ledger.help_evidence_required');
       if (event.event_id === 'EVT-08' && (evidence.independent_action !== true || !evidence.action_id || [...slots.values()].some(s => s.event.evidence.action_id === evidence.action_id))) throw new Error('ledger.independent_action_required');
       if (event.event_id === 'EVT-10' && evidence.monopoly_proven !== true) throw new Error('ledger.monopoly_evidence_required');
       if (event.event_id === 'EVT-09' && (evidence.record_corrected !== true || evidence.delivery_committed !== true || !evidence.action_id)) throw new Error('ledger.correction_delivery_required');
       if (event.event_id === 'EVT-12') {
-        const target = config.repair_target;
-        if (!target || evidence.conflict_id !== target.conflict_id || evidence.topic !== target.topic || evidence.repair_scope_id !== target.scope_id || target.scope_id !== config.scope_id) throw new Error('ledger.repair_target_mismatch');
+        const target = [config.repair_target,...(config.repair_targets || [])].find(t=>t&&evidence.conflict_id===t.conflict_id&&evidence.topic===t.topic&&evidence.repair_scope_id===t.scope_id);
+        if (!target || target.scope_id !== event.scope_id) throw new Error('ledger.repair_target_mismatch');
         if (!evidence.action_id || !evidence.repair_plan_id || evidence.repair_executed !== true || evidence.repair_accepted !== true) throw new Error('ledger.repair_evidence_required');
         id(evidence.repair_plan_id);
       }
