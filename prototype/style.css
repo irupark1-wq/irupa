@@ -388,7 +388,7 @@ legend { font-size: 12px; color: var(--ink-3); padding: 0 6px; }
 .account-block h4 { margin-bottom: 6px; }
 .account-lines { display: grid; gap: 4px; margin-bottom: 8px; padding: 8px 10px; border-radius: 12px; background: #f6eedc; }
 .account-line { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
-.account-line span { color: var(--ink-2); font-weight: 700; }
+.account-line span { flex: none; white-space: nowrap; color: var(--ink-2); font-weight: 700; }
 .account-line b { text-align: right; overflow-wrap: anywhere; }
 .auth-msg { margin: 0 0 8px; padding: 8px 10px; border-radius: 10px; font-size: 13px; font-weight: 700; background: #eef2f7; }
 .auth-msg.ok { background: #e3f1df; color: #3c6a35; }
