@@ -9,12 +9,12 @@ import {judge,grant,dayIndex,emptyRepeat,migrateLegacyTalk} from './repeat.js';
 import {creditHooks,applyCredit,emptyCredit,validateCredit,openIssuesFor} from './credit.js';
 import {roll} from './accept.js';
 export const STORE_KEY='game1-local-a-v1';
-const initial=()=>({schema_version:1,version:0,authority:1,pawns:[],events:[],sessions:[],structures:{resources:[],roles:[],commitments:[],conflicts:[]},memories:[],tag_history:{},receipts:{}});
+const initial=()=>({save_format:2,schema_version:1,version:0,authority:1,pawns:[],events:[],sessions:[],structures:{resources:[],roles:[],commitments:[],conflicts:[]},memories:[],tag_history:{},receipts:{}});
 const position=n=>({authority_stream_id:'game1-local-authority',authority_order_id:n});
 const base={affection:100,trust:300,respect:300,reciprocity:500};
 const direction=(from,to)=>({from_pawn_id:from,to_pawn_id:to});
 function ledger(state,from,to){
- const l=createTestLedger({observer_id:from,target_id:to,scope_id:'order-001',allowed_scope_ids:['life-001'],checkpoint:{position:position(1),scores:{...base,...(state.relation_baseline?.[from+'->'+to]||{})}},repair_target:{conflict_id:'credit-001',topic:'credit_attribution',scope_id:'order-001'},repair_targets:state.structures.conflicts.filter(c=>c.from_pawn_id===from&&c.to_pawn_id===to).map(c=>({conflict_id:c.id,topic:c.topic,scope_id:c.scope_id}))});
+ const l=createTestLedger({observer_id:from,target_id:to,scope_id:'order-001',allowed_scope_ids:['life-001'],checkpoint:state.ledger_checkpoints?.[from+'->'+to]?{position:state.ledger_checkpoints[from+'->'+to].position,scores:state.ledger_checkpoints[from+'->'+to].scores}:{position:position(1),scores:{...base,...(state.relation_baseline?.[from+'->'+to]||{})}},repair_target:{conflict_id:'credit-001',topic:'credit_attribution',scope_id:'order-001'},repair_targets:state.structures.conflicts.filter(c=>c.from_pawn_id===from&&c.to_pawn_id===to).map(c=>({conflict_id:c.id,topic:c.topic,scope_id:c.scope_id}))});
  for(const row of state.events.filter(e=>e.event.observer_id===from&&e.event.target_id===to))l.append(row.event,row.knowledge);
  return l;
 }
@@ -25,6 +25,8 @@ function validateState(state){
  if(state.life)validateLife(state.life);
  if(state.relation_baseline!==undefined){if(!state.relation_baseline||typeof state.relation_baseline!=='object'||Object.keys(state.relation_baseline).length>12)throw Error('save.invalid_baseline');for(const v of Object.values(state.relation_baseline))for(const [k,n] of Object.entries(v))if(!(k in base)||!Number.isSafeInteger(n)||n<1||n>1000)throw Error('save.invalid_baseline');}
  if(state.credit!==undefined)validateCredit(state.credit);
+ if(state.save_format!==undefined&&(!Number.isSafeInteger(state.save_format)||state.save_format<1))throw Error('save.invalid_data');
+ if(state.ledger_checkpoints!==undefined){if(!state.ledger_checkpoints||typeof state.ledger_checkpoints!=='object'||Object.keys(state.ledger_checkpoints).length>12)throw Error('save.invalid_checkpoint');for(const c of Object.values(state.ledger_checkpoints))if(!c||!Number.isSafeInteger(c.folded)||c.folded<1||!Array.isArray(c.rewarded_actions)||c.rewarded_actions.length>200)throw Error('save.invalid_checkpoint');}
  if(state.init_rule!==undefined&&(state.init_rule!==INIT_RULE||typeof state.world_seed!=='string'||state.world_seed.length>64))throw Error('save.invalid_init');
  if(state.life?.neutral_activity!==undefined&&(!Array.isArray(state.life.neutral_activity)||state.life.neutral_activity.length>NEUTRAL_MAX))throw Error('save.invalid_neutral');
  if(state.life?.neutral_summary!==undefined&&(typeof state.life.neutral_summary!=='object'||Object.keys(state.life.neutral_summary).length>2000))throw Error('save.invalid_neutral');
@@ -50,6 +52,7 @@ export const NEUTRAL_MAX=300;
 function append(next,event_id,from,to,actionId,evidence={},knowledge={revision:1,known:true,delay_reason:'unconfirmed'},scope='order-001'){
   const observer=[...next.pawns,...(next.life?.guest?[next.life.guest]:[])].find(p=>p.id===from);if(!observer)throw Error('event.observer_missing');
   const event={source_event_id:actionId+'-'+event_id,scope_id:scope,observer_id:from,target_id:to,event_id,position:position(++next.authority),trait_snapshot:structuredClone(observer.trait),rule_version:'game1-rel-test-v041',seed:'seed-a',repeat_multiplier:1,evidence:{action_id:actionId,...evidence}};
+  if(['EVT-09','EVT-12'].includes(event_id)&&next.ledger_checkpoints?.[from+'->'+to]?.rewarded_actions.includes(event_id+':'+actionId))throw Error('ledger.action_already_rewarded');
   const l=ledger(next,from,to);l.append(event,knowledge);next.events.push({event,knowledge});
   next.memories.push({id:event.source_event_id,from,to,scope_id:scope,topic:event_id==='EVT-01'?'conversation':event_id==='EVT-04'?'help':'credit_attribution',known:knowledge.known,reason_known:false,resolution:'open'});
   return event;
@@ -57,18 +60,54 @@ function append(next,event_id,from,to,actionId,evidence={},knowledge={revision:1
 /* 태그 이력 재구축(PO-15 §4): 행(source)은 그대로 두고, 각 행의 긍정 여부와 당시 점수 문맥을 원장 replay 로 다시 계산한다.
    positive = 생활 완료로 자격을 얻은 행(qualifies) ∧ observer 가 현재 인지. 중립(상한)·미인지는 긍정이 아니다. */
 export function rebuildTagHistory(next){
+ const STRUCT=['dependence','power','obligation','conflict','basis_status'];
  const afterAt=(proj,order)=>{let sc=proj.checkpoint.scores;for(const t of proj.trace){if(t.position.authority_order_id<=order)sc=t.after;else break;}return sc;};
  for(const [key,rows] of Object.entries(next.tag_history)){
   const [from,to]=key.split('->');if(!from||!to)continue;
   const pa=ledger(next,from,to).project(),pb=ledger(next,to,from).project(),flags=context(next,from,to);
   const da=deriveAxes(direction(from,to),next.structures),db=deriveAxes(direction(to,from),next.structures);
   for(const row of rows){
+   if(row.frozen)continue; // 접힌 사건: 당시 문맥 그대로
    const ev=next.events.find(e=>e.event.source_event_id===row.source_event_id);
    row.positive=row.qualifies!==false&&(ev?ev.knowledge.known:row.positive);
-   row.context={...flags,a:{...afterAt(pa,row.tick),...da},b:{...afterAt(pb,row.tick),...db}};
+   // 구조 축(의존·권력·의무·갈등)은 지금 값이 아니라 그 행이 만들어질 때 값을 쓴다(PO-DEC-005 §3-2). 옛 행에 없으면 현재 값(호환).
+   const keep=(old,now)=>Object.fromEntries(STRUCT.map(k=>[k,old?.[k]??now[k]]));
+   row.context={...flags,a:{...afterAt(pa,row.tick),...da,...keep(row.context?.a,da)},b:{...afterAt(pb,row.tick),...db,...keep(row.context?.b,db)}};
   }
  }
 }
+/* 원장 접기(PO-DEC-005 §3-4): 사건이 많아지면 새 완료를 버리지 않고, 오래되고 확정된 사건을 방향별 checkpoint 점수로 접는다.
+   접는 조건: observer 가 인지함(known) + 어제 이전 action(정정·재전송 창 밖, 같은 action 재전송은 stale 로 거절됨).
+   방향마다 앞에서부터만 접는다(접을 수 없는 사건 뒤의 사건은 남김). 접힌 태그 행은 당시 문맥을 그대로 얼린다(frozen).
+   점수는 접기 전후가 같아야 한다(시험 game1-history). */
+export const SAVE_FORMAT=2,FOLD_AT=300,FOLD_KEEP=150;
+const foldLimit={at:FOLD_AT,keep:FOLD_KEEP};
+/** 시험 전용: 접기 기준을 작게 바꿔 빠르게 검산한다(게임은 기본값). */
+export function configureHistory(o={}){foldLimit.at=o.foldAt??FOLD_AT;foldLimit.keep=o.foldKeep??FOLD_KEEP;}
+const order=row=>row.event.position.authority_order_id;
+function settled(row,today){if(row.knowledge.known!==true)return false;const t=actionTick(row.event.evidence?.action_id||'');return t===null||dayIndex(t)<today-1;}
+export function foldLedger(next,force=false){
+ if(!force&&next.events.length<=foldLimit.at)return 0;
+ const today=dayIndex(next.life?.tick||0),blocked=new Set(),fold=new Map();let left=next.events.length;
+ for(const row of [...next.events].sort((a,b)=>order(a)-order(b))){
+  if(left<=foldLimit.keep)break;const key=row.event.observer_id+'->'+row.event.target_id;
+  if(blocked.has(key))continue;if(!settled(row,today)){blocked.add(key);continue;}
+  if(!fold.has(key))fold.set(key,[]);fold.get(key).push(row);left--;
+ }
+ if(!fold.size)return 0;
+ next.ledger_checkpoints??={};const gone=new Set();
+ for(const [key,rows] of fold){
+  const [from,to]=key.split('->'),proj=ledger(next,from,to).project(),last=rows.at(-1),at=proj.trace.find(t=>t.source_event_id===last.event.source_event_id);
+  const prev=next.ledger_checkpoints[key];
+  next.ledger_checkpoints[key]={position:structuredClone(last.event.position),scores:{...at.after},folded:(prev?.folded||0)+rows.length,rewarded_actions:[...(prev?.rewarded_actions||[]),...rows.filter(r=>['EVT-09','EVT-12'].includes(r.event.event_id)).map(r=>r.event.event_id+':'+r.event.evidence.action_id)].slice(-200)};
+  for(const r of rows)gone.add(r.event.source_event_id);
+ }
+ next.events=next.events.filter(r=>!gone.has(r.event.source_event_id));
+ for(const rows of Object.values(next.tag_history))for(const row of rows)if(gone.has(row.source_event_id))row.frozen=true;
+ return gone.size;
+}
+/** 접힌 사건까지 포함해 해당 방향에 그 사건이 있었는지 */
+export function hadEvent(state,eventId,from,to){return state.events.some(e=>e.event.event_id===eventId&&e.event.observer_id===from&&e.event.target_id===to)||!!state.ledger_checkpoints?.[from+'->'+to]?.rewarded_actions.some(a=>a.startsWith(eventId+':'));}
 const actionTick=id=>{const m=/^game1-auto-(\d+)-/.exec(id);return m?Number(m[1]):null;};
 /* 중립 기록 보존: 오늘·어제는 행 단위(재전송·정정 참조용), 그 이전은 Day×방향×family 개수로 압축 */
 function compactNeutral(life){
@@ -99,7 +138,9 @@ export function applyLifeCompletions(next,completed){
  for(const done of completed){
   if(['record','read','deliver','credit_check','correct'].includes(done.kind)){outcomes.push({action_id:done.action_id,status:applyCredit(next,done,creditHelpers)});continue;}
   if(done.kind==='help')applyCredit(next,done,creditHelpers);
-  if(done.limited||next.events.length>490)continue;
+  if(done.limited)continue;
+  if(next.events.length>=490){foldLedger(next,true);if(next.events.length>=490){ // 접을 수 있는 사건이 없을 때만(이틀 안 미인지 사건이 490개) — 조용히 버리지 않고 기록에 남긴다
+outcomes.push({action_id:done.action_id,status:'ledger_full'});creditHelpers.log(done.from,'기록할 공간이 부족해 이 일의 관계 변화를 남기지 못했어요','blocked',done.to||null);continue;}}
   const at=actionTick(done.action_id);
   if(at!==null&&dayIndex(at)<dayIndex(life.tick)-1){outcomes.push({action_id:done.action_id,status:'stale'});continue;}
   const pairs=done.kind==='talk'?[[done.from,done.to],[done.to,done.from]]:[[done.from,done.to]];
@@ -127,6 +168,7 @@ export function applyLifeCompletions(next,completed){
   outcomes.push({action_id:done.action_id,status:granted?'applied':'neutral'});
  }
  compactNeutral(life);
+ foldLedger(next);
  return outcomes;
 }
 
@@ -136,10 +178,14 @@ export function memoryView(m){
  const ev=(/-(EVT-\d\d)$/.exec(m.id)||[])[1]||null;
  const kind=ev==='EVT-01'?'conversation':ev==='EVT-04'?'help':ev==='EVT-12'?'repair':ev==='EVT-09'?'correction':'credit_gap';
  const conflictKind=kind==='credit_gap'||kind==='correction'||kind==='repair';
- return {id:m.id,kind,target:m.to,reason:conflictKind?(m.reason_known?'known':'unknown'):'not_applicable',resolution:conflictKind?m.resolution:'not_applicable'};
+ return {id:m.id,kind,target:m.to,reason:conflictKind?(m.reason_known?'known':'unknown'):'not_applicable',resolution:conflictKind?(m.resolution==='resolved'&&m.corrector_known===false?'corrected_by_unknown':m.resolution):'not_applicable'};
 }
 export function createLocalStore(storage,options={}){
  const raw=storage.getItem(STORE_KEY);let state=raw?validateState(JSON.parse(raw)):initial();
+ // 저장 형식(PO-DEC-005 §3-3): 더 새 형식이면 덮어쓰지 않고 거절. 옛 형식이면 바꾸기 전에 원본을 한 번 따로 보관한다.
+ if((state.save_format||1)>SAVE_FORMAT)throw Error('save.newer_format');
+ if(raw&&(state.save_format||1)<SAVE_FORMAT){const key=STORE_KEY+'.backup-f'+(state.save_format||1);let backup=false;try{if(!storage.getItem(key))storage.setItem(key,raw);backup=true;}catch{}state.migration={from:state.save_format||1,to:SAVE_FORMAT,backup};}
+ state.save_format=SAVE_FORMAT;
  // 새 월드에서만 시작 관계 편차 규칙을 켠다(이미 있는 저장본의 폰·관계는 바꾸지 않음)
  if(!raw&&options.initialSpread){state.init_rule=INIT_RULE;state.world_seed='w-'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
  const previouslyLiving=!!state.life;state.life??=initialLife();if(previouslyLiving&&state.life.tick>0)state.life.paused=true;state.life.layout_version??=0;state.life.repeat??=emptyRepeat();migrateLegacyTalk(state.life);state.life.neutral_activity??=[];state.life.neutral_summary??={};state.credit??=emptyCredit();
@@ -160,7 +206,7 @@ export function createLocalStore(storage,options={}){
   reviseLifeKnowledge(commandId,sourceId,knowledge){return commit(commandId,{kind:'life-knowledge',sourceId,knowledge},next=>{
    const row=next.events.find(r=>r.event.source_event_id===sourceId);
    // 상한 중립으로 남은 완료는 자격이 없었으므로 뒤늦게 알아도 기여가 생기지 않는다(PO-15 §3)
-   if(!row){if(next.life.neutral_activity?.some(n=>n.source_ref===sourceId))return {status:'not_eligible',action_reexecutions:0,reward_reexecutions:0,quota_changes:0};throw Error('ledger.source_not_found');}
+   if(!row){if(next.life.neutral_activity?.some(n=>n.source_ref===sourceId))return {status:'not_eligible',action_reexecutions:0,reward_reexecutions:0,quota_changes:0};if(Object.values(next.tag_history).some(rows=>rows.some(r=>r.frozen&&r.source_event_id===sourceId)))return {status:'settled',action_reexecutions:0,reward_reexecutions:0,quota_changes:0};throw Error('ledger.source_not_found');}
    const l=ledger(next,row.event.observer_id,row.event.target_id);const result=l.revise(sourceId,knowledge);
    if(result.status==='revised'){row.knowledge=structuredClone(knowledge);const memory=next.memories.find(m=>m.id===sourceId);if(memory){memory.known=knowledge.known;if(memory.topic==='credit_attribution')memory.reason_known=knowledge.delay_reason==='proven_concealment';}rebuildTagHistory(next);}
    return {status:result.status,action_reexecutions:0,reward_reexecutions:0,quota_changes:0};});},
@@ -172,7 +218,7 @@ export function createLocalStore(storage,options={}){
    if(state.life.paused)return {status:'paused',tick:state.life.tick};
    return commit('game1-life-step-'+expectedTick,{kind:'life-step',expectedTick},next=>{
     next.credit??=emptyCredit();
-    const completed=advanceLife(next,(from,to)=>{const value=scores(next,from,to),target=next.structures.conflicts.find(c=>c.active&&c.from_pawn_id===from&&c.to_pawn_id===to&&(c.scope_id==='life-001'||(c.id==='credit-001'&&next.events.some(e=>e.event.event_id==='EVT-09'&&e.event.observer_id===from&&e.event.target_id===to))));return {...value,repair_target:target?{conflict_id:target.id,scope_id:target.scope_id,topic:target.topic}:null};},creditHooks(next));
+    const completed=advanceLife(next,(from,to)=>{const value=scores(next,from,to),target=next.structures.conflicts.find(c=>c.active&&c.from_pawn_id===from&&c.to_pawn_id===to&&(c.scope_id==='life-001'||(c.id==='credit-001'&&hadEvent(next,'EVT-09',from,to))));return {...value,repair_target:target?{conflict_id:target.id,scope_id:target.scope_id,topic:target.topic}:null};},creditHooks(next));
     const outcomes=applyLifeCompletions(next,completed);
     return {status:'applied',tick:next.life.tick,completed:completed.length,outcomes};
    });

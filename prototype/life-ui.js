@@ -22,7 +22,8 @@ const MODE = {
   checking: { text: T("기록 확인을 부탁해요"), icon: "i-chat" },
 };
 const A = "./assets/";
-const BUBBLE_KEY = { listening: "talking", repairListening: "repairing", recording: "working", reading: "idle", correcting: "repairing", checking: "talking" };
+// DES-11: reading·recording 은 폰이 실제로 기록판을 읽거나 적는 동안에만(관계창 열람·기술 저장에는 쓰지 않음)
+const BUBBLE_KEY = { listening: "talking", repairListening: "repairing", correcting: "repairing", checking: "talking" };
 const pic = (src, className) => {
   const i = document.createElement("img");
   i.src = src;

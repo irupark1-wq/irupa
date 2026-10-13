@@ -25,10 +25,27 @@ export function validateCredit(c) {
   if (Object.keys(c.helps).length > KEEP * 2 || Object.keys(c.records).length > KEEP * 2 || Object.keys(c.issues).length > KEEP * 2) throw Error("life.invalid_credit");
   return c;
 }
-const trim = (obj) => {
-  const keys = Object.keys(obj);
-  for (const k of keys.slice(0, Math.max(0, keys.length - KEEP))) delete obj[k];
+/* 보관 상한(PO-DEC-005 §3-5): 오래된 것부터 지우되, 아직 진행 중인 확인사항이 가리키는 기록·도움 원천은 지우지 않는다(pinning).
+   진행 중 = 말하려 함·답 기다림·확인 수락·정정 전달 전. "봤지만 말하지 않음(observed)"·닫힌 확인사항은 지울 수 있다.
+   지워진 옛 완료가 다시 들어오면 store 의 stale 규칙(어제 이전 action 거절)이 막는다. */
+const LIVE = ["intends_request", "verification_pending", "verification_accepted", "correction_published"];
+const dropOldest = (obj, pinned) => {
+  let extra = Object.keys(obj).length - KEEP;
+  for (const k of Object.keys(obj)) {
+    if (extra <= 0) break;
+    if (pinned(k)) continue;
+    delete obj[k];
+    extra--;
+  }
 };
+export function trimCredit(c) {
+  const live = Object.values(c.issues).filter((i) => LIVE.includes(i.state)),
+    liveRecords = new Set(live.map((i) => i.record_id)),
+    liveHelps = new Set([...liveRecords].map((r) => c.records[r]?.help_id).filter(Boolean));
+  dropOldest(c.issues, (k) => LIVE.includes(c.issues[k].state));
+  dropOldest(c.records, (k) => liveRecords.has(k));
+  dropOldest(c.helps, (k) => liveHelps.has(k));
+}
 
 /** 목격 모델(작은안: "권한 있는 단순 관측"). 같은 소유자의 다른 폰이 작업대 3칸 안에 있고 쉬는 중(눈 감음)이 아니면 그 순간을 본 것으로 기록한다.
     증거가 없다는 것은 "못 봤다고 확정"이 아니라 "봤다는 근거가 없음"이다. 가림·시선 방향은 아직 모델링하지 않는다. */
@@ -89,7 +106,7 @@ export function applyCredit(next, done, helpers) {
   if (done.kind === "help") {
     if (c.helps[done.action_id]) return "duplicate";
     c.helps[done.action_id] = { help_id: done.action_id, worker: done.from, helper: done.to, tick: life.tick, witnesses: [...new Set(done.witnesses || [])], recorded: false };
-    trim(c.helps);
+    trimCredit(c);
     return "applied";
   }
   if (done.kind === "record") {
@@ -115,7 +132,7 @@ export function applyCredit(next, done, helpers) {
       readers: {},
       intent: "unconfirmed",
     };
-    trim(c.records);
+    trimCredit(c);
     helpers.log(done.from, "작업대 기록판에 결과를 적었어요", "activity", null);
     return "applied";
   }
@@ -138,7 +155,7 @@ export function applyCredit(next, done, helpers) {
         const fairness = next.pawns.find((p) => p.id === reader)?.trait.axis_values.fairness_sensitivity || "medium",
           express = roll(life.seed, r.record_id, reader, "express") < CREDIT_VARIANTS[c.variant].express[fairness];
         c.issues[issueId] = { issue_id: issueId, record_id: r.record_id, from: reader, to: r.writer, topic: "credit_attribution", scope_id: "life-001", state: express ? "intends_request" : "observed", requests: [], delivered: false, evt09: null, opened_tick: life.tick };
-        trim(c.issues);
+        trimCredit(c);
       }
       helpers.log(reader, "작업 기록에 내 이름이 빠진 것을 봤어요 · 이유는 아직 몰라요", "noticed", r.writer);
       return "applied";
@@ -148,12 +165,17 @@ export function applyCredit(next, done, helpers) {
       issue.delivered = true;
       const knowsActor = done.kind === "deliver" || r.corrected_by_visible;
       if (!knowsActor) {
+        // 기록이 고쳐진 것은 알지만 누가 고쳤는지는 모름(PO-DEC-005 §3-6): 확인사항·기억·공개 카드를 같은 상태로 맞추고 감정 효과(EVT-09)는 없다.
         issue.state = "resolved_record";
+        issue.corrector_known = false;
+        for (const m of next.memories) if (m.from === reader && m.to === r.writer && m.id === r.record_id + "-" + reader) { m.resolution = "resolved"; m.corrector_known = false; }
+        helpers.log(reader, "고쳐진 작업 기록을 확인했어요 · 누가 고쳤는지는 몰라요", "activity", null);
         return "applied";
       }
       const ev = helpers.append("EVT-09", reader, r.corrected_by, r.correction_action_id + "-" + reader, { record_corrected: true, delivery_committed: true });
       issue.evt09 = ev.source_event_id;
       issue.state = "resolved_record";
+      issue.corrector_known = true;
       for (const m of next.memories) if (m.from === reader && m.to === r.writer && m.id === r.record_id + "-" + reader) m.resolution = "resolved";
       helpers.log(reader, done.kind === "deliver" ? "고친 기록을 전해 듣고 확인했어요" : "고쳐진 작업 기록을 확인했어요", "completed", r.writer);
       return "evt09";

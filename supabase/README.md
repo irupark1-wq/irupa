@@ -12,6 +12,7 @@
 | `migrations/0001_game1_security_baseline.sql` | `game1_private` 스키마, 기본 권한 회수(이전 개발자 작성) | 적용됨(0002 가 `game1_private` 에 함수를 만들며 성공했고 T00f 통과로 확인) |
 | `migrations/0002_game1_core.sql` | `game1_profiles`(소유자 1행), `game1_worlds`(월드 저장본 jsonb + 서버 버전), RLS 6정책, 트리거 2개(`game1_private`), 저장 함수 `public.game1_save_world(jsonb, integer)` | **적용됨 2026-10-13** (김PO 가 SQL Editor 에서 실행, "Success. No rows returned") |
 | `tests/0002_rls_check.sql` | 0002 거부·허용 테스트 31건(anon 거부, 타인 행 차단, 버전 충돌, 입력 검증). BEGIN…ROLLBACK 이라 흔적 없음 | **실행 완료 2026-10-13: 31/31 PASS, fail_total 0** |
+| `0003_auth_setup.md` | 로그인 설정 안내(Google OAuth·이메일+비밀번호·SMTP·URL·한국어 메일 문구·익명 로그인 끄기). SQL 없음 | **입력 대기** (PO-AUTH-001, DEV-25) |
 
 ## 0002 적용 순서 (김PO) — 2026-10-13 전부 완료 (Advisors Security 경고 0건, Anonymous sign-ins 켬, Site URL neinom.com 확인. Email provider 는 이메일 연결 기능 구현 전에 재확인)
 

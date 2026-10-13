@@ -284,6 +284,9 @@ const en = {
   "…확인했어.": "…Checked.",
   "접기": "Collapse",
   "펼치기": "Expand",
+  "누가 고쳤는지는 몰라요": "I don't know who fixed it",
+  "기록할 공간이 부족해 이 일의 관계 변화를 남기지 못했어요": "Not enough room to record the relationship change from this",
+  "기록은 고쳐졌어요. 누가 고쳤는지는 아직 몰라요.": "The record was fixed. Who fixed it is still unknown.",
 };
 
 const ja = {
@@ -544,6 +547,9 @@ const ja = {
   "…확인했어.": "…確かめた。",
   "접기": "たたむ",
   "펼치기": "ひらく",
+  "누가 고쳤는지는 몰라요": "誰が直したかはわかりません",
+  "기록할 공간이 부족해 이 일의 관계 변화를 남기지 못했어요": "記録する場所が足りず、この出来事の関係の変化を残せませんでした",
+  "기록은 고쳐졌어요. 누가 고쳤는지는 아직 몰라요.": "記録は直されました。誰が直したかはまだわかりません。",
 };
 
 const DICT = { ko: null, en, ja };

@@ -27,7 +27,9 @@ export function memoryText(view, nameOf) {
     resolution:
       view.resolution === "not_applicable"
         ? null
-        : view.resolution === "resolved"
+        : view.resolution === "corrected_by_unknown"
+          ? T("기록은 고쳐졌어요. 누가 고쳤는지는 아직 몰라요.")
+          : view.resolution === "resolved"
           ? T("해결됐어요. 기억은 남아 있어요.")
           : view.kind === "correction"
             ? T("기록은 고쳐졌지만 갈등은 아직 남아 있어요.")

@@ -75,10 +75,11 @@ npm test         # 140개 통과해야 함 (core/·store·life·layout·A2 기�
 
 1. (완료 2026-10-13) 상대 경로 전환, `prototype/.nojekyll`·`CNAME`, `pages.yml`, CSP 메타, 계정 문서 교체. 배포 기록은 `docs/planning/replies/17_*.md`.
 2. (완료 2026-10-13) SB-0002 계정·월드 저장 테이블 적용, RLS 테스트 31/31 (DEV-18). 브라우저 연결(익명 로그인·저장/복구, CSP `connect-src`)은 DEV-19 의 B0.5 단계에서.
-3. **진행(2026-10-13 기준)**: A1 납품(DEV-20, 판정 대기) → A2 기반 납품(DEV-22) → PO-REQ-001 말풍선·관계창 기반(DEV-23) → PO-HAND-005 행동별 수락·제3자 기록 흐름·초기 관계 편차(DEV-24, 실제 Conflict 정의는 blocked) → STORY-C(PO-15 v1.1) → 두 번째 방 → A3 → B-ACCOUNT → B1.
+3. **진행(2026-10-13 기준)**: A1 납품(DEV-20, 판정 대기) → A2 기반 납품(DEV-22) → PO-REQ-001 말풍선·관계창 기반(DEV-23) → PO-HAND-005 행동별 수락·제3자 기록 흐름·초기 관계 편차(DEV-24) → 저장·이력 보완(DEV-25: 원장 접기·save_format·credit pinning) → **다음: A1-10 → 로그인(PO-AUTH-001, SB-0003 설정 대기) → 계정 월드 저장(SB-0004) → 두 방(PO-ROOM-001) → 국소 공로 분쟁 250(정연우 검수 대기)** → STORY-C(PO-15 v1.1) → 두 번째 방 → A3 → B-ACCOUNT → B1.
    - store.js 의 `applyLifeCompletions` 가 완료 사건 → 반복 자격 → 원장·기억·태그를 한 commit 에서 처리(시험도 같은 함수 사용). 상한 대화는 `life.neutral_activity`(원장 아님). 정정 시 `rebuildTagHistory`.
    - 진단: `node scripts/game1_life_diagnostics.mjs 2000` (단계별 개수, 성격만/관계만 비교).
    - 기록 흐름 진단: `node scripts/game1_credit_diagnostics.mjs 2000 4` (변형 A/B × 배치, 도움→기록→누락→열람→정정→EVT-09).
+   - 원장 접기: 살아 있는 사건 300 초과 시 인지 확정+어제 이전 사건을 방향별 `ledger_checkpoints` 로 접어 150. `save_format`=2, 더 새 형식 거절·옛 형식 `.backup-f1` 보관. **배포를 형식 2 이전 커밋으로 되돌리지 않는다.** 시험은 `configureHistory()` 로 작은 기준 사용.
    - 새 월드만 초기 관계 편차(±20, `INIT_RULE`). 앱은 `createLocalStore(storage, {initialSpread:true})`. 시험 fixture 는 옵션 없이 기존 기본값.
    - 이전 메모 — 단계 순서(PO-DEC-001): A1 공간 정합(**DEV-20 납품, 김PO 판정 대기**) → A2 관계 서사(PO-15 요청 중 = REQ-02, 반복 상한 Day 규칙은 DEV-20 6.2) → A3 AUTO22 실행 증거(PO-16) → B-ACCOUNT 계정 연결 → B1. B0 온라인 설계는 A2/A3 와 병행(PO-17).
    - **두 번째 방(사용자 결정 2026-10-13):** 이전 "아늑한 방" 배경·가구 그림(`prototype/assets/legacy-room/`)을 게임 안 두 번째 장소로 넣는다. **A2 다음, A3 전**에 한다(약 2~3일: 방 전환, 방별 배치 저장, 그림 속 침대·책장 자리를 막힌 칸으로 등록). PO-14 의 '방 1개'를 바꾸는 결정이므로 착수 전 세부계획서(REQ-04 로 요청)를 받는다.
