@@ -85,3 +85,11 @@ test('setup guard: only the two registered return addresses can log in; anything
  const a=createAccount({client:null,returnUrl:null});assert.equal(a.state().status,'unavailable');assert.equal((await a.google()).key,'unavailable');
  assert.equal(maskEmail('ab@x.com'),'ab***@x.com');
 });
+
+test('START (mock) a device with a stored session shows "checking" (not guest) until restore ends; no session → guest; slow check → notice, guest play stays open',async()=>{
+ const f=fake({session}),a=createAccount({client:f.client,returnUrl:RETURN,checking:true});
+ assert.equal(a.state().status,'checking');
+ await a.restore();assert.equal(a.state().status,'signed_in');
+ const g=fake(),b=createAccount({client:g.client,returnUrl:RETURN,checking:true});await b.restore();assert.equal(b.state().status,'guest');
+ const h=fake(),c=createAccount({client:h.client,returnUrl:RETURN,checking:true});c.notice('auth_slow');assert.equal(c.state().status,'guest');assert.equal(c.state().message,'auth_slow');
+});

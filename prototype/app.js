@@ -2,6 +2,7 @@ import { t as T, tLife, applyStatic, setLang, getLang, LANGS } from "./i18n.js";
 applyStatic();
 import { mountLifeUI } from "./life-ui.js";
 import { mountAccountUI } from "./account-ui.js";
+import { mountStart, showUnreadable, hideSplash } from "./start.js";
 import { renderSpaceComparison } from "./space-comparison.js";
 import { createLocalStore, STORE_KEY } from "./store.js";
 import { memoryText, AXES as REL_AXES } from "./relation-text.js";
@@ -39,7 +40,8 @@ try {
   // 새 월드만 시작 관계 편차(PO-DEC-004 §2)를 한 번 만든다. 기존 저장본은 바뀌지 않는다.
   store = createLocalStore(storage, { initialSpread: true });
 } catch (e) {
-  say(T("저장 기록을 읽지 못했습니다. 기존 데이터를 덮어쓰지 않습니다. ") + e.message);
+  // 손상·새 형식 저장본: 원본을 지우지 않고 내려받기 / 보관 후 새로 시작만 안내(PO-START-001 §2). 자동 새 월드 없음
+  showUnreadable({ storeKey: STORE_KEY, reason: e.message });
   throw e;
 }
 
@@ -813,6 +815,8 @@ $("importFile").onchange = async () => {
 
 /* ───────── 시작 ───────── */
 blank();
+/** 시작 화면에서 고른 뒤 실제 화면으로: 그리던 초안 → 그리기, 폰 없음 → 첫 폰 그리기, 그 밖 → 월드(멈춘 상태로 열림) */
+async function enterGame() {
 try {
   const d = JSON.parse(localStorage.getItem("game1-draft-v1") || "null");
   if (d) {
@@ -830,6 +834,8 @@ try {
   } else show(null);
 } catch {
   say(T("초안을 읽지 못했습니다. 저장 기록은 유지합니다."));
+}
+if (lifeUI) await lifeUI.render();
 }
 $("layer").onchange();
 
@@ -861,6 +867,9 @@ mountAccountUI({
     } catch {}
   },
 });
+// 시작 화면(PO-START-001): 준비가 끝나면 준비 화면을 바로 닫고 시작 화면을 보여 준다
+mountStart({ store, storeKey: STORE_KEY, enterGame });
+hideSplash();
 $("artCompare").onclick = async () => {
   show("comparePanel");
   await renderSpaceComparison($("compareCanvas"), store.read(), paint, image);
@@ -880,11 +889,14 @@ for (const [code, label] of Object.entries(LANGS)) {
     location.reload();
   };
   $("langPicker").append(b);
+  const c = b.cloneNode(true); // 시작 화면에도 같은 언어 선택
+  c.onclick = b.onclick;
+  $("startLang").append(c);
 }
 if (getLang() !== "ko") {
-  const plate = document.querySelector(".title-plate"),
+  const plates = document.querySelectorAll(".title-plate, .start-title"),
     alt = "./assets/brand/title-" + getLang() + ".png",
     probe = new Image();
-  probe.onload = () => (plate.src = alt);
+  probe.onload = () => plates.forEach((p) => (p.src = alt));
   probe.src = alt;
 }

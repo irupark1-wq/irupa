@@ -30,6 +30,7 @@ export const AUTH_MESSAGES = {
   confirm_other_device: "이 브라우저에서는 로그인을 마칠 수 없었어요. 메일 확인을 마쳤다면 게임에서 이메일과 비밀번호로 로그인해 주세요.",
   redirecting: "Google 로그인 화면으로 이동해요…",
   unavailable: "계정 기능을 준비하고 있어요. 지금은 이 기기에만 저장돼요.",
+  auth_slow: "로그인 확인이 늦어지고 있어요. 이 기기의 월드로 계속할 수 있어요.",
 };
 /** 계정 월드 저장 문구(SB-0004). 로컬 월드가 그대로인지 항상 함께 말한다 */
 export const WORLD_MESSAGES = {
@@ -50,6 +51,7 @@ export const WORLD_MESSAGES = {
 };
 const STATUS_LINE = {
   unavailable: () => T("계정 기능 준비 중"),
+  checking: () => T("로그인 확인 중…"),
   guest: () => T("게스트로 이용 중"),
   busy: () => T("처리 중…"),
   email_pending: (s) => T("이메일 확인을 기다려요") + (s.email_masked ? " · " + s.email_masked : ""),
@@ -62,7 +64,7 @@ const STATUS_LINE = {
  * @param {() => void} o.pauseLife  로그인 과정 중 생활을 멈춘다(초안은 각 화면이 보존)
  */
 export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
-  let account = createAccount({ client: null, returnUrl: authReturnUrl(), lazy: authConfigured() }),
+  let account = createAccount({ client: null, returnUrl: authReturnUrl(), lazy: authConfigured(), checking: authConfigured() && hasStoredSession() }),
     started = null,
     client = null,
     worldNote = null; // 진행 중·실패·충돌 같은 일시 상태(없으면 실제 연결 상태로 계산)
@@ -105,7 +107,7 @@ export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
     $("authSigned").hidden = !signed;
     $("authSetPassword").textContent = s.providers.includes("email") ? T("비밀번호 바꾸기") : T("비밀번호 정하기");
     $("authResend").hidden = s.status !== "email_pending";
-    const off = s.status === "busy" || s.status === "unavailable";
+    const off = s.status === "busy" || s.status === "unavailable" || s.status === "checking";
     for (const id of ["authGoogle", "authSignIn", "authSignUp", "authReset", "authResend", "authSetPassword", "authSignOut", "authEmail", "authPassword", "authNewPassword"]) $(id).disabled = off;
   };
   account.subscribe(render);
@@ -116,10 +118,12 @@ export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
       if (!authConfigured()) return account;
       try {
         client = await loadClient();
-        account = createAccount({ client, returnUrl: authReturnUrl() });
+        account = createAccount({ client, returnUrl: authReturnUrl(), checking: hasStoredSession() });
         account.subscribe(render);
         account.subscribe((st) => separate(st));
-        await account.restore();
+        // 로그인 확인이 8초 넘게 걸리면 안내만 하고 기다리게 하지 않는다(늦게 확인돼도 고른 월드를 바꾸지 않음)
+        const slow = setTimeout(() => account.state().status === "checking" && account.notice("auth_slow"), 8000);
+        await account.restore().finally(() => clearTimeout(slow));
       } catch {
         account = createAccount({ client: null, returnUrl: null });
         account.subscribe(render);

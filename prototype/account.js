@@ -2,7 +2,7 @@
 // 원칙: 로그인 상태와 월드 저장 위치는 별개(로그인 성공 ≠ 계정 저장). 실패 문구는 계정이 있는지 드러내지 않는다.
 // 토큰·비밀번호는 상태(state)에 담지 않는다. 화면·기록·오류 문구 어디에도 나오지 않는다.
 
-export const AUTH_STATUS = ["unavailable", "guest", "busy", "email_pending", "signed_in", "expired"];
+export const AUTH_STATUS = ["unavailable", "checking", "guest", "busy", "email_pending", "signed_in", "expired"];
 export const PASSWORD_RULE = { min: 10, lower: true, upper: true, digit: true };
 
 /** 비밀번호 규칙(SB-0003: 10자 이상, 영문 소문자·대문자·숫자). 서버도 같은 규칙으로 다시 검사한다. */
@@ -42,9 +42,10 @@ export function errorKey(error) {
  * @param {object|null} o.client  supabase client(없으면 unavailable)
  * @param {string|null} o.returnUrl  로그인·메일 확인·재설정 후 돌아올 정확한 주소(SB-0003 의 두 주소 중 하나)
  */
-export function createAccount({ client, returnUrl, lazy = false }) {
+export function createAccount({ client, returnUrl, lazy = false, checking = false }) {
   // lazy: 설정은 됐지만 라이브러리를 아직 안 불러온 상태(게스트로 보이고, 첫 동작 때 실제 클라이언트로 바뀐다)
-  let state = { status: (client || lazy) && returnUrl ? "guest" : "unavailable", email: null, providers: [], message: null, user_id: null };
+  // checking: 이 기기에 로그인 기록이 있어 확인하는 중(게스트로 잘못 보이지 않게)
+  let state = { status: (client || lazy) && returnUrl ? (checking ? "checking" : "guest") : "unavailable", email: null, providers: [], message: null, user_id: null };
   let signingOut = false;
   const listeners = new Set();
   const set = (patch) => {
@@ -92,6 +93,7 @@ export function createAccount({ client, returnUrl, lazy = false }) {
       const { data, error } = await client.auth.getSession();
       if (error) set({ status: "guest", message: errorKey(error) });
       else if (data?.session?.user) set(fromUser(data.session.user));
+      else if (state.status === "checking") set({ status: "guest" }); // 남은 세션이 없음
       return snapshot();
     },
     /** Google 로 계속하기: Google 화면으로 이동한다. 취소·실패는 /auth/ 페이지가 받아 공통 문구로 돌려준다 */
@@ -185,6 +187,10 @@ export function createAccount({ client, returnUrl, lazy = false }) {
     },
     clearMessage() {
       set({ message: null });
+    },
+    /** 화면 안내만 바꾼다(상태는 그대로). 예: 로그인 확인이 늦어질 때 */
+    notice(key) {
+      set({ message: key, ...(state.status === "checking" ? { status: "guest" } : {}) });
     },
   };
 }

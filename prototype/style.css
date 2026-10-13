@@ -412,3 +412,61 @@ legend { font-size: 12px; color: var(--ink-3); padding: 0 6px; }
 .world-rows li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 6px 8px; border-radius: 10px; background: #f6eedc; font-size: 13px; }
 .world-rows li span { flex: 1 1 160px; font-weight: 700; overflow-wrap: anywhere; }
 .world-rows li.empty { background: none; color: var(--ink-2); }
+/* 준비 화면·시작 화면(PO-START-001). 배경은 장식(실제 월드 아님), 그림에 글자·버튼을 굽지 않는다 */
+.splash { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; background: radial-gradient(700px 420px at 50% 40%, #fff6e6 0%, #f6e3c6 70%); text-align: center; color: var(--ink); font-weight: 800; }
+.splash[hidden] { display: none; }
+.splash-error { max-width: 420px; padding: 12px 14px; border-radius: 14px; background: #fbe9e3; color: #7a3226; font-size: 14px; }
+.start-title { width: min(320px, 70%); height: auto; filter: drop-shadow(0 4px 0 rgba(120, 80, 40, 0.25)); }
+.splash .start-title { animation: breathe 2.4s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: scale(1.03); } }
+@media (prefers-reduced-motion: reduce) { .splash .start-title { animation: none; } }
+.start-screen { z-index: 55; align-items: center; justify-content: flex-start; overflow: auto; padding: 18px 16px; background: linear-gradient(rgba(251, 242, 227, 0.72), rgba(251, 242, 227, 0.86)), url("./assets/background/room-portrait-decorated.png") center / cover no-repeat, #fbf2e3; }
+@media (orientation: landscape) { .start-screen { background: linear-gradient(rgba(251, 242, 227, 0.72), rgba(251, 242, 227, 0.86)), url("./assets/background/room-landscape-decorated.png") center / cover no-repeat, #fbf2e3; } }
+.start-card { display: grid; gap: 12px; justify-items: stretch; width: min(440px, 100%); margin: auto; padding: 20px 18px; border-radius: 26px; background: rgba(255, 250, 240, 0.95); box-shadow: 0 10px 30px rgba(110, 70, 30, 0.22); }
+.start-card .start-title { justify-self: center; }
+.start-copy { margin: 0; text-align: center; font-weight: 800; color: var(--ink-2); }
+.start-main { min-height: 46px; font-size: 16px; }
+.start-local { display: grid; gap: 8px; padding: 10px 12px; border-radius: 16px; background: #f3e8d2; }
+.start-local-info { display: grid; gap: 2px; }
+.start-local-info small { color: var(--ink-2); font-weight: 700; }
+.start-account .account-block { margin: 0; padding: 0; background: none; box-shadow: none; }
+.start-account .account-block > h4 { display: none; }
+.start-screen:not(.email-open) #authForm { display: none; }
+.start-screen.email-open .start-email { display: none; }
+.start-screen #authSigned ~ .hint.small { display: none; }
+.start-note { margin: 0; text-align: center; }
+.start-lang { justify-content: center; }
+#startNewWorld { justify-self: center; }
+/* 시작 화면 장식 모션: 통통 걷는 예시 폰 셋, 떠오르는 빛 먼지, 은은한 빛, 카드·버튼 차례 등장. 생활 시간과 무관 */
+.start-deco { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.start-screen .start-card { position: relative; z-index: 1; animation: rise-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.start-card > * { animation: rise-in 0.5s ease-out both; }
+.start-card > *:nth-child(2) { animation-delay: 0.08s; } .start-card > *:nth-child(3) { animation-delay: 0.16s; } .start-card > *:nth-child(4) { animation-delay: 0.24s; }
+.start-card > *:nth-child(5) { animation-delay: 0.32s; } .start-card > *:nth-child(6) { animation-delay: 0.4s; } .start-card > *:nth-child(n+7) { animation-delay: 0.48s; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
+.start-screen .start-card .start-title { animation: rise-in 0.5s ease-out both, breathe 3.2s ease-in-out 0.6s infinite; }
+.deco-pawn { position: absolute; bottom: 7%; width: 64px; height: 64px; border-radius: 50%; border: 3px solid #8d6a4a; box-shadow: inset -6px -8px 0 rgba(120, 80, 40, 0.12), 0 8px 0 -2px rgba(80, 50, 20, 0.18); animation: stroll 14s linear infinite, hop 0.9s ease-in-out infinite; }
+.deco-pawn i { position: absolute; left: 50%; top: 42%; width: 22px; height: 8px; transform: translateX(-50%); background: radial-gradient(circle at 3px 4px, #4a3a2a 3px, transparent 3.5px), radial-gradient(circle at 19px 4px, #4a3a2a 3px, transparent 3.5px); animation: blink 4.2s steps(1) infinite; }
+.deco-pawn.p1 { background: #fff1d6; left: -80px; animation-delay: 0s, 0s; }
+.deco-pawn.p2 { background: #dfeedd; width: 52px; height: 52px; left: -80px; animation-delay: -5s, -0.3s; animation-duration: 17s, 0.8s; }
+.deco-pawn.p3 { background: #f9d9cf; width: 58px; height: 58px; left: -80px; animation-delay: -10s, -0.5s; animation-duration: 15s, 1s; }
+@keyframes stroll { from { left: -90px; } to { left: calc(100% + 90px); } }
+@keyframes hop { 0%, 100% { transform: translateY(0) scale(1.04, 0.96); } 50% { transform: translateY(-14px) scale(0.97, 1.03); } }
+@keyframes blink { 0%, 92% { transform: translateX(-50%) scaleY(1); } 95% { transform: translateX(-50%) scaleY(0.1); } }
+.mote { position: absolute; bottom: -12px; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle, #fff9e6 0%, rgba(255, 220, 150, 0.7) 50%, transparent 70%); animation: float-up 9s ease-in infinite; }
+.mote.m1 { left: 12%; } .mote.m2 { left: 28%; animation-delay: -2s; animation-duration: 11s; } .mote.m3 { left: 47%; animation-delay: -5s; } .mote.m4 { left: 63%; animation-delay: -1s; animation-duration: 12s; } .mote.m5 { left: 78%; animation-delay: -7s; } .mote.m6 { left: 90%; animation-delay: -3.5s; animation-duration: 10s; }
+@keyframes float-up { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(24px, -105vh); opacity: 0; } }
+.deco-glow { position: absolute; left: 50%; top: 18%; width: 520px; height: 520px; margin-left: -260px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 236, 190, 0.55) 0%, transparent 65%); animation: glow 6s ease-in-out infinite; }
+@keyframes glow { 50% { opacity: 0.55; transform: scale(1.08); } }
+@media (prefers-reduced-motion: reduce) {
+  .deco-pawn, .deco-pawn i, .mote, .deco-glow, .start-screen .start-card, .start-card > *, .start-screen .start-card .start-title { animation: none !important; }
+  .deco-pawn.p1 { left: 18%; } .deco-pawn.p2 { left: 44%; } .deco-pawn.p3 { left: 70%; }
+  .mote { display: none; }
+}
+/* 낮은 가로 화면(폰 가로): 카드를 줄여 이어하기·로그인 버튼이 한 화면에 들어오게. 넘치면 위에서부터 스크롤(제목이 잘리지 않음) */
+@media (orientation: landscape) and (max-height: 520px) {
+  .start-card { gap: 8px; padding: 12px 14px; width: min(520px, 100%); }
+  .start-card .start-title { width: 190px; }
+  .start-copy, .start-note { display: none; }
+  .start-main { min-height: 40px; font-size: 15px; }
+}
