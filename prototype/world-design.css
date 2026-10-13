@@ -316,3 +316,6 @@ details.arrange-board summary { cursor: pointer; padding: 4px 0; }
 
 /* 좁은 화면: 방 전환을 두 번째 줄로(시계·속도 버튼이 밀려나지 않게) */
 @container game (max-width: 520px) { .hud-top { flex-wrap: wrap; row-gap: 6px; } .plate-room { order: 10; } }
+
+/* 일시정지: 걷던 폰도 제자리에 가만히 선다(걷기·통통·숨쉬기 모두 멈춤). 재개하면 다시 움직인다 */
+#lifeStage.life-paused .life-pawn canvas { animation: none; }

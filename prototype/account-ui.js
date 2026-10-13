@@ -27,7 +27,7 @@ export const AUTH_MESSAGES = {
   signed_out: "로그아웃했어요. 이 기기의 월드는 그대로예요.",
   cancelled: "로그인을 취소했어요.",
   link_expired: "링크가 만료됐거나 이미 쓰였어요. 다시 요청해 주세요.",
-  confirm_other_device: "이 브라우저에서는 로그인을 마칠 수 없었어요. 메일 확인을 마쳤다면 게임에서 이메일과 비밀번호로 로그인해 주세요.",
+  confirm_other_device: "이 브라우저에서는 마칠 수 없었어요. 가입 확인 메일이었다면 확인은 끝났을 수 있으니 게임에서 이메일과 비밀번호로 로그인해 주세요. 비밀번호 재설정 메일이었다면 비밀번호는 바뀌지 않았어요. 재설정을 요청한 브라우저에서 링크를 열거나 다시 요청해 주세요.",
   redirecting: "Google 로그인 화면으로 이동해요…",
   unavailable: "계정 기능을 준비하고 있어요. 지금은 이 기기에만 저장돼요.",
   auth_slow: "로그인 확인이 늦어지고 있어요. 이 기기의 월드로 계속할 수 있어요.",
@@ -86,8 +86,13 @@ export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
   async function renderWorldLine() {
     const line = $("worldLine");
     if (worldNote) return (line.textContent = T(worldNote));
-    // 이 기기에 월드가 아직 없으면 "저장됨"이라고 하지 않는다(DES-15, PO-START-001 §6 빈 로컬)
-    if (!store.read().pawns.length) return (line.textContent = T("아직 월드 없음"));
+    // 이 기기에 월드가 아직 없으면 "저장됨"이라고 하지 않는다(DES-15, PO-START-001 §6 빈 로컬).
+    // 읽기에 실패한 저장본은 "없음"으로 바꾸지 않는다(PO-HAND-013 §1)
+    let empty = false;
+    try {
+      empty = !store.read().pawns.length;
+    } catch {}
+    if (empty) return (line.textContent = T("아직 월드 없음"));
     const w = worlds();
     if (!w) return (line.textContent = T("이 기기에 저장됨"));
     try {

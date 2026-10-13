@@ -625,6 +625,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       pause.firstElementChild.src = A + "ui/hud/" + (life.paused ? "play" : "pause") + ".png";
       pause.setAttribute("aria-label", life.paused ? T("생활 재개") : T("일시정지"));
       pause.title = life.paused ? T("생활 재개") : T("일시정지");
+      stage.classList.toggle("life-paused", life.paused); // 일시정지 중에는 폰 걷기·통통 움직임도 멈춘다
       stage.classList.toggle("placing", layout);
       stage.classList.toggle("tool", layout && !!tool);
       $("arrangePanel").hidden = !layout;
@@ -675,7 +676,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
         v.el.style.left = ((a.x + 0.5) / GRID.width) * 100 + "%";
         v.el.style.top = ((a.y + 0.5) / GRID.height) * 100 + "%";
         if (moved) v.lean = a.x > prev.x ? 1 : a.x < prev.x ? -1 : v.lean; // 옆으로 걸을 때만 기울기 방향을 바꾼다
-        v.el.style.setProperty("--lean", (a.mode === "moving" ? v.lean * 6 : 0) + "deg");
+        v.el.style.setProperty("--lean", (a.mode === "moving" && !life.paused ? v.lean * 6 : 0) + "deg");
         // 가구 칸에서 활동 중이면 가구 바로 뒤(한 단계 낮은 z)로, 조금 위로 올려 가구가 보이게 한다
         const atPlace = life.places.some((q) => q.x === a.x && q.y === a.y);
         // 아래로 걸어갈 때는 도착 행 기준, 위로 걸어갈 때는 출발 행 기준으로 앞뒤를 정해 가구를 뚫고 지나가 보이지 않게 한다
