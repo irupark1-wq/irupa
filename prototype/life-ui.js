@@ -1,5 +1,8 @@
 import { actorsFor, GRID } from "./life.js";
 import { t as T, tLife } from "./i18n.js";
+import { memoryView } from "./store.js";
+import { memoryText } from "./relation-text.js";
+import { speechTurns, toneOf, lineFor } from "./dialogue.js";
 const $ = (id) => document.getElementById(id);
 const SLOTS = ["back_hair", "base", "eyes_pair", "mouth", "front_hair", "frame_accessory"];
 const MODE = {
@@ -131,10 +134,142 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     lastSeq = logs.length ? Math.max(lastSeq, seqOf(logs.at(-1))) : lastSeq;
   }
 
+  /* ───────── 대화 말풍선 (PO-REQ-001 §3) ─────────
+     저장이 확정된 생활 기록에서만 만든다. 처음 그릴 때까지의 기록은 말하지 않는다(새로고침·정정으로 지난 대화를 다시 말하지 않음).
+     표시 시간은 실제 시간(생활 속도와 분리), 폰마다 대기열 최대 2개, 다른 말풍선과 겹치면 한 칸 위로. */
+  let speechSeq = null;
+  const speechQueue = new Map();
+  const speechOn = () => {
+    try {
+      return localStorage.getItem("game1-speech") !== "off";
+    } catch {
+      return true;
+    }
+  };
+  function speakerTone(state, speaker, listener) {
+    const p = state.pawns.find((x) => x.id === speaker);
+    if (!p || !state.pawns.some((x) => x.id === listener)) return "plain"; // 방문 폰이 끼면 관계 정보 없이 일반 말투
+    try {
+      return toneOf(p.trait.axis_values, store.projection(speaker, listener).scores);
+    } catch {
+      return "plain";
+    }
+  }
+  const spoken = (state, log, turn) => T(lineFor(turn.situation, speakerTone(state, turn.speaker, turn.listener), log.id + "|" + turn.speaker));
+  function queueSpeech(state) {
+    const logs = state.life.logs,
+      seqOf = (l) => Number(String(l.id).split("-").pop());
+    if (speechSeq === null) {
+      speechSeq = logs.length ? seqOf(logs.at(-1)) : 0;
+      return;
+    }
+    const now = performance.now();
+    for (const l of logs) {
+      const seq = seqOf(l);
+      if (seq <= speechSeq) continue;
+      speechSeq = Math.max(speechSeq, seq);
+      if (!speechOn() || document.hidden) continue;
+      speechTurns(l).forEach((turn, i) => {
+        const q = speechQueue.get(turn.speaker) || [];
+        q.push({ text: spoken(state, l, turn), at: now + i * 700 });
+        while (q.length > 2) q.shift();
+        speechQueue.set(turn.speaker, q);
+      });
+    }
+    pumpSpeech();
+  }
+  function pumpSpeech() {
+    const now = performance.now();
+    for (const [id, q] of speechQueue) {
+      const v = pawnViews.get(id);
+      if (!v) {
+        speechQueue.delete(id);
+        continue;
+      }
+      if ((v.speechUntil && now < v.speechUntil) || v.speech?.classList.contains("held")) continue;
+      const next = q[0];
+      if (!next) continue;
+      if (next.at > now) {
+        setTimeout(pumpSpeech, next.at - now + 10);
+        continue;
+      }
+      q.shift();
+      showSpeech(v, next.text);
+    }
+  }
+  function placeSpeech(v) {
+    if (!v.speech) return;
+    v.speech.style.transition = v.el.style.transition;
+    v.speech.style.left = v.el.style.left;
+    v.speech.style.top = v.el.style.top;
+  }
+  function showSpeech(v, text) {
+    v.speech?.remove();
+    const b = node("span", "speech", text);
+    b.setAttribute("role", "button");
+    b.tabIndex = 0;
+    b.title = T("누르면 읽는 동안 생활을 멈춰요");
+    b.onclick = (e) => {
+      e.stopPropagation();
+      clearTimeout(v.speechTimer);
+      b.classList.add("held"); // 읽는 동안 멈춘 말풍선은 ▶ 로 다시 시작할 때까지 남긴다
+      if (store.life().paused) return;
+      try {
+        store.lifePause(crypto.randomUUID(), true);
+      } catch {}
+      notify(T("읽는 동안 멈췄어요. ▶ 를 누르면 다시 시작해요."));
+      render();
+    };
+    speechLayer.append(b);
+    v.speech = b;
+    placeSpeech(v);
+    const dur = Math.min(4500, Math.max(2200, 1800 + 70 * text.length));
+    v.speechUntil = performance.now() + dur;
+    requestAnimationFrame(() => {
+      const r = b.getBoundingClientRect(),
+        sc = scene.getBoundingClientRect();
+      for (const o of speechLayer.children) {
+        if (o === b) continue;
+        const q = o.getBoundingClientRect();
+        if (r.left < q.right && r.right > q.left && r.top < q.bottom && r.bottom > q.top) {
+          b.classList.add("lift");
+          break;
+        }
+      }
+      const dx = r.left < sc.left + 4 ? sc.left + 4 - r.left : r.right > sc.right - 4 ? sc.right - 4 - r.right : 0;
+      if (dx) b.style.setProperty("--nudge", Math.round(dx) + "px");
+    });
+    v.speechTimer = setTimeout(() => hideSpeech(v, b), dur);
+  }
+  function hideSpeech(v, b) {
+    {
+      if (v.speech !== b) return;
+      b.classList.add("out");
+      setTimeout(() => {
+        if (v.speech === b) {
+          b.remove();
+          v.speech = null;
+        }
+        pumpSpeech();
+      }, 260);
+    }
+  }
+  function releaseHeldSpeech() {
+    for (const v of pawnViews.values())
+      if (v.speech?.classList.contains("held")) {
+        const b = v.speech;
+        b.classList.remove("held");
+        v.speechTimer = setTimeout(() => hideSpeech(v, b), 1200);
+      }
+  }
+
   /* ───────── 카메라: 바닥 영역이 화면에 들어오도록 배경을 배치 ───────── */
   const art = $("sceneArt"),
     scene = $("scene"),
     stage = $("lifeStage");
+  const speechLayer = node("div", "speech-layer");
+  speechLayer.setAttribute("aria-live", "polite");
+  stage.append(speechLayer);
   const missing = new Set();
   art.addEventListener("error", () => {
     missing.add(art.dataset.key);
@@ -525,6 +660,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
         v.el.setAttribute("aria-label", T(p.name) + " · " + modeOf(a).text + T(" · 상세 보기"));
         v.pos = { x: a.x, y: a.y };
         v.mode = a.mode;
+        placeSpeech(v);
         if (!life.paused && !document.hidden) {
           // 그리기 횟수가 속도만큼 늘었으니 확률을 나눠 초당 빈도는 그대로
           const r = Math.random() * speed;
@@ -535,10 +671,13 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       }
       for (const [id, v] of pawnViews)
         if (!alive.has(id)) {
+          v.speech?.remove();
           v.el.remove();
           pawnViews.delete(id);
         }
       spawnEffects(state);
+      if (!life.paused) releaseHeldSpeech();
+      queueSpeech(state);
       await renderDetails(state, all);
       const reserve = $("pawnDetails").hidden + "|" + $("arrangePanel").hidden;
       if (reserve !== lastReserve) {
@@ -711,10 +850,11 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       for (const m of rows) {
         const r = node("div", "mem-row");
         const t = node("div");
-        t.append(
-          node("span", "", (m.description ? tLife(m.description) : TOPIC[m.topic] || T(T("확인한 사건이 있어요"))) + (m.to ? " · " + actorName(state, m.to) : "")),
-          node("small", "", (m.reason_known ? T("사유 확인") : T("사유 미상")) + " · " + (m.resolution === "resolved" ? T("해결됨") : T("기억 유지"))),
-        );
+        // PO-15 §5: 사실 / 해석 / 사유 / 해결을 따로 보여 준다(해당 없는 항목은 생략)
+        const mt = memoryText(memoryView(m), (id) => actorName(state, id));
+        t.append(node("span", "mem-fact", mt.fact), node("small", "mem-interp", mt.interpretation));
+        if (mt.reason) t.append(node("small", "mem-reason", mt.reason));
+        if (mt.resolution) t.append(node("small", "mem-resolution", mt.resolution));
         r.append(icon("i-book"), t);
         block.append(r);
       }
@@ -771,7 +911,15 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
   function renderLogs(state) {
     const root = $("lifeLog");
     root.replaceChildren();
-    const rows = state.life.logs.slice(showAllLogs ? -120 : -15).reverse();
+    const raw = state.life.logs.slice(showAllLogs ? -120 : -15).reverse(),
+      pairOf = (l) => [l.actor, l.target].sort().join("|"),
+      rows = [];
+    // 반복된 중립 대화(점수 변화 없음)는 한 줄로 묶어 "몇 번" 으로 보여 준다. 실패·하락처럼 보이지 않게 생활 문장으로.
+    for (const l of raw) {
+      const prev = rows.at(-1);
+      if (l.kind === "neutral" && prev?.kind === "neutral" && pairOf(prev) === pairOf(l) && clockOf(prev.tick).day === clockOf(l.tick).day) prev.repeat = (prev.repeat || 1) + 1;
+      else rows.push({ ...l });
+    }
     let lastDay = null;
     for (const entry of rows) {
       const day = clockOf(entry.tick).day;
@@ -787,6 +935,9 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       txt.append(node("strong", "", actorName(state, entry.actor) + " · " + tLife(entry.text)));
       const subs = [];
       if (entry.target) subs.push(T(T("{name}와 함께"), { name: actorName(state, entry.target) }));
+      if (entry.repeat > 1) subs.push(T("오늘 {n}번", { n: entry.repeat }));
+      const turn = speechTurns(entry)[0];
+      if (turn) subs.push("“" + spoken(state, entry, turn) + "”");
       for (const c of (entry.changes || []).filter((c) => state.pawns.some((p) => p.id === c.from)))
         subs.push(actorName(state, c.from) + "→" + actorName(state, c.to) + T(" 애정 +") + c.affection + T(" · 신뢰 +") + c.trust);
       if (subs.length) {
@@ -1038,6 +1189,20 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     render();
   };
   $("arrangeDone").onclick = () => endLayout();
+  $("speechToggle").checked = speechOn();
+  $("speechToggle").onchange = () => {
+    try {
+      localStorage.setItem("game1-speech", $("speechToggle").checked ? "on" : "off");
+    } catch {}
+    if (!$("speechToggle").checked) {
+      speechQueue.clear();
+      for (const v of pawnViews.values()) {
+        v.speech?.remove();
+        v.speech = null;
+        v.speechUntil = 0;
+      }
+    }
+  };
   const cellAt = (e) => {
     const r = stage.getBoundingClientRect();
     return {
@@ -1127,5 +1292,6 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       previewAt(saved.tool, saved.x, saved.y, true);
     }
   } catch {}
+  if (window.game1Debug) window.game1Debug.life = () => ({ rendering, rerender, faulted, speed, timerSet: !!timer, speechQueued: [...speechQueue.values()].reduce((n, q) => n + q.length, 0) }); // ?debug=1 전용 점검
   return { render, renderList, toggleLayout };
 }

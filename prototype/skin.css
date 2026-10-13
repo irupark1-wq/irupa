@@ -91,3 +91,6 @@
   .life-place .label { height: 24px; font-size: 9.5px; padding: 2px 8px 2px 20px; border-image-width: 0 8px 0 20px; }
   .life-pawn .say { padding: 0 10px 3px 12px; }
 }
+/* PO-REQ-001: 대사 말풍선이 주인공. 상태 글자는 선택한 폰에만(다른 폰은 손을 올리거나 초점이 갈 때) — 상태는 작은 아이콘 말풍선으로 항상 보인다 */
+.life-pawn .say { display: none; }
+.life-pawn.chosen .say, .life-pawn:hover .say, .life-pawn:focus-visible .say { display: inline-flex; }

@@ -5,13 +5,14 @@ import {evaluateBasicTags} from './core/game1-tags.js';
 import {createWorkshopTrial,TEST_READY} from './core/game1-workshop.js';
 import {initialLife,advanceLife,validateLife,actorsFor,GRID} from './life.js';
 import {evaluateLayout,releasePlace,standingCells,LAYOUT_OWNER} from './layout.js';
+import {judge,grant,dayIndex,emptyRepeat,migrateLegacyTalk} from './repeat.js';
 export const STORE_KEY='game1-local-a-v1';
 const initial=()=>({schema_version:1,version:0,authority:1,pawns:[],events:[],sessions:[],structures:{resources:[],roles:[],commitments:[],conflicts:[]},memories:[],tag_history:{},receipts:{}});
 const position=n=>({authority_stream_id:'game1-local-authority',authority_order_id:n});
 const base={affection:100,trust:300,respect:300,reciprocity:500};
 const direction=(from,to)=>({from_pawn_id:from,to_pawn_id:to});
 function ledger(state,from,to){
- const l=createTestLedger({observer_id:from,target_id:to,scope_id:'order-001',allowed_scope_ids:['life-001'],checkpoint:{position:position(1),scores:base},repair_target:{conflict_id:'credit-001',topic:'credit_attribution',scope_id:'order-001'},repair_targets:state.structures.conflicts.filter(c=>c.from_pawn_id===from&&c.to_pawn_id===to).map(c=>({conflict_id:c.id,topic:c.topic,scope_id:c.scope_id}))});
+ const l=createTestLedger({observer_id:from,target_id:to,scope_id:'order-001',allowed_scope_ids:['life-001'],checkpoint:{position:position(1),scores:{...base,...(state.relation_baseline?.[from+'->'+to]||{})}},repair_target:{conflict_id:'credit-001',topic:'credit_attribution',scope_id:'order-001'},repair_targets:state.structures.conflicts.filter(c=>c.from_pawn_id===from&&c.to_pawn_id===to).map(c=>({conflict_id:c.id,topic:c.topic,scope_id:c.scope_id}))});
  for(const row of state.events.filter(e=>e.event.observer_id===from&&e.event.target_id===to))l.append(row.event,row.knowledge);
  return l;
 }
@@ -20,14 +21,99 @@ function context(state,from,to){const a=scores(state,from,to),b=scores(state,to,
 function validateState(state){
  if(!state||state.schema_version!==1||!Number.isSafeInteger(state.version)||state.version<0||!Number.isSafeInteger(state.authority)||state.authority<1||!Array.isArray(state.pawns)||state.pawns.length>3||!Array.isArray(state.events)||state.events.length>500||!Array.isArray(state.sessions)||state.sessions.length>20||!state.receipts)throw Error('save.invalid_data');
  if(state.life)validateLife(state.life);
+ if(state.relation_baseline!==undefined){if(!state.relation_baseline||typeof state.relation_baseline!=='object'||Object.keys(state.relation_baseline).length>12)throw Error('save.invalid_baseline');for(const v of Object.values(state.relation_baseline))for(const [k,n] of Object.entries(v))if(!(k in base)||!Number.isSafeInteger(n)||n<1||n>1000)throw Error('save.invalid_baseline');}
+ if(state.life?.neutral_activity!==undefined&&(!Array.isArray(state.life.neutral_activity)||state.life.neutral_activity.length>NEUTRAL_MAX))throw Error('save.invalid_neutral');
+ if(state.life?.neutral_summary!==undefined&&(typeof state.life.neutral_summary!=='object'||Object.keys(state.life.neutral_summary).length>2000))throw Error('save.invalid_neutral');
  const seen=new Set();for(const p of state.pawns){if(typeof p.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(p.id)||seen.has(p.id)||typeof p.name!=='string'||p.name.length>20)throw Error('save.invalid_pawn');seen.add(p.id);validateAxes(p.trait.axis_values);
   for(const layer of Object.values(p.appearance.layers))if(typeof layer!=='string'||(layer!==''&&(!layer.startsWith('data:image/png;base64,')||layer.length>1500000)))throw Error('save.invalid_image');}
  for(const p of state.pawns)for(const other of state.pawns)if(p.id!==other.id)scores(state,p.id,other.id);
  return state;
 }
+
+/* ───────── A2 기반(PO-15): 완료 사건 → 반복 자격 → 원장·기억·태그 ───────── */
+export const NEUTRAL_MAX=300;
+function append(next,event_id,from,to,actionId,evidence={},knowledge={revision:1,known:true,delay_reason:'unconfirmed'},scope='order-001'){
+  const observer=[...next.pawns,...(next.life?.guest?[next.life.guest]:[])].find(p=>p.id===from);if(!observer)throw Error('event.observer_missing');
+  const event={source_event_id:actionId+'-'+event_id,scope_id:scope,observer_id:from,target_id:to,event_id,position:position(++next.authority),trait_snapshot:structuredClone(observer.trait),rule_version:'game1-rel-test-v041',seed:'seed-a',repeat_multiplier:1,evidence:{action_id:actionId,...evidence}};
+  const l=ledger(next,from,to);l.append(event,knowledge);next.events.push({event,knowledge});
+  next.memories.push({id:event.source_event_id,from,to,scope_id:scope,topic:event_id==='EVT-01'?'conversation':event_id==='EVT-04'?'help':'credit_attribution',known:knowledge.known,reason_known:false,resolution:'open'});
+  return event;
+ }
+/* 태그 이력 재구축(PO-15 §4): 행(source)은 그대로 두고, 각 행의 긍정 여부와 당시 점수 문맥을 원장 replay 로 다시 계산한다.
+   positive = 생활 완료로 자격을 얻은 행(qualifies) ∧ observer 가 현재 인지. 중립(상한)·미인지는 긍정이 아니다. */
+export function rebuildTagHistory(next){
+ const afterAt=(proj,order)=>{let sc=proj.checkpoint.scores;for(const t of proj.trace){if(t.position.authority_order_id<=order)sc=t.after;else break;}return sc;};
+ for(const [key,rows] of Object.entries(next.tag_history)){
+  const [from,to]=key.split('->');if(!from||!to)continue;
+  const pa=ledger(next,from,to).project(),pb=ledger(next,to,from).project(),flags=context(next,from,to);
+  const da=deriveAxes(direction(from,to),next.structures),db=deriveAxes(direction(to,from),next.structures);
+  for(const row of rows){
+   const ev=next.events.find(e=>e.event.source_event_id===row.source_event_id);
+   row.positive=row.qualifies!==false&&(ev?ev.knowledge.known:row.positive);
+   row.context={...flags,a:{...afterAt(pa,row.tick),...da},b:{...afterAt(pb,row.tick),...db}};
+  }
+ }
+}
+const actionTick=id=>{const m=/^game1-auto-(\d+)-/.exec(id);return m?Number(m[1]):null;};
+/* 중립 기록 보존: 오늘·어제는 행 단위(재전송·정정 참조용), 그 이전은 Day×방향×family 개수로 압축 */
+function compactNeutral(life){
+ const keepFrom=dayIndex(life.tick)-1,keep=[],fold=n=>{const k=n.day+'|'+n.observer+'>'+n.target+'|'+n.family;life.neutral_summary[k]=(life.neutral_summary[k]||0)+1;};
+ for(const n of life.neutral_activity){if(n.day>=keepFrom)keep.push(n);else fold(n);}
+ while(keep.length>NEUTRAL_MAX)fold(keep.shift());
+ life.neutral_activity=keep;
+}
+/**
+ * 한 tick 에 확정된 완료 사건들을 반영한다(같은 commit 안에서 호출). 결과: action 별 'applied' | 'neutral' | 'duplicate' | 'stale'.
+ * - 인사·대화(light_social): 방향마다 자격 판정. 허용 → EVT-01 원장 + 기억 + 태그 행. 불허 → 중립 기록만(원장·기억·태그 없음).
+ * - 도움·복구: 기존 정의 그대로(도움 한도는 life.js 의 기존 시험 규칙, minor_help 매핑 검수 전).
+ * - 같은 물리 action 의 재전송은 아무것도 더하지 않는다. 자격은 완료 시점에 동결되고, 인지 여부와 무관하게 quota 를 쓴다.
+ */
+export function applyLifeCompletions(next,completed){
+ const life=next.life;life.repeat??=emptyRepeat();life.neutral_activity??=[];life.neutral_summary??={};
+ const seen=new Set([...next.events.map(r=>r.event.evidence?.action_id).filter(Boolean),...life.neutral_activity.map(n=>n.action_ref)]),outcomes=[];
+ for(const done of completed){
+  if(done.limited||next.events.length>490)continue;
+  const at=actionTick(done.action_id);
+  if(at!==null&&dayIndex(at)<dayIndex(life.tick)-1){outcomes.push({action_id:done.action_id,status:'stale'});continue;}
+  const pairs=done.kind==='talk'?[[done.from,done.to],[done.to,done.from]]:[[done.from,done.to]];
+  if(pairs.some(([from])=>seen.has(done.action_id+'-'+from))){outcomes.push({action_id:done.action_id,status:'duplicate'});continue;}
+  const log=life.logs.findLast(l=>l.kind==='completed'&&l.actor===done.from);let granted=0;
+  for(const [from,to]of pairs){
+   const scope=done.kind==='repair'?done.conflict.scope_id:'life-001',ref=done.action_id+'-'+from,eventId=done.kind==='repair'?'EVT-12':done.kind==='talk'?'EVT-01':'EVT-04';
+   let eligibility=null;
+   if(done.kind==='talk'){
+    const v=judge(life.repeat,{observer:from,target:to,scope,tick:life.tick});
+    if(!v.eligible){life.neutral_activity.push({action_ref:ref,action_id:done.action_id,source_ref:ref+'-'+eventId,observer:from,target:to,tick:life.tick,day:v.day,family:v.family,scope,reason:v.reason,since_last_grant:v.since_last_grant,rule_version:v.rule_version});seen.add(ref);continue;}
+    eligibility={family:v.family,day:v.day,quota_index:grant(life.repeat,{observer:from,target:to,scope,tick:life.tick}),since_last_grant:v.since_last_grant,rule_version:v.rule_version};
+   }
+   const knowledge=done.knowledge?.[from]===false?{revision:1,known:false,delay_reason:'unconfirmed'}:undefined;
+   const previous=scores(next,from,to);
+   const e=append(next,eventId,from,to,ref,{mutual_acceptance:true,greeting_completed:true,role_accepted:true,help_completed:true,...(done.kind==='repair'?{conflict_id:done.conflict.conflict_id,topic:done.conflict.topic,repair_scope_id:scope,repair_plan_id:done.action_id+'-plan',repair_executed:true,repair_accepted:true}:{})},knowledge,scope);
+   seen.add(ref);granted++;
+   if(eligibility)next.events.at(-1).eligibility=eligibility;
+   if(done.kind==='repair'){const target=next.structures.conflicts.find(c=>c.id===done.conflict.conflict_id&&c.scope_id===scope&&c.from_pawn_id===from&&c.to_pawn_id===to);if(!target?.active)throw Error('life.repair_target_changed');target.active=false;target.state='resolved';target.severity=1;for(const m of next.memories)if(m.from===from&&m.to===to&&m.scope_id===scope&&m.topic===done.conflict.topic)m.resolution='resolved';}
+   const memory=next.memories.findLast(m=>m.id===e.source_event_id);if(memory){memory.reason_known=true;memory.description=done.reason;}
+   const key=from+'->'+to;next.tag_history[key]??=[];next.tag_history[key].push({source_event_id:e.source_event_id,tick:e.position.authority_order_id,positive:!knowledge,qualifies:true,context:context(next,from,to)});
+   const current=scores(next,from,to);if(log){log.changes??=[];log.changes.push({from,to,affection:current.affection-previous.affection,trust:current.trust-previous.trust});}
+  }
+  if(done.kind==='talk'&&!granted&&log){log.kind='neutral';log.text='둘은 잠깐 이야기를 나눴어요';}
+  outcomes.push({action_id:done.action_id,status:granted?'applied':'neutral'});
+ }
+ compactNeutral(life);
+ return outcomes;
+}
+
+/* 관계 상세 공개 표시(PO-15 §5, PO-DEC-001): 자기 폰이 인지한 사실·해석·사유·해결을 따로 담는다.
+   문구 자체는 화면(i18n)이 키로 고른다. 확인되지 않은 악의·상대 속마음은 만들지 않는다. */
+export function memoryView(m){
+ const ev=(/-(EVT-\d\d)$/.exec(m.id)||[])[1]||null;
+ const kind=ev==='EVT-01'?'conversation':ev==='EVT-04'?'help':ev==='EVT-12'?'repair':ev==='EVT-09'?'correction':'credit_gap';
+ const conflictKind=kind==='credit_gap'||kind==='correction'||kind==='repair';
+ return {id:m.id,kind,target:m.to,reason:conflictKind?(m.reason_known?'known':'unknown'):'not_applicable',resolution:conflictKind?m.resolution:'not_applicable'};
+}
 export function createLocalStore(storage){
  const raw=storage.getItem(STORE_KEY);let state=raw?validateState(JSON.parse(raw)):initial();
- const previouslyLiving=!!state.life;state.life??=initialLife();if(previouslyLiving&&state.life.tick>0)state.life.paused=true;state.life.layout_version??=0;
+ const previouslyLiving=!!state.life;state.life??=initialLife();if(previouslyLiving&&state.life.tick>0)state.life.paused=true;state.life.layout_version??=0;state.life.repeat??=emptyRepeat();migrateLegacyTalk(state.life);state.life.neutral_activity??=[];state.life.neutral_summary??={};
  function commit(commandId,command,change,expected=state.version){
   if(typeof commandId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(commandId))throw Error('command.invalid_id');
   const fingerprint=JSON.stringify(command),old=state.receipts[commandId];if(old){if(old.fingerprint!==fingerprint)throw Error('command.payload_conflict');return structuredClone(old.result);}
@@ -37,18 +123,18 @@ export function createLocalStore(storage){
   validateState(next);
   storage.setItem(STORE_KEY,JSON.stringify(next));state=next;return structuredClone(result);
  }
- function append(next,event_id,from,to,actionId,evidence={},knowledge={revision:1,known:true,delay_reason:'unconfirmed'},scope='order-001'){
-  const observer=[...next.pawns,...(next.life?.guest?[next.life.guest]:[])].find(p=>p.id===from);if(!observer)throw Error('event.observer_missing');
-  const event={source_event_id:actionId+'-'+event_id,scope_id:scope,observer_id:from,target_id:to,event_id,position:position(++next.authority),trait_snapshot:structuredClone(observer.trait),rule_version:'game1-rel-test-v041',seed:'seed-a',repeat_multiplier:1,evidence:{action_id:actionId,...evidence}};
-  const l=ledger(next,from,to);l.append(event,knowledge);next.events.push({event,knowledge});
-  if(knowledge.known)next.memories.push({id:event.source_event_id,from,to,scope_id:scope,topic:event_id==='EVT-01'?'conversation':event_id==='EVT-04'?'help':'credit_attribution',known:true,reason_known:false,resolution:'open'});
-  return event;
- }
+
  return {
   read:()=>structuredClone(state),
   life:()=>structuredClone(state.life),
   visitPermission(commandId,scope,allowed){if(!['host_access','activity_participation','light_auto_events'].includes(scope)||typeof allowed!=='boolean')throw Error('visit.invalid_permission');return commit(commandId,{kind:'local-visit-permission',scope,allowed},next=>{if(scope==='host_access')next.life.host_access=allowed;else next.life.owner_scopes[scope]=allowed;return {status:allowed?'allowed':'owner_scope_denied',penalty:0};});},
-  reviseLifeKnowledge(commandId,sourceId,knowledge){return commit(commandId,{kind:'life-knowledge',sourceId,knowledge},next=>{const row=next.events.find(r=>r.event.source_event_id===sourceId);if(!row)throw Error('ledger.source_not_found');const l=ledger(next,row.event.observer_id,row.event.target_id);const result=l.revise(sourceId,knowledge);if(result.status==='revised'){row.knowledge=structuredClone(knowledge);const memory=next.memories.find(m=>m.id===sourceId);if(memory){memory.known=knowledge.known;memory.reason_known=knowledge.delay_reason==='proven_concealment';}for(const history of Object.values(next.tag_history))for(const item of history)if(item.source_event_id===sourceId)item.positive=knowledge.known;}return {status:result.status,action_reexecutions:0,reward_reexecutions:0};});},
+  reviseLifeKnowledge(commandId,sourceId,knowledge){return commit(commandId,{kind:'life-knowledge',sourceId,knowledge},next=>{
+   const row=next.events.find(r=>r.event.source_event_id===sourceId);
+   // 상한 중립으로 남은 완료는 자격이 없었으므로 뒤늦게 알아도 기여가 생기지 않는다(PO-15 §3)
+   if(!row){if(next.life.neutral_activity?.some(n=>n.source_ref===sourceId))return {status:'not_eligible',action_reexecutions:0,reward_reexecutions:0,quota_changes:0};throw Error('ledger.source_not_found');}
+   const l=ledger(next,row.event.observer_id,row.event.target_id);const result=l.revise(sourceId,knowledge);
+   if(result.status==='revised'){row.knowledge=structuredClone(knowledge);const memory=next.memories.find(m=>m.id===sourceId);if(memory){memory.known=knowledge.known;if(memory.topic==='credit_attribution')memory.reason_known=knowledge.delay_reason==='proven_concealment';}rebuildTagHistory(next);}
+   return {status:result.status,action_reexecutions:0,reward_reexecutions:0,quota_changes:0};});},
   lifePause(commandId,paused){if(typeof paused!=='boolean')throw Error('life.invalid_pause');return commit(commandId,{kind:'life-pause',paused},next=>{next.life.paused=paused;return {paused};});},
   lifeStep(expectedTick){
    if(!Number.isSafeInteger(expectedTick)||expectedTick<1)throw Error('life.invalid_tick');
@@ -57,20 +143,8 @@ export function createLocalStore(storage){
    if(state.life.paused)return {status:'paused',tick:state.life.tick};
    return commit('game1-life-step-'+expectedTick,{kind:'life-step',expectedTick},next=>{
     const completed=advanceLife(next,(from,to)=>{const value=scores(next,from,to),target=next.structures.conflicts.find(c=>c.active&&c.from_pawn_id===from&&c.to_pawn_id===to&&(c.scope_id==='life-001'||(c.id==='credit-001'&&next.events.some(e=>e.event.event_id==='EVT-09'&&e.event.observer_id===from&&e.event.target_id===to))));return {...value,repair_target:target?{conflict_id:target.id,scope_id:target.scope_id,topic:target.topic}:null};});
-    for(const done of completed){
-     if(done.limited||next.events.length>490)continue;
-     const pairs=done.kind==='talk'?[[done.from,done.to],[done.to,done.from]]:[[done.from,done.to]];
-     for(const [from,to]of pairs){
-      const previous=scores(next,from,to),scope=done.kind==='repair'?done.conflict.scope_id:'life-001';
-      const e=append(next,done.kind==='repair'?'EVT-12':done.kind==='talk'?'EVT-01':'EVT-04',from,to,done.action_id+'-'+from,{mutual_acceptance:true,greeting_completed:true,role_accepted:true,help_completed:true,...(done.kind==='repair'?{conflict_id:done.conflict.conflict_id,topic:done.conflict.topic,repair_scope_id:scope,repair_plan_id:done.action_id+'-plan',repair_executed:true,repair_accepted:true}:{})},undefined,scope);
-      if(done.kind==='repair'){const target=next.structures.conflicts.find(c=>c.id===done.conflict.conflict_id&&c.scope_id===scope&&c.from_pawn_id===from&&c.to_pawn_id===to);if(!target?.active)throw Error('life.repair_target_changed');target.active=false;target.state='resolved';target.severity=1;for(const m of next.memories)if(m.from===from&&m.to===to&&m.scope_id===scope&&m.topic===done.conflict.topic)m.resolution='resolved';}
-      const memory=next.memories.at(-1);memory.reason_known=true;memory.description=done.reason;
-      const key=from+'->'+to;next.tag_history[key]??=[];next.tag_history[key].push({source_event_id:e.source_event_id,tick:e.position.authority_order_id,positive:true,context:context(next,from,to)});
-      const current=scores(next,from,to),log=next.life.logs.findLast(l=>l.kind==='completed'&&l.actor===done.from);if(log){log.changes??=[];log.changes.push({from,to,affection:current.affection-previous.affection,trust:current.trust-previous.trust});}
-
-     }
-    }
-    return {status:'applied',tick:next.life.tick,completed:completed.length};
+    const outcomes=applyLifeCompletions(next,completed);
+    return {status:'applied',tick:next.life.tick,completed:completed.length,outcomes};
    });
   },
   /* A1(PO-14): 배치는 판정(layout.js) 통과 + 배치 버전 일치 + 월드 주인일 때만 한 commit 으로 반영한다.
@@ -142,7 +216,7 @@ export function createLocalStore(storage){
    return {status:'applied',source_event_id:e.source_event_id};
   },expected);},
   projection(from,to,otherOwner=false){const internal=scores(state,from,to),c=context(state,from,to);const visitor=state.life.guest?.id;const dto=relationshipProjection({requester_id:'local-owner',observer_owner_id:otherOwner||from===visitor?'another-owner':'local-owner',target_owner_id:to===visitor?'another-owner':'local-owner'},{scores:internal,basis_status:internal.basis_status,memories:state.memories.filter(m=>m.from===from&&m.to===to)});
-   if(dto.visibility!=='restricted')dto.tags=evaluateBasicTags(state.tag_history[from+'->'+to]||[],c).tags.slice(0,3);return dto;
+   if(dto.visibility!=='restricted'){dto.tags=evaluateBasicTags(state.tag_history[from+'->'+to]||[],c).tags.slice(0,3);dto.memory_views=state.memories.filter(m=>m.from===from&&m.to===to&&m.known).map(memoryView);const mine=x=>x.active!==false&&x.from_pawn_id===from&&x.to_pawn_id===to;dto.basis={conflicts:state.structures.conflicts.filter(c=>c.active&&mine(c)).map(c=>({topic:c.topic,state:c.state})),roles:state.structures.roles.filter(mine).length,resources:state.structures.resources.filter(mine).length,commitments:(state.structures.commitments||[]).filter(mine).length};}return dto;
   },
  };
 }

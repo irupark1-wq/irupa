@@ -1,11 +1,12 @@
 // Deterministic local simulation. Tick time is simulation time, never wall-clock replay.
+import {emptyRepeat,validateRepeat} from './repeat.js';
 export const GRID={width:12,height:8};
 export const DEFAULT_PLACES=[
  {id:'game1-rest',kind:'rest',label:'포근한 쉼터',x:2,y:2,blocked:false},
  {id:'game1-work',kind:'work',label:'함께 만드는 작업대',x:9,y:2,blocked:false},
  {id:'game1-social',kind:'social',label:'이야기 자리',x:6,y:5,blocked:false},
 ];
-export function initialLife(){return {schema:1,epoch:'game1-life-a1',seed:'game1-auto-v06-seed-a',definition_version:'game1-life-test-v06',tick:0,paused:false,host_access:true,owner_scopes:{activity_participation:true,light_auto_events:true,role_commitment:false,public_relation_declaration:false,major_transition:false},places:structuredClone(DEFAULT_PLACES),walls:[],actors:{},guest:null,logs:[],trace:[],cooldowns:{},effects:{},sequence:0,layout_version:0};}
+export function initialLife(){return {schema:1,epoch:'game1-life-a1',seed:'game1-auto-v06-seed-a',definition_version:'game1-life-test-v06',tick:0,paused:false,host_access:true,owner_scopes:{activity_participation:true,light_auto_events:true,role_commitment:false,public_relation_declaration:false,major_transition:false},places:structuredClone(DEFAULT_PLACES),walls:[],actors:{},guest:null,logs:[],trace:[],cooldowns:{},effects:{},sequence:0,layout_version:0,repeat:emptyRepeat()};}
 const cell=p=>p.x+','+p.y;
 const distance=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
 const clamp=n=>Math.max(0,Math.min(100,n));
@@ -13,6 +14,7 @@ const level=n=>n==='high'?1:n==='low'?-1:0;
 export function actorState(index){return {x:3+index*2,y:6,tired:12+index*10,social:50+index*7,activity:55-index*8,mode:'idle',goal:null,until:0,cooldown:0,reason:'살펴보는 중',last_place:null};}
 export function actorsFor(state){return [...state.pawns,...(state.life?.guest?.present&&state.life.guest.connected&&state.life.host_access&&state.life.owner_scopes.activity_participation&&state.life.owner_scopes.light_auto_events?[state.life.guest]:[])];}
 export function validateLife(life){
+ if(life?.repeat!==undefined)validateRepeat(life.repeat);
  if(life?.layout_version!==undefined&&(!Number.isSafeInteger(life.layout_version)||life.layout_version<0))throw Error('life.invalid_state');
  if(typeof life?.host_access!=='boolean'||!life.owner_scopes||['activity_participation','light_auto_events','role_commitment','public_relation_declaration','major_transition'].some(k=>typeof life.owner_scopes[k]!=='boolean')||typeof life.seed!=='string'||life.seed.length>128||!Array.isArray(life.trace)||life.trace.length>80||!Number.isSafeInteger(life.sequence)||life.sequence<0)throw Error('life.invalid_state');
  if(!life||life.schema!==1||life.epoch!=='game1-life-a1'||!Number.isSafeInteger(life.tick)||life.tick<0||typeof life.paused!=='boolean'||!Array.isArray(life.places)||life.places.length!==3||!Array.isArray(life.walls)||life.walls.length>30||!Array.isArray(life.logs)||life.logs.length>120)throw Error('life.invalid_state');
@@ -78,7 +80,7 @@ export function advanceLife(state,relationship){
    if((g.place&&(!place||place.blocked))||(g.target&&!target)){a.mode='idle';a.goal=null;a.cooldown=life.tick+6;log(life,pawn.id,'대상이 사라져 다른 일을 찾아요','cancelled');continue;}
    let destination=place;if(target){const t=life.actors[target.id],near=[{x:t.x-1,y:t.y},{x:t.x+1,y:t.y},{x:t.x,y:t.y-1},{x:t.x,y:t.y+1}];destination=near.filter(n=>n.x>=0&&n.x<12&&n.y>=0&&n.y<8).sort((x,y)=>distance(a,x)-distance(a,y)).find(n=>route(life,a,n,occupied(pawn.id))!==null);}
    const path=destination&&route(life,a,destination,occupied(pawn.id));
-   if(!path){a.mode='idle';a.goal=null;a.cooldown=life.tick+9;a.reason='경로가 막혀 다른 일을 찾아요';log(life,pawn.id,a.reason,'blocked');continue;}
+   if(!path){const taken=!!place&&occupied(pawn.id).some(o=>o.x===place.x&&o.y===place.y)&&route(life,a,destination,occupied(pawn.id).filter(o=>!(o.x===place.x&&o.y===place.y)))!==null;a.mode='idle';a.goal=null;a.cooldown=life.tick+(taken?5:9);a.reason=taken?'자리가 비기를 기다리며 다른 일을 찾아요':'경로가 막혀 다른 일을 찾아요';log(life,pawn.id,a.reason,taken?'occupied':'blocked');continue;}
    if(path.length){Object.assign(a,path[0]);continue;}
    if(target){const other=life.actors[target.id],r=relationship(target.id,pawn.id);
     if(g.kind==='repair'&&r.repair_target?.conflict_id===g.conflict.conflict_id&&other.mode==='idle'&&other.tired<65&&r.trust>=280&&other.social>30){a.mode='repairing';a.partner=target.id;a.until=life.tick+6;other.mode='repairListening';other.partner=pawn.id;other.until=a.until;log(life,pawn.id,'상대가 구체적인 보완 제안을 수락했어요','accepted',target.id);continue;}
@@ -98,7 +100,8 @@ export function advanceLife(state,relationship){
   const options=candidates(life,pawn.id,all,relationship),choice=options[0];if(choice){a.intent_id='game1-intent-'+life.tick+'-'+pawn.id;a.mode='moving';a.started=life.tick;a.goal=choice;a.reason=choice.reason;life.trace??=[];life.trace.push({tick:life.tick,seed:life.seed,definition_version:life.definition_version,intent_id:a.intent_id,actor:pawn.id,position:{x:a.x,y:a.y},candidates:structuredClone(options),chosen:structuredClone(choice)});life.trace=life.trace.slice(-80);log(life,pawn.id,choice.kind==='repair'?'남은 문제를 보완하러 가요':choice.kind==='assist'?'도움을 제안하러 가요':choice.kind==='meet'?'다른 폰에게 다가가요':life.places.find(p=>p.id===choice.place).label+'로 가요','move',choice.target||null);}
  }
  // Only completed, mutually accepted interactions reach the event adapter.
- for(const event of confirmed){if(event.kind==='repair'){event.limited=false;continue;}const pair=[event.from,event.to].sort().join('-')+'-'+event.kind;const usage=life.effects[pair]||{count:0,last:-100};
+ // 인사·대화(light_social)의 효과 자격은 store 가 방향별로 판정한다(PO-15). 여기서는 도움의 기존 시험 한도만 유지한다(minor_help 매핑 검수 전).
+ for(const event of confirmed){if(event.kind==='repair'||event.kind==='talk'){event.limited=false;continue;}const pair=[event.from,event.to].sort().join('-')+'-'+event.kind;const usage=life.effects[pair]||{count:0,last:-100};
   if(usage.count>=3||life.tick-usage.last<60){event.limited=true;log(life,event.from,'이야기는 남지만 반복 관계 효과는 제한해요','limited',event.to);}
   else{life.effects[pair]={count:usage.count+1,last:life.tick};event.limited=false;}}
  return confirmed;

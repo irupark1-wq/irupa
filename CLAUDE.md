@@ -23,7 +23,7 @@
 
 ```bash
 npm start        # http://127.0.0.1:4173 (Node 24+). 처음이면 node scripts/game1_build_prototype.mjs 먼저
-npm test         # 126개 통과해야 함 (core/·store·life·layout 계약)
+npm test         # 140개 통과해야 함 (core/·store·life·layout·A2 기반·대사 계약)
 ```
 - 브라우저 확인은 PC 가로(1440×900)와 폰 세로(375×812) 둘 다. 서버 CSP 가 `style-src 'self'` 라 **인라인 `style=` 속성 금지**(JS 의 `element.style` 은 됨), 외부 폰트·이미지 링크 금지(모든 파일은 레포 안).
 - 변경 후: `node --check` + `npm test` + HTML id ↔ JS `$("id")` 대조 + 브라우저 스크린샷을 `docs/evidence/` 에 남기고 `docs/planning/replies/NN_*.md` 에 기록.
@@ -40,6 +40,9 @@ npm test         # 126개 통과해야 함 (core/·store·life·layout 계약)
 | `i18n.js` | 다국어. **사전 키 = 한국어 원문**. `T("한국어")`, `T("{name}…", {name})`, `tLife()`(시뮬레이션 문장), `applyStatic()`. 언어 변경 = localStorage `game1-lang` 저장 후 새로고침 |
 | `app.js` | 화면 전환(screen/sheet), 얼굴 편집기, 성격, 저장/불러오기 파일, 관계 화면, 언어 선택 |
 | `life-ui.js` | 월드 렌더: 카메라 `frameScene()`(방향별 배경·바닥 비율 `BACKGROUNDS`), 폰·말풍선, 상세 패널 탭 3개, 기록·관계·방문·목록 팝업, fx |
+| `repeat.js` | A2 반복 효과 자격(PO-15): Day=⌊(480+tick)/1440⌋, 방향별 bucket, 하루 3회·60tick. 순수 함수 |
+| `dialogue.js` | 폰 위 대화 말풍선 대사(개발용 임시, 김플레이 대사팩으로 교체). 기록→대사, 말투(친밀 지향)·따뜻함(애정·신뢰) 분리 |
+| `relation-text.js` | 기억의 사실/해석/사유/해결 문구, 8축 이름·설명 |
 | `layout.js` | A1 배치 판정 순수 함수(경계·겹침·폰 칸·30칸·통로/고립)와 장소 변경 시 활동 중지. 미리보기·저장이 같은 판정을 쓴다 |
 | `life.js`, `store.js`, `core/*` | 시뮬레이션·저장소·계약(core 는 `src/contracts/*.ts` 에서 생성). **UI 작업으로 건드리지 않는다** |
 | `assets/` | 디자이너 조각: `background/ brand/ bubbles/ furniture/ log/ needs/ relation/ ui/(dock,hud,icon)`, 임시 예시 파츠 `six_layers/`, 임시 배경 `game1-cozy-room-v1.png` |
@@ -70,7 +73,10 @@ npm test         # 126개 통과해야 함 (core/·store·life·layout 계약)
 
 1. (완료 2026-10-13) 상대 경로 전환, `prototype/.nojekyll`·`CNAME`, `pages.yml`, CSP 메타, 계정 문서 교체. 배포 기록은 `docs/planning/replies/17_*.md`.
 2. (완료 2026-10-13) SB-0002 계정·월드 저장 테이블 적용, RLS 테스트 31/31 (DEV-18). 브라우저 연결(익명 로그인·저장/복구, CSP `connect-src`)은 DEV-19 의 B0.5 단계에서.
-3. **단계 순서(PO-DEC-001)**: A1 공간 정합(**DEV-20 납품, 김PO 판정 대기**) → A2 관계 서사(PO-15 요청 중 = REQ-02, 반복 상한 Day 규칙은 DEV-20 6.2) → A3 AUTO22 실행 증거(PO-16) → B-ACCOUNT 계정 연결 → B1. B0 온라인 설계는 A2/A3 와 병행(PO-17).
+3. **진행(2026-10-13 기준)**: A1 납품(DEV-20, 판정 대기) → A2 기반 납품(DEV-22) → PO-REQ-001 말풍선·관계창 기반(DEV-23, 갈등 생성은 REQ-04 입력 대기) → STORY-C(PO-15 v1.1) → 두 번째 방 → A3 → B-ACCOUNT → B1.
+   - store.js 의 `applyLifeCompletions` 가 완료 사건 → 반복 자격 → 원장·기억·태그를 한 commit 에서 처리(시험도 같은 함수 사용). 상한 대화는 `life.neutral_activity`(원장 아님). 정정 시 `rebuildTagHistory`.
+   - 진단: `node scripts/game1_life_diagnostics.mjs 2000` (단계별 개수, 성격만/관계만 비교).
+   - 이전 메모 — 단계 순서(PO-DEC-001): A1 공간 정합(**DEV-20 납품, 김PO 판정 대기**) → A2 관계 서사(PO-15 요청 중 = REQ-02, 반복 상한 Day 규칙은 DEV-20 6.2) → A3 AUTO22 실행 증거(PO-16) → B-ACCOUNT 계정 연결 → B1. B0 온라인 설계는 A2/A3 와 병행(PO-17).
    - **두 번째 방(사용자 결정 2026-10-13):** 이전 "아늑한 방" 배경·가구 그림(`prototype/assets/legacy-room/`)을 게임 안 두 번째 장소로 넣는다. **A2 다음, A3 전**에 한다(약 2~3일: 방 전환, 방별 배치 저장, 그림 속 침대·책장 자리를 막힌 칸으로 등록). PO-14 의 '방 1개'를 바꾸는 결정이므로 착수 전 세부계획서(REQ-04 로 요청)를 받는다.
    - 로컬 확인: 4173 포트는 이 PC 의 다른 프로세스가 쓰므로 `GAME1_PROTOTYPE_PORT=4199`. 시험 주소 옵션: `?debug=1`(저장 실패 1회 주입 `game1Debug.failNextSave()`), `?viewer=visitor`(비소유자 시점).
 4. 디자이너 대기: 시안 글꼴 이름(없으면 나눔스퀘어라운드), 참고 예시 캐릭터 6레이어 세트(선택).

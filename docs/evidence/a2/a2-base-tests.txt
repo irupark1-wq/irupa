@@ -1,0 +1,20 @@
+✔ A2-B01 Day1 completed greetings at 100/170/240/310 from affection 300: +4/+4/+4/0, final 312, 4th neutral with no positive basis (10.6293ms)
+✔ A2-B02 Day boundary 925/960/995: Day 1/2/2, interval 35/70, effect +4/0/+4, Day2 count 0->1 (2.9835ms)
+✔ A2-B03 three frozen-eligible unknown events then a 4th, later known: past cap kept, no new quota, 4th never eligible [mechanism fixture] (8.7971ms)
+✔ A2-B04 one source unknown->known->duplicate known->unknown->known: original slot replaced, tags replayed, no extra source/action/quota (4.2452ms)
+✔ A2-B05 clamp-limited valid event vs cap-neutral: both show delta 0, only the valid one is a positive basis (3.1484ms)
+✔ A2-B06 same action resent under another command adds nothing; storage failure rolls back tick, counters, ledger and tags (18.7717ms)
+✔ A2-B07 only the authoritative Day starts a new bucket: reconnect, real date and moving furniture reset nothing (5.5134ms)
+✔ A2-B08 decline, visit withdrawal, disconnect and blocked path: no penalty, no betrayal memory, no faked completion (526.9887ms)
+✔ A2-B09 neutral and unknown sources never satisfy positive/independent-source tag conditions; after correction the order is consistent (6.5121ms)
+✔ A2-B10 save/restore and two-direction public projection: state equal, paused, no reverse/trace leak (421.3409ms)
+✔ A2 migration: legacy unordered talk counter becomes per-direction buckets without granting extra effect (0.1909ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1093.4516
+v24.19.0

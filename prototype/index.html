@@ -216,6 +216,7 @@
         </div>
         <p class="hint note" id="saveNote">이 브라우저에는 자동으로 저장돼요. 브라우저 데이터를 지우면 복구할 수 없으니 파일로도 저장해 두세요.</p>
         <div class="block lang-block"><h4>언어</h4><div class="chips" id="langPicker"></div></div>
+        <div class="block"><h4>대화 말풍선</h4><label class="check"><input type="checkbox" id="speechToggle" checked>폰 위에 대화 보여 주기</label><p class="hint small">말풍선을 누르면 읽는 동안 생활이 멈춰요.</p></div>
         <div class="settings-list">
           <button id="artCompare" class="row-btn" type="button"><img class="" src="./assets/ui/icon/compare.png" alt="" draggable="false"><span><strong>공간 표현 비교</strong><small>2D 바닥과 3D 기하 공간 합성 비교</small></span></button>
           <button id="openWorkshop" class="row-btn" type="button"><img class="" src="./assets/ui/icon/hammer.png" alt="" draggable="false"><span><strong>공동 공방 시험 (보존)</strong><small>이전 선택형 흐름, 주요 UX에서 제외됨</small></span></button>
@@ -326,6 +327,7 @@
     </div>
     <div class="screen-body">
       <div class="panel relation-panel">
+        <div id="relHead" class="rel-head"></div>
         <div class="pair-row">
           <label class="field">평가하는 폰<select id="from"></select></label>
           <span class="pair-heart"><svg><use href="#i-heart"/></svg></span>

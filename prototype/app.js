@@ -1,8 +1,9 @@
-import { t as T, applyStatic, setLang, getLang, LANGS } from "./i18n.js";
+import { t as T, tLife, applyStatic, setLang, getLang, LANGS } from "./i18n.js";
 applyStatic();
 import { mountLifeUI } from "./life-ui.js";
 import { renderSpaceComparison } from "./space-comparison.js";
 import { createLocalStore, STORE_KEY } from "./store.js";
+import { memoryText, AXES as REL_AXES } from "./relation-text.js";
 import { AXES, LEVELS, DEFAULT_AXES, PRESETS } from "./core/game1-traits.js";
 import { CHOICES, TEST_READY } from "./core/game1-workshop.js";
 
@@ -520,49 +521,121 @@ const svgIcon = (name) => {
   s.append(u);
   return s;
 };
-function relationship() {
+/* 관계창(PO-REQ-001 §4): 누가 누구를 어떻게 보는지 → 근거 → 8축 → 최근 사건(사실/해석/사유/해결) → 실제 근거 엔터티 */
+const SLOT_ORDER = ["back_hair", "base", "eyes_pair", "mouth", "front_hair", "frame_accessory"];
+async function pawnFace(p, size) {
+  const c = el("canvas", "rel-face");
+  c.width = c.height = size;
+  const imgs = {};
+  for (const sl of SLOT_ORDER) imgs[sl] = await image(p.appearance?.layers?.[sl] || "./assets/six_layers/" + sl + "_neutral.png");
+  paint(c, imgs, p.appearance?.transforms || Object.fromEntries(SLOT_ORDER.map((sl) => [sl, { x: 0, y: 0, rotation: 0, scale: 1, visible: true }])), false);
+  return c;
+}
+async function relationship() {
   const from = $("from").value,
-    to = $("to").value;
+    to = $("to").value,
+    state = store.read(),
+    all = [...state.pawns, ...(state.life.guest?.present ? [state.life.guest] : [])],
+    pf = all.find((p) => p.id === from),
+    pt = all.find((p) => p.id === to),
+    nameOf = (id) => T(all.find((p) => p.id === id)?.name || T("폰"));
   $("relationship").replaceChildren();
-  if (!from || !to || from === to) {
+  $("relHead").replaceChildren();
+  if (!pf || !pt || from === to) {
     $("relationship").append(el("p", "empty", T("서로 다른 폰을 선택해 주세요.")));
     return;
   }
+  // 1. 방향 머리말: 얼굴·이름·A→B, 같은 소유자끼리면 방향 바꾸기
+  const head = $("relHead"),
+    bothOwn = !pf.local_double && !pt.local_double;
+  const who = (p) => {
+    const box = el("div", "rel-who");
+    box.append(el("b", "", T(p.name)), el("small", "", p.local_double ? T("방문 폰 · 로컬 방문 데모") : T("내 폰")));
+    return box;
+  };
+  head.append(await pawnFace(pf, 72), who(pf), el("span", "rel-arrow", "→"), await pawnFace(pt, 72), who(pt));
+  if (bothOwn) {
+    const swap = el("button", "gbtn gbtn-sm rel-swap", T("반대 방향 보기"));
+    swap.type = "button";
+    swap.onclick = () => {
+      $("from").value = to;
+      $("to").value = from;
+      relationship();
+    };
+    head.append(swap);
+  }
   const dto = store.projection(from, to, $("restricted").checked);
   if (dto.visibility === "restricted") {
-    $("relationship").append(el("p", "empty", T("공개된 정보가 없습니다.")));
+    $("relationship").append(el("p", "empty", T("이 방향은 공개된 정보가 없어요.")));
     return;
   }
-  for (const [a, n] of Object.entries(dto.scores)) {
-    const row = el("div", "score-row");
-    const bar = el("div", "bar " + (barTone[a] || ""));
-    const fill = el("i");
-    fill.style.width = Math.min(100, (n / 1000) * 100) + "%";
-    bar.append(fill);
-    row.append(el("span", "", labels[a] || a), bar, el("b", "", String(n)));
-    $("relationship").append(row);
+  // 2. 요약: 실제 판정된 태그 + 최근 인지한 변화 이유(저장 확정된 기록만)
+  const sum = el("div", "rel-summary");
+  sum.append(el("h4", "", T("{a}이(가) 보는 {b}", { a: T(pf.name), b: T(pt.name) })));
+  const tags = el("div", "tag-row");
+  if (dto.tags.length) for (const t of dto.tags) tags.append(el("span", "tag", t.label));
+  else tags.append(el("span", "muted", T("아직 정해진 관계 설명은 없어요.")));
+  sum.append(tags);
+  const lastView = dto.memory_views.at(-1);
+  if (lastView) {
+    const mt = memoryText(lastView, nameOf);
+    sum.append(el("p", "rel-reason", T("최근 알게 된 일: ") + mt.fact + " " + mt.interpretation));
   }
-  const tagRow = el("div", "tag-row", T("관계 설명 "));
-  if (dto.tags.length) for (const t of dto.tags) tagRow.append(el("span", "tag", t.label));
-  else tagRow.append(el("span", "", T("아직 확정된 설명 없음")));
-  $("relationship").append(tagRow);
-  if (dto.basis_status === "no_active_basis") $("relationship").append(el("p", "hint", T("공동 결정 기록 없음")));
-  if (!dto.memories.length) $("relationship").append(el("p", "hint", T("아직 확인된 기억이 없습니다.")));
-  for (const m of dto.memories) {
-    const row = el("div", "memory-row");
-    row.append(
-      svgIcon("i-book"),
-      el(
-        "span",
-        "",
-        T("사건은 확인됨 · ") +
-          (m.reason === "known" ? T("사유 확인됨") : T("이유는 아직 모릅니다")) +
-          " · " +
-          (m.resolution === "resolved" ? T("해결됨 · 기억은 남아 있습니다") : T("미해결")),
-      ),
-    );
-    $("relationship").append(row);
+  const lastChange = [...state.life.logs].reverse().find((l) => (l.changes || []).some((c) => c.from === from && c.to === to && (c.affection || c.trust)));
+  if (lastChange) {
+    const c = lastChange.changes.find((c) => c.from === from && c.to === to);
+    sum.append(el("p", "rel-reason small", T("마지막 변화: {text} (애정 {a}, 신뢰 {t})", { text: tLife(lastChange.text), a: (c.affection >= 0 ? "+" : "") + c.affection, t: (c.trust >= 0 ? "+" : "") + c.trust })));
   }
+  $("relationship").append(sum);
+  // 3. 8축: 두 묶음으로 나누되 8개 모두 보여 준다
+  for (const [title, keys] of [
+    [T("마음"), ["affection", "trust", "respect", "conflict"]],
+    [T("관계 구조"), ["dependence", "power", "reciprocity", "obligation"]],
+  ]) {
+    const group = el("div", "axis-group");
+    group.append(el("h4", "", title));
+    for (const key of keys) {
+      const [, label, desc] = REL_AXES.find((a) => a[0] === key),
+        n = dto.scores[key];
+      const row = el("div", "score-row");
+      const bar = el("div", "bar " + (barTone[key] || ""));
+      const fill = el("i");
+      fill.style.width = Math.min(100, (n / 1000) * 100) + "%";
+      bar.append(fill);
+      const name = el("span", "axis-name");
+      name.append(el("b", "", T(label)), el("small", "", T(desc)));
+      row.append(name, bar, el("b", "", String(n)));
+      group.append(row);
+    }
+    $("relationship").append(group);
+  }
+  // 4. 최근 사건: 사실 / 해석 / 사유 / 해결 독립 표시
+  const ev = el("div", "rel-events");
+  ev.append(el("h4", "", T("최근 사건")));
+  if (!dto.memory_views.length) ev.append(el("p", "hint", T("아직 함께 겪은 일이 없어요.")));
+  for (const v of dto.memory_views.slice(-6).reverse()) {
+    const mt = memoryText(v, nameOf),
+      row = el("div", "memory-row");
+    const body = el("div");
+    body.append(el("span", "mem-fact", mt.fact), el("small", "mem-interp", T("해석 · ") + mt.interpretation));
+    if (mt.reason) body.append(el("small", "mem-reason", T("이유 · ") + mt.reason));
+    if (mt.resolution) body.append(el("small", "mem-resolution", T("해결 · ") + mt.resolution));
+    row.append(svgIcon("i-book"), body);
+    ev.append(row);
+  }
+  $("relationship").append(ev);
+  // 5. 실제 근거가 있는 것만
+  const basis = el("div", "rel-basis");
+  basis.append(el("h4", "", T("관계의 근거")));
+  const items = [];
+  for (const c of dto.basis?.conflicts || []) items.push(T("풀리지 않은 갈등: {topic}", { topic: c.topic === "credit_attribution" ? T("공동작업 공로") : c.topic }));
+  if (dto.basis?.roles) items.push(T("함께 맡은 역할 {n}개", { n: dto.basis.roles }));
+  if (dto.basis?.resources) items.push(T("기대고 있는 자원 {n}개", { n: dto.basis.resources }));
+  if (dto.basis?.commitments) items.push(T("받아들인 약속 {n}개", { n: dto.basis.commitments }));
+  if (dto.basis_status === "no_active_basis") items.push(T("공동 결정 기록 없음 (권력은 기본값)"));
+  if (!items.length) items.push(T("지금은 따로 기록된 근거가 없어요."));
+  for (const t of items) basis.append(el("p", "hint", t));
+  $("relationship").append(basis);
 }
 $("relations").onclick = () => {
   show("relationPanel");

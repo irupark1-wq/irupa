@@ -280,7 +280,7 @@ legend { font-size: 12px; color: var(--ink-3); padding: 0 6px; }
 .pair-heart { display: grid; place-items: center; height: 44px; color: var(--pink); }
 .pair-heart svg { width: 28px; height: 28px; fill: var(--pink-soft); }
 #relationship { display: grid; gap: 10px; }
-.score-row { display: grid; grid-template-columns: 70px 1fr 52px; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 800; }
+.score-row { display: grid; grid-template-columns: minmax(70px, auto) 1fr 52px; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 800; }
 .score-row b { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .memory-row { display: flex; gap: 10px; align-items: flex-start; background: var(--cream); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 12px; font-size: 13px; }
 .memory-row svg { width: 20px; height: 20px; color: var(--lilac); margin-top: 1px; }
@@ -353,3 +353,23 @@ legend { font-size: 12px; color: var(--ink-3); padding: 0 6px; }
 }
 @container game (max-width: 380px) { .plate-clock small { display: none; } .plate-speed [data-speed="4"] { display: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* 관계창(PO-REQ-001 §4): 방향 → 요약 → 8축 두 묶음 → 최근 사건 → 근거 */
+.rel-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.rel-head .rel-face { width: 56px; height: 56px; border-radius: 50%; background: var(--cream); box-shadow: 0 2px 0 var(--line-2); }
+.rel-who { display: grid; line-height: 1.25; }
+.rel-who b { font-size: 15px; } .rel-who small { font-size: 11px; color: var(--ink-3); font-weight: 800; }
+.rel-arrow { font-size: 22px; font-weight: 900; color: var(--sky-2); padding: 0 2px; }
+.rel-swap { margin-left: auto; }
+.rel-summary, .axis-group, .rel-events, .rel-basis { margin-top: 12px; padding: 10px 12px; border-radius: 14px; background: #fff; border: 2px solid var(--line); }
+.rel-summary h4, .axis-group h4, .rel-events h4, .rel-basis h4 { margin: 0 0 6px; font-size: 13.5px; font-weight: 900; color: var(--ink-2); }
+.rel-reason { margin: 6px 0 0; font-size: 13px; line-height: 1.5; } .rel-reason.small { font-size: 12px; color: var(--ink-3); }
+.muted { color: var(--ink-3); font-size: 12.5px; }
+.axis-name { display: grid; line-height: 1.2; min-width: 0; } .axis-name small { font-size: 10.5px; color: var(--ink-3); font-weight: 700; }
+.memory-row > div { display: grid; gap: 2px; line-height: 1.4; }
+.mem-fact { font-weight: 800; } .mem-interp, .mem-reason, .mem-resolution { font-size: 12px; color: var(--ink-2); }
+.mem-row > div { display: grid; gap: 2px; }
+.axis-group .score-row { grid-template-columns: minmax(150px, 34%) 1fr 48px; }
+@container game (max-width: 820px) { .axis-group .score-row { grid-template-columns: minmax(118px, 40%) 1fr 40px; } }
+.axis-name b { text-align: left; color: var(--ink); font-size: 13.5px; }
+.axis-name small { text-align: left; }

@@ -1,0 +1,677 @@
+{
+ "generated_at_ticks": 2000,
+ "presets_used": [
+  {
+   "id": "cautious_mediator",
+   "axes": {
+    "fairness_sensitivity": "high",
+    "closeness_orientation": "medium",
+    "risk_aversion": "high"
+   }
+  },
+  {
+   "id": "warm_explorer",
+   "axes": {
+    "fairness_sensitivity": "medium",
+    "closeness_orientation": "high",
+    "risk_aversion": "low"
+   }
+  },
+  {
+   "id": "quiet_crafter",
+   "axes": {
+    "fairness_sensitivity": "high",
+    "closeness_orientation": "low",
+    "risk_aversion": "medium"
+   }
+  }
+ ],
+ "general": {
+  "label": "일반 생활: 기본 프리셋 3명, 기본 seed",
+  "ticks": 2000,
+  "moves": {
+   "work": 83,
+   "meet": 87,
+   "rest": 126,
+   "social": 62,
+   "assist": 23
+  },
+  "accepted": 41,
+  "declined": {
+   "지금 하던 일을 마치고 싶어요": 41,
+   "지금 도움을 받기 어려워요": 12,
+   "지금은 쉬고 싶어요": 7
+  },
+  "completed": {
+   "talk": 17,
+   "work_alone": 48,
+   "help": 10
+  },
+  "neutral": 14,
+  "blocked": 2,
+  "cancelled": 13,
+  "limited": 3,
+  "events": {
+   "EVT-01": 34,
+   "EVT-04": 7
+  },
+  "negative_events": 0,
+  "conflicts_created": 0,
+  "per_pawn": {
+   "모래": {
+    "meet": 18,
+    "rest": 37,
+    "work": 32,
+    "social": 27,
+    "assist": 10,
+    "repair": 0,
+    "declined_by_others": 0
+   },
+   "밤": {
+    "meet": 62,
+    "rest": 38,
+    "work": 19,
+    "social": 13,
+    "assist": 4,
+    "repair": 0,
+    "declined_by_others": 0
+   },
+   "노을": {
+    "meet": 7,
+    "rest": 51,
+    "work": 32,
+    "social": 22,
+    "assist": 9,
+    "repair": 0,
+    "declined_by_others": 0
+   }
+  },
+  "occupied": 94,
+  "relations": {
+   "모래→밤": {
+    "affection": 134,
+    "trust": 306,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   },
+   "모래→노을": {
+    "affection": 150,
+    "trust": 318,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   },
+   "밤→모래": {
+    "affection": 144,
+    "trust": 312,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   },
+   "밤→노을": {
+    "affection": 134,
+    "trust": 306,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   },
+   "노을→모래": {
+    "affection": 120,
+    "trust": 300,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   },
+   "노을→밤": {
+    "affection": 124,
+    "trust": 300,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   }
+  }
+ },
+ "general_seed_b": {
+  "label": "일반 생활: 같은 폰, 다른 seed",
+  "ticks": 2000,
+  "moves": {
+   "work": 82,
+   "meet": 82,
+   "rest": 123,
+   "social": 61,
+   "assist": 20
+  },
+  "accepted": 43,
+  "declined": {
+   "지금 하던 일을 마치고 싶어요": 38,
+   "지금 도움을 받기 어려워요": 12,
+   "지금은 쉬고 싶어요": 9
+  },
+  "completed": {
+   "talk": 16,
+   "work_alone": 50,
+   "help": 10
+  },
+  "neutral": 16,
+  "blocked": 1,
+  "cancelled": 9,
+  "limited": 4,
+  "events": {
+   "EVT-01": 32,
+   "EVT-04": 6
+  },
+  "negative_events": 0,
+  "conflicts_created": 0,
+  "per_pawn": {
+   "모래": {
+    "meet": 18,
+    "rest": 41,
+    "work": 24,
+    "social": 26,
+    "assist": 8,
+    "repair": 0,
+    "declined_by_others": 0
+   },
+   "밤": {
+    "meet": 60,
+    "rest": 32,
+    "work": 17,
+    "social": 15,
+    "assist": 2,
+    "repair": 0,
+    "declined_by_others": 0
+   },
+   "노을": {
+    "meet": 4,
+    "rest": 50,
+    "work": 41,
+    "social": 20,
+    "assist": 10,
+    "repair": 0,
+    "declined_by_others": 0
+   }
+  },
+  "occupied": 84,
+  "relations": {
+   "모래→밤": {
+    "affection": 134,
+    "trust": 306,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   },
+   "모래→노을": {
+    "affection": 146,
+    "trust": 318,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   },
+   "밤→모래": {
+    "affection": 124,
+    "trust": 300,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   },
+   "밤→노을": {
+    "affection": 134,
+    "trust": 306,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   },
+   "노을→모래": {
+    "affection": 116,
+    "trust": 300,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   },
+   "노을→밤": {
+    "affection": 134,
+    "trust": 306,
+    "respect": 300,
+    "conflict": 1,
+    "tags": []
+   }
+  }
+ },
+ "trait_only": {
+  "closeness_low": {
+   "label": "성격만 변경: 3명 모두 친밀 낮음",
+   "ticks": 2000,
+   "moves": {
+    "work": 74,
+    "rest": 127,
+    "assist": 40,
+    "social": 107,
+    "meet": 36
+   },
+   "accepted": 28,
+   "declined": {
+    "지금 하던 일을 마치고 싶어요": 19,
+    "지금 도움을 받기 어려워요": 24,
+    "지금은 쉬고 싶어요": 1
+   },
+   "completed": {
+    "help": 18,
+    "work_alone": 53,
+    "talk": 10
+   },
+   "neutral": 0,
+   "blocked": 0,
+   "cancelled": 12,
+   "limited": 10,
+   "events": {
+    "EVT-04": 8,
+    "EVT-01": 20
+   },
+   "negative_events": 0,
+   "conflicts_created": 0,
+   "per_pawn": {
+    "모래": {
+     "meet": 15,
+     "rest": 45,
+     "work": 25,
+     "social": 33,
+     "assist": 11,
+     "repair": 0,
+     "declined_by_others": 0
+    },
+    "밤": {
+     "meet": 9,
+     "rest": 43,
+     "work": 29,
+     "social": 32,
+     "assist": 16,
+     "repair": 0,
+     "declined_by_others": 0
+    },
+    "노을": {
+     "meet": 12,
+     "rest": 39,
+     "work": 20,
+     "social": 42,
+     "assist": 13,
+     "repair": 0,
+     "declined_by_others": 0
+    }
+   },
+   "occupied": 88,
+   "relations": {
+    "모래→밤": {
+     "affection": 132,
+     "trust": 312,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "모래→노을": {
+     "affection": 132,
+     "trust": 312,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "밤→모래": {
+     "affection": 122,
+     "trust": 306,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "밤→노을": {
+     "affection": 126,
+     "trust": 306,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "노을→모래": {
+     "affection": 112,
+     "trust": 300,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "노을→밤": {
+     "affection": 136,
+     "trust": 312,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    }
+   }
+  },
+  "closeness_high": {
+   "label": "성격만 변경: 3명 모두 친밀 높음",
+   "ticks": 2000,
+   "moves": {
+    "meet": 120,
+    "work": 80,
+    "social": 50,
+    "rest": 116,
+    "assist": 13
+   },
+   "accepted": 50,
+   "declined": {
+    "지금 하던 일을 마치고 싶어요": 58,
+    "지금 도움을 받기 어려워요": 7,
+    "지금은 쉬고 싶어요": 13
+   },
+   "completed": {
+    "talk": 18,
+    "work_alone": 45,
+    "help": 8
+   },
+   "neutral": 23,
+   "blocked": 0,
+   "cancelled": 13,
+   "limited": 1,
+   "events": {
+    "EVT-01": 36,
+    "EVT-04": 7
+   },
+   "negative_events": 0,
+   "conflicts_created": 0,
+   "per_pawn": {
+    "모래": {
+     "meet": 47,
+     "rest": 34,
+     "work": 19,
+     "social": 16,
+     "assist": 4,
+     "repair": 0,
+     "declined_by_others": 0
+    },
+    "밤": {
+     "meet": 37,
+     "rest": 46,
+     "work": 32,
+     "social": 14,
+     "assist": 3,
+     "repair": 0,
+     "declined_by_others": 0
+    },
+    "노을": {
+     "meet": 36,
+     "rest": 36,
+     "work": 29,
+     "social": 20,
+     "assist": 6,
+     "repair": 0,
+     "declined_by_others": 0
+    }
+   },
+   "occupied": 83,
+   "relations": {
+    "모래→밤": {
+     "affection": 134,
+     "trust": 306,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "모래→노을": {
+     "affection": 124,
+     "trust": 300,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "밤→모래": {
+     "affection": 134,
+     "trust": 306,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "밤→노을": {
+     "affection": 134,
+     "trust": 306,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "노을→모래": {
+     "affection": 144,
+     "trust": 312,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "노을→밤": {
+     "affection": 144,
+     "trust": 312,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    }
+   }
+  }
+ },
+ "relation_only": {
+  "low_trust": {
+   "label": "관계만 변경: 서로 신뢰 150",
+   "ticks": 2000,
+   "moves": {
+    "work": 73,
+    "social": 126,
+    "rest": 146,
+    "assist": 46,
+    "meet": 25
+   },
+   "accepted": 0,
+   "declined": {
+    "지금 도움을 받기 어려워요": 45,
+    "조금 거리를 두고 싶어요": 9,
+    "지금 하던 일을 마치고 싶어요": 8,
+    "지금은 쉬고 싶어요": 5
+   },
+   "completed": {
+    "work_alone": 55
+   },
+   "neutral": 0,
+   "blocked": 2,
+   "cancelled": 6,
+   "limited": 0,
+   "events": {},
+   "negative_events": 0,
+   "conflicts_created": 0,
+   "per_pawn": {
+    "모래": {
+     "meet": 5,
+     "rest": 49,
+     "work": 27,
+     "social": 41,
+     "assist": 18,
+     "repair": 0,
+     "declined_by_others": 0
+    },
+    "밤": {
+     "meet": 9,
+     "rest": 53,
+     "work": 22,
+     "social": 42,
+     "assist": 14,
+     "repair": 0,
+     "declined_by_others": 0
+    },
+    "노을": {
+     "meet": 11,
+     "rest": 44,
+     "work": 24,
+     "social": 43,
+     "assist": 14,
+     "repair": 0,
+     "declined_by_others": 0
+    }
+   },
+   "occupied": 117,
+   "relations": {
+    "모래→밤": {
+     "affection": 100,
+     "trust": 150,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "모래→노을": {
+     "affection": 100,
+     "trust": 150,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "밤→모래": {
+     "affection": 100,
+     "trust": 150,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "밤→노을": {
+     "affection": 100,
+     "trust": 150,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "노을→모래": {
+     "affection": 100,
+     "trust": 150,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    },
+    "노을→밤": {
+     "affection": 100,
+     "trust": 150,
+     "respect": 300,
+     "conflict": 1,
+     "tags": []
+    }
+   }
+  },
+  "high_trust": {
+   "label": "관계만 변경: 서로 신뢰 700·애정 600",
+   "ticks": 2000,
+   "moves": {
+    "meet": 125,
+    "work": 95,
+    "rest": 143,
+    "social": 21,
+    "assist": 11
+   },
+   "accepted": 44,
+   "declined": {
+    "지금 하던 일을 마치고 싶어요": 57,
+    "지금은 쉬고 싶어요": 21,
+    "지금 도움을 받기 어려워요": 8
+   },
+   "completed": {
+    "talk": 18,
+    "work_alone": 44,
+    "help": 5
+   },
+   "neutral": 20,
+   "blocked": 0,
+   "cancelled": 17,
+   "limited": 0,
+   "events": {
+    "EVT-01": 36,
+    "EVT-04": 5
+   },
+   "negative_events": 0,
+   "conflicts_created": 0,
+   "per_pawn": {
+    "모래": {
+     "meet": 38,
+     "rest": 45,
+     "work": 31,
+     "social": 9,
+     "assist": 5,
+     "repair": 0,
+     "declined_by_others": 0
+    },
+    "밤": {
+     "meet": 41,
+     "rest": 48,
+     "work": 39,
+     "social": 6,
+     "assist": 3,
+     "repair": 0,
+     "declined_by_others": 0
+    },
+    "노을": {
+     "meet": 46,
+     "rest": 50,
+     "work": 25,
+     "social": 6,
+     "assist": 3,
+     "repair": 0,
+     "declined_by_others": 0
+    }
+   },
+   "occupied": 117,
+   "relations": {
+    "모래→밤": {
+     "affection": 624,
+     "trust": 700,
+     "respect": 300,
+     "conflict": 1,
+     "tags": [
+      "편안한 친구"
+     ]
+    },
+    "모래→노을": {
+     "affection": 634,
+     "trust": 706,
+     "respect": 300,
+     "conflict": 1,
+     "tags": [
+      "편안한 친구"
+     ]
+    },
+    "밤→모래": {
+     "affection": 624,
+     "trust": 700,
+     "respect": 300,
+     "conflict": 1,
+     "tags": [
+      "편안한 친구"
+     ]
+    },
+    "밤→노을": {
+     "affection": 644,
+     "trust": 712,
+     "respect": 300,
+     "conflict": 1,
+     "tags": [
+      "편안한 친구"
+     ]
+    },
+    "노을→모래": {
+     "affection": 634,
+     "trust": 706,
+     "respect": 300,
+     "conflict": 1,
+     "tags": [
+      "편안한 친구"
+     ]
+    },
+    "노을→밤": {
+     "affection": 634,
+     "trust": 706,
+     "respect": 300,
+     "conflict": 1,
+     "tags": [
+      "편안한 친구"
+     ]
+    }
+   }
+  }
+ }
+}
