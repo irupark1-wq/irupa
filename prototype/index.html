@@ -92,6 +92,7 @@
       <button id="startGuest" class="gbtn gbtn-blue start-main" type="button" hidden>이 기기에서 시작하기</button>
       <div id="startAccountSlot" class="start-account"></div>
       <button id="startEmail" class="gbtn start-email" type="button">이메일로 계속하기</button>
+      <p id="startLocalNote" class="start-local-note" hidden>시작하면 이 기기에 저장돼요</p>
       <p class="hint small start-note">로그인하면 월드를 계정에 저장하고 다른 기기에서 불러올 수 있어요.</p>
       <button id="startNewWorld" class="link-btn" type="button" hidden>새 월드 만들기</button>
       <button id="startForget" class="link-btn" type="button" hidden>이 기기의 계정 사본 지우기</button>
@@ -118,8 +119,8 @@
       <img class="title-plate" src="./assets/brand/title.png" alt="동그란 사이 · 내 월드" draggable="false">
       <!-- 방 보기(PO-ROOM-001 §5): 현재 방·방별 폰 수. 보기 전환은 폰을 옮기지 않는다 -->
       <div class="plate plate-room" id="roomSwitch" role="group" aria-label="방 보기">
-        <button type="button" data-room="living" aria-pressed="true"><span>생활방</span><b id="roomCountLiving">0</b></button>
-        <button type="button" data-room="cozy" aria-pressed="false"><span>아늑한 방</span><b id="roomCountCozy">0</b></button>
+        <button type="button" data-room="living" aria-pressed="true"><svg aria-hidden="true"><use href="#i-home"/></svg><span>생활방</span><b id="roomCountLiving">0</b></button>
+        <button type="button" data-room="cozy" aria-pressed="false"><svg aria-hidden="true"><use href="#i-moon"/></svg><span>아늑한 방</span><b id="roomCountCozy">0</b></button>
       </div>
       <div class="hud-spacer"></div>
       <div class="plate plate-clock" title="자율 생활 시간"><img id="clockIcon" src="./assets/ui/hud/sun.png" alt="" draggable="false"><b id="lifeClock">08:00</b><small id="lifeDay">Day 1</small><small id="saveState" class="save-state" data-state="ok" role="status">저장됐어요</small></div>
@@ -263,8 +264,8 @@
         <div class="block account-block" id="accountBlock">
           <h4>계정</h4>
           <div class="account-lines">
-            <div class="account-line"><span>로그인 상태</span><b id="authLine">게스트로 이용 중</b></div>
-            <div class="account-line"><span>월드 저장 위치</span><b id="worldLine">이 기기에 저장됨</b></div>
+            <div class="account-line"><span><svg aria-hidden="true"><use href="#i-users"/></svg>로그인 상태</span><b id="authLine">게스트로 이용 중</b></div>
+            <div class="account-line"><span><svg aria-hidden="true"><use href="#i-folder"/></svg>월드 저장 위치</span><b id="worldLine">이 기기에 저장됨</b></div>
           </div>
           <p id="authMsg" class="auth-msg" role="status" aria-live="polite" hidden></p>
           <div id="authGuest" class="auth-guest">

@@ -48,6 +48,7 @@ export function mountStart({ store, storeKey, enterGame }) {
   $("startLocal").hidden = variant !== "returning";
   $("startGuest").hidden = variant === "returning";
   $("startNewWorld").hidden = variant !== "returning";
+  $("startLocalNote").hidden = variant === "returning"; // DES-15: 처음 시작 안내
   const origin = readOrigin(localStorage);
   let auth = null;
   function paintLocal() {

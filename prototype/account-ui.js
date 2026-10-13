@@ -86,6 +86,8 @@ export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
   async function renderWorldLine() {
     const line = $("worldLine");
     if (worldNote) return (line.textContent = T(worldNote));
+    // 이 기기에 월드가 아직 없으면 "저장됨"이라고 하지 않는다(DES-15, PO-START-001 §6 빈 로컬)
+    if (!store.read().pawns.length) return (line.textContent = T("아직 월드 없음"));
     const w = worlds();
     if (!w) return (line.textContent = T("이 기기에 저장됨"));
     try {

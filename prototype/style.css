@@ -470,3 +470,11 @@ legend { font-size: 12px; color: var(--ink-3); padding: 0 6px; }
   .start-copy, .start-note { display: none; }
   .start-main { min-height: 40px; font-size: 15px; }
 }
+
+/* DES-15 시작 화면 시각 반영: 민트 주 버튼, 테두리 보조 버튼, 아이콘 두 줄 상태. Google 버튼은 공식 규격 유지 */
+.start-screen #startGuest, .start-screen #startContinue { background: linear-gradient(#a9dfbf, #8ecfa8); color: #2f4a33; border: 2px solid #6f9e7c; box-shadow: 0 3px 0 #6f9e7c; }
+.start-screen #startEmail { background: #fffaf0; color: #4a3a2a; border: 2px solid #8d6a4a; box-shadow: none; }
+.account-line span { display: inline-flex; align-items: center; gap: 6px; }
+.account-line span svg { width: 16px; height: 16px; padding: 3px; border-radius: 50%; background: #e3efe0; color: #4f7a58; }
+.start-local-note { margin: -4px 0 0; text-align: center; font-size: 13px; font-weight: 700; color: #4f7a58; }
+.plate-room button svg { width: 16px; height: 16px; }

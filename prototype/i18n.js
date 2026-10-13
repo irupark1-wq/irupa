@@ -433,6 +433,8 @@ const en = {
   "상대가 다른 방으로 가서 다른 일을 찾아요": "The other pawn went to another room; looking for something else",
   "새 방을 둘러봐요": "Looking around the new room",
   "그림 속 장식 자리라 쓸 수 없어요.": "That spot is decoration in the picture.",
+  "아직 월드 없음": "No world yet",
+  "시작하면 이 기기에 저장돼요": "Starting saves to this device",
 };
 
 const ja = {
@@ -842,6 +844,8 @@ const ja = {
   "상대가 다른 방으로 가서 다른 일을 찾아요": "相手が別の部屋へ行ったので、ほかのことを探します",
   "새 방을 둘러봐요": "新しい部屋を見回しています",
   "그림 속 장식 자리라 쓸 수 없어요.": "絵の中の飾りの場所なので使えません。",
+  "아직 월드 없음": "まだワールドなし",
+  "시작하면 이 기기에 저장돼요": "始めるとこの端末に保存されます",
 };
 
 const DICT = { ko: null, en, ja };
