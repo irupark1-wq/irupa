@@ -57,3 +57,6 @@ DB 변경 후 Supabase security advisors와 실제 anon/authenticated 역할 권
 2026-10-13 UI 교체: 동적 이름/이유/기억은 textContent로 출력하고 수신 이미지 속 예시를 데이터로 수입하지 않는다. 방문 대역의 비공개 욕구/성격은 새 상세 UI에도 표시하지 않으며 허용 철회 후 초상 목록에서 제외한다. 외부 스크립트·신규 의존성·서버 권한 변경 없음. 기존 114개 회귀와 secrets 검사 통과.
 
 자율 tick·원장·기억·중복 제한은 단일 로컬 저장 commit으로 적용한다. 저장 실패는 원본을 유지하며 다른 탭 변경 감지 시 실행을 멈춘다. tick 영수증은 최신 1개만 유지한다. 반복 사건은 쌍별 간격/누적 상한을 적용한다. 방문 대역은 호스트 허용·소유자 canonical 참여 2scope를 확인하며 영구 역할/약속 권한을 부여하지 않는다. 화면은 대역의 비공개 욕구/성격/반대 방향 관계를 제외한다. 로컬 저장은 사용자가 변경할 수 있으므로 실제 온라인의 권한 경계로 사용할 수 없다. 온라인에는 서버 JWT/RLS/트랜잭션/공개 DTO 검증이 필요하다. 이번 변경은 Supabase 설정을 배포하지 않아 원격 advisor 재검사는 수행하지 않았다. 로컬 검사는 114개 통과했으며 아래 기존 보안 기준을 계속 적용한다.
+
+## 2026-10-13 Supabase 0002 코어 마이그레이션 초안(미적용)
+`supabase/migrations/0002_game1_core.sql` 초안: `game1_profiles`·`game1_worlds` 는 생성과 동시에 RLS 활성, 정책은 `to authenticated` 본인 행만(select/insert/update, UPDATE 는 USING·WITH CHECK), anon·service_role 권한 없음, 열 단위 GRANT 로 `version`·시각은 트리거만 설정. 저장 함수 `public.game1_save_world` 는 SECURITY INVOKER·`search_path=''`·스키마 한정, 낙관적 잠금(버전 불일치 예외). 내부 트리거 함수는 `game1_private`. 거부·허용 테스트는 `supabase/tests/0002_rls_check.sql`(anon/sub 없음/본인/타인/프로필 없는 사용자, BEGIN…ROLLBACK). 로컬 PostgreSQL 이 없어 PostgreSQL 17 파서로 문법만 확인했고 **운영 DB 에는 적용하지 않았다**. 적용·테스트·Security Advisors 확인은 김PO 가 수행한 뒤 기록한다. 브라우저 코드·배포 변경 없음.
