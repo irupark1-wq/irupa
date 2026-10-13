@@ -16,3 +16,6 @@ supabase/.temp/
 supabase/.branches/
 *.log
 docs/reference/
+
+node_modules/
+tools/slicer/node_modules/

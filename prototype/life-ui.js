@@ -1,59 +1,864 @@
-import {actorsFor,GRID} from './life.js';
-const $=id=>document.getElementById(id);
-const names={idle:'주변을 살펴봐요',moving:'이동하고 있어요',working:'만들고 있어요',resting:'쉬고 있어요',talking:'대화하고 있어요',listening:'이야기를 듣고 있어요',assisting:'함께 만들고 있어요',repairing:'함께 문제를 보완해요',repairListening:'보완 기록을 확인해요',waiting:'잠깐 기다려요'};
-export function mountLifeUI({store,paint,image,edit,notify,openRelations}){
- let selected=null,speed=1,rendering=false,faulted=false,layout=false,wallMode=false;
- const cache=new Map(),previousPositions=new Map();let detailsOpen=true,showAllLogs=false;
- async function artwork(pawn){const key=pawn.id+'-'+(pawn.appearance_version||0);if(cache.has(key))return cache.get(key);const imgs={};for(const s of ['back_hair','base','eyes_pair','mouth','front_hair','frame_accessory'])imgs[s]=await image(pawn.appearance?.layers[s]||'/assets/six_layers/'+s+'_neutral.png');const art={imgs,transforms:pawn.appearance?.transforms||Object.fromEntries(Object.keys(imgs).map(s=>[s,{x:0,y:0,rotation:0,scale:1,visible:true}]))};cache.set(key,art);return art;}
- const actorName=(s,id)=>[...s.pawns,...(s.life.guest?[s.life.guest]:[])].find(p=>p.id===id)?.name||'폰';
- async function render(){if(rendering)return;rendering=true;try{
-  const state=store.read(),life=state.life,all=actorsFor(state);selected??=state.pawns[0]?.id;
-  $('lifeClock').textContent='생활 '+life.tick+'초 · '+(life.paused?'일시정지':'자율 생활 중');$('pauseLife').textContent=life.paused?'▶ 생활 재개':'Ⅱ 일시정지';
-  $('lifeStage').classList.toggle('placing',layout);$('lifePlaces').replaceChildren();
-  for(const p of life.places){const b=document.createElement('button');b.className='life-place '+p.kind+(p.blocked?' blocked':'');b.textContent=({rest:'☾',work:'⚒',social:'☕'})[p.kind]+' '+p.label;b.style.left=(p.x+.5)/12*100+'%';b.style.top=(p.y+.5)/8*100+'%';b.onclick=()=>{$('placeSelect').value=p.id;updatePlaceControls();};$('lifePlaces').append(b);}
-  for(const w of life.walls){const b=document.createElement('button');b.className='life-wall';b.textContent='▧';b.style.left=(w.x+.5)/12*100+'%';b.style.top=(w.y+.5)/8*100+'%';b.onclick=()=>{if(layout){store.wall(crypto.randomUUID(),w.x,w.y);render();}};$('lifePlaces').append(b);}
-  $('lifeActors').replaceChildren();
-  for(const p of all){const a=life.actors[p.id]||{x:3+state.pawns.indexOf(p)*2,y:6,mode:'idle'},art=await artwork(p),b=document.createElement('button');b.className='life-pawn '+a.mode+(p.local_double?' visitor':'')+(p.id===selected?' chosen':'');b.style.left=(a.x+.5)/12*100+'%';b.style.top=(a.y+.5)/8*100+'%';const c=document.createElement('canvas');c.width=c.height=96;paint(c,art.imgs,art.transforms);const label=document.createElement('span');label.textContent=p.name+(p.local_double?' · 방문 대역':'');const bubble=document.createElement('small');bubble.textContent=names[a.mode]||'살펴봐요';b.append(bubble,c,label);b.onclick=()=>{selected=p.id;detailsOpen=true;$('pawnDetails').hidden=false;document.querySelector('.life-layout').classList.remove('details-closed');render();};b.setAttribute('aria-label',p.name+' 상세 보기');$('lifeActors').append(b);const prev=previousPositions.get(p.id);if(prev&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&(prev.x!==a.x||prev.y!==a.y)){const r=$('lifeStage').getBoundingClientRect();b.animate([{transform:'translate(-50%,-50%) translate('+((prev.x-a.x)/12*r.width)+'px,'+((prev.y-a.y)/8*r.height)+'px)'},{transform:'translate(-50%,-50%)'}],{duration:Math.min(700,900/speed),easing:'ease-in-out'});}previousPositions.set(p.id,{x:a.x,y:a.y});}
-  await renderDetails(state,all);
-  renderLogs(state);
-  const journal=all.find(p=>p.id===selected&&!p.local_double)||all.find(p=>!p.local_double);if(journal){const art=await artwork(journal);paint($('journalPawn'),art.imgs,art.transforms);}
-  $('visitorPortraits').replaceChildren();for(const p of all.slice(0,4)){const art=await artwork(p),c=document.createElement('canvas');c.width=c.height=160;c.setAttribute('aria-label',p.name+(p.local_double?' · 방문 대역':''));paint(c,art.imgs,art.transforms);$('visitorPortraits').append(c);}
-  const guest=life.guest;$('hostAccess').checked=life.host_access;$('guestActivity').checked=life.owner_scopes.activity_participation;$('guestLight').checked=life.owner_scopes.light_auto_events;$('visitorState').textContent=(!life.host_access||!life.owner_scopes.activity_participation||!life.owner_scopes.light_auto_events)?'허용 범위 밖이라 방문 활동을 진행하지 않습니다.':!guest?.present?'방문 대역이 없어요':guest.connected?'루미가 같은 공간에서 생활해요':'루미의 연결이 잠시 끊겼어요. 행동을 멈추고 자리를 비웁니다.';
-  $('visitEnter').disabled=!!guest?.present;for(const id of ['visitLeave','visitDisconnect','visitReconnect'])$(id).disabled=!guest?.present;
- }finally{rendering=false;}}
+import { actorsFor, GRID } from "./life.js";
+import { t as T, tLife } from "./i18n.js";
+const $ = (id) => document.getElementById(id);
+const SLOTS = ["back_hair", "base", "eyes_pair", "mouth", "front_hair", "frame_accessory"];
+const MODE = {
+  idle: { text: T("주변을 살펴봐요"), icon: "i-sparkle" },
+  moving: { text: T("이동하고 있어요"), icon: "i-steps" },
+  working: { text: T("만들고 있어요"), icon: "i-hammer" },
+  resting: { text: T("쉬고 있어요"), icon: "i-zzz" },
+  talking: { text: T("대화하고 있어요"), icon: "i-chat" },
+  listening: { text: T("이야기를 듣고 있어요"), icon: "i-chat" },
+  assisting: { text: T("함께 만들고 있어요"), icon: "i-hammer" },
+  repairing: { text: T("함께 문제를 보완해요"), icon: "i-wrench" },
+  repairListening: { text: T("보완 기록을 확인해요"), icon: "i-book" },
+  waiting: { text: T("잠깐 기다려요"), icon: "i-clock" },
+};
+const A = "./assets/";
+const BUBBLE_KEY = { listening: "talking", repairListening: "repairing" };
+const pic = (src, className) => {
+  const i = document.createElement("img");
+  i.src = src;
+  i.alt = "";
+  i.draggable = false;
+  if (className) i.className = className;
+  return i;
+};
+const LOG_ICON = { move: "i-steps", completed: "i-check", declined: "i-x", blocked: "i-block", accepted: "i-chat", cancelled: "i-refresh", limited: "i-eye-off", activity: "i-sparkle" };
+const AXIS_NAMES = { fairness_sensitivity: T("공정성 민감도"), closeness_orientation: T("친밀 지향"), risk_aversion: T("위험 회피") };
+const TOPIC = { conversation: T("이야기를 나눴어요"), help: T("도움을 주고받았어요"), credit_attribution: T("공로를 확인했어요") };
+/* 방향별 배경과 그 안에서 12×8 바닥이 차지하는 비율(디자이너 회신 v1.3 의 규격).
+   파일이 아직 없으면 temp(기존 가로 그림)로 자동 대체한다. 배경을 바꾸면 여기만 맞춘다. */
+const BACKGROUNDS = {
+  portrait: { src: "./assets/background/room-portrait.png", floor: { x: 0.06, y: 0.3, w: 0.88, h: 0.46 } },
+  landscape: { src: "./assets/background/room-landscape.png", floor: { x: 0.06, y: 0.34, w: 0.66, h: 0.44 } },
+  temp: { src: "./assets/game1-cozy-room-v1.png", floor: { x: 0.07, y: 0.38, w: 0.86, h: 0.55 } },
+};
 
- const node=(tag,className,text)=>{const e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e;};
- function selectRelative(all,id,offset){const index=all.findIndex(p=>p.id===id);selected=all[(index+offset+all.length)%all.length].id;render();}
- async function renderDetails(state,all){
-  const root=$('pawnDetails');root.replaceChildren();const p=all.find(p=>p.id===selected)||state.pawns[0];if(!p){root.append(node('p','empty-state','폰을 만들어 작은 하루를 시작해 보세요.'));return;}selected=p.id;
-  const a=state.life.actors[p.id],art=await artwork(p),status=a?(names[a.mode]||'주변을 살펴봐요'):'새 공간을 둘러보고 있어요';
-  const portrait=node('div','detail-portrait'),speech=node('p','portrait-speech','지금 '+status+'.'),canvas=node('canvas','portrait-canvas');canvas.width=canvas.height=512;canvas.setAttribute('aria-label',p.name+' 얼굴');paint(canvas,art.imgs,art.transforms);
-  const prev=node('button','portrait-prev','‹'),next=node('button','portrait-next','›');prev.setAttribute('aria-label','이전 폰 보기');next.setAttribute('aria-label','다음 폰 보기');prev.disabled=next.disabled=all.length<2;prev.onclick=()=>selectRelative(all,p.id,-1);next.onclick=()=>selectRelative(all,p.id,1);
-  portrait.append(speech,canvas,prev,next,node('strong','portrait-name','♧ '+p.name+(p.local_double?' · 방문 대역':'')));
-  const info=node('div','detail-info'),heading=node('div','detail-heading'),mini=node('canvas','detail-avatar');mini.width=mini.height=96;paint(mini,art.imgs,art.transforms);heading.append(mini,node('h3','',p.name+(p.local_double?' · 방문 대역':'')),node('p','',status+(a&&a.mode!=='idle'&&!p.local_double?' · '+a.reason:'')));info.append(heading);
-  const content=node('div','detail-content'),body=node('div','detail-main');
-  if(!p.local_double){const needs=node('div','need-list');for(const [k,label,icon]of [['tired','피로','ϟ'],['social','이야기 욕구','♧'],['activity','활동 욕구','☆']]){const row=node('div','need-row'),labelNode=node('label','',label),bar=node('progress','');bar.id='need-'+k;bar.max=100;bar.value=a?.[k]??0;labelNode.htmlFor=bar.id;row.append(node('span','need-icon '+k,icon),labelNode,bar,node('span','need-value',Math.round(bar.value)+'%'));needs.append(row);}body.append(needs);
-   const actions=node('div','detail-actions'),editButton=node('button','','✎ 얼굴·성격 꾸미기'),relationButton=node('button','','▤ 관계·기억 자세히');editButton.onclick=()=>edit(p);const other=all.find(q=>q.id!==p.id);relationButton.disabled=!other;relationButton.onclick=()=>{if(other)openRelations(p.id,other.id);};actions.append(editButton,relationButton);body.append(actions);
-   if(other){const dto=store.projection(p.id,other.id),summary=node('div','relation-strip');summary.append(node('span','relation-heart','♥'),node('p','','내가 느끼는 '+other.name+' · 애정 '+dto.scores.affection+' / 신뢰 '+dto.scores.trust+' / 갈등 '+dto.scores.conflict),node('small','',dto.tags.length?dto.tags.map(t=>t.label).join(' · '):'관계 설명은 아직 확정되지 않았어요.'));body.append(summary);}
-  }else body.append(node('p','visitor-private-note','로컬 방문 대역이에요. 공개된 현재 행동만 살펴볼 수 있어요. 외형·성격과 비공개 반대 방향은 수정·조회하지 않습니다.'));
-  const note=node('aside','day-note'),tiny=node('canvas','');tiny.width=tiny.height=160;paint(tiny,art.imgs,art.transforms);note.append(node('span','note-pin',''),node('strong','','오늘도'),node('p','',status+'.'),tiny);content.append(body,note);info.append(content);root.append(portrait,info);
-  const memory=!p.local_double?state.memories.filter(m=>m.from===p.id&&m.known).at(-1):null;$('recentMemory').textContent=memory?'♧ 최근 기억 · '+(memory.description||'확인한 사건이 있어요.')+' / '+(memory.reason_known?'사유 확인':'사유 미상')+' / '+(memory.resolution==='resolved'?'해결됨':'기억 유지'):'지금까지의 하루가 차곡차곡 기록돼요.';
- }
- function renderLogs(state){const root=$('lifeLog');root.replaceChildren();const rows=state.life.logs.slice(showAllLogs?-120:-12).reverse();for(const entry of rows){const li=node('li','journal-row '+entry.kind),time=node('span','log-time',entry.tick+'초'),icon=node('span','log-icon',entry.kind==='move'?'♧':entry.kind==='completed'?'☆':entry.kind==='declined'?'☁':'⌂'),name=node('strong','log-name',actorName(state,entry.actor)),text=node('span','log-text',entry.text+(entry.target?' ('+actorName(state,entry.target)+')':''));for(const c of (entry.changes||[]).filter(c=>state.pawns.some(p=>p.id===c.from)))text.textContent+=' · '+actorName(state,c.from)+'→'+actorName(state,c.to)+' 애정 +'+c.affection+' / 신뢰 +'+c.trust;li.append(time,icon,name,text);root.append(li);}if(!rows.length)root.append(node('li','empty-state','작은 하루의 첫 기록을 기다리고 있어요.'));$('allLifeLogs').textContent=showAllLogs?'최근 기록만 보기':'▤ 전체 기록 보기';$('allLifeLogs').setAttribute('aria-pressed',String(showAllLogs));}
- $('allLifeLogs').onclick=()=>{showAllLogs=!showAllLogs;renderLogs(store.read());};
- function updatePlaceControls(){const p=store.life().places.find(p=>p.id===$('placeSelect').value);$('placeX').value=p.x;$('placeY').value=p.y;$('placeBlocked').checked=p.blocked;}
- $('pauseLife').onclick=()=>{try{store.lifePause(crypto.randomUUID(),!store.life().paused);faulted=false;render();}catch{notify('저장하지 못해 생활을 멈췄어요. 기존 기록은 유지합니다.');faulted=true;}};
- $('lifeSpeed').onchange=()=>{speed=Number($('lifeSpeed').value);};
- $('arrangeLife').onclick=()=>{layout=!layout;$('arrangePanel').hidden=!layout;render();};
- $('placeSelect').onchange=updatePlaceControls;updatePlaceControls();
- $('placeApply').onclick=()=>{try{store.place(crypto.randomUUID(),$('placeSelect').value,Number($('placeX').value),Number($('placeY').value),$('placeBlocked').checked);notify('배치를 저장했어요. 폰이 바뀐 공간에서 새 경로를 찾습니다.');render();}catch{notify('다른 가구나 장애물과 겹쳐 배치할 수 없어요.');}};
- $('wallMode').onchange=()=>{wallMode=$('wallMode').checked;};
- $('lifeStage').onclick=e=>{if(!layout||e.target.closest('button'))return;const r=$('lifeStage').getBoundingClientRect(),x=Math.min(11,Math.max(0,Math.floor((e.clientX-r.left)/r.width*GRID.width))),y=Math.min(7,Math.max(0,Math.floor((e.clientY-r.top)/r.height*GRID.height)));if(wallMode){try{store.wall(crypto.randomUUID(),x,y);render();}catch{notify('폰이나 활동 지점이 있는 칸에는 장애물을 둘 수 없어요.');}}else{$('placeX').value=x;$('placeY').value=y;$('placeApply').click();}};
- for(const [id,action]of [['visitEnter','enter'],['visitLeave','leave'],['visitDisconnect','disconnect'],['visitReconnect','reconnect']])$(id).onclick=()=>{try{store.visit(crypto.randomUUID(),action);render();}catch{notify('방문 대역의 현재 상태를 확인해 주세요.');}};
- $('toggleDetails').onclick=()=>{detailsOpen=!detailsOpen;$('pawnDetails').hidden=!detailsOpen;document.querySelector('.life-layout').classList.toggle('details-closed',!detailsOpen);};
- for(const [id,scope]of [['hostAccess','host_access'],['guestActivity','activity_participation'],['guestLight','light_auto_events']])$(id).onchange=()=>{try{store.visitPermission(crypto.randomUUID(),scope,$(id).checked);render();}catch{notify('방문 허용 상태를 저장하지 못했어요.');}};
- const timer=setInterval(async()=>{if(document.hidden||$('worldPanel').hidden||rendering||faulted||store.life().paused||!store.read().pawns.length)return;try{for(let i=0;i<speed;i++)store.lifeStep(store.life().tick+1);await render();}catch{faulted=true;notify('저장 충돌 또는 저장 실패로 생활을 멈췄어요. 현재 기록을 보존한 채 새로고침해 주세요.');}},1000);
- window.addEventListener('storage',event=>{if(event.key==='game1-local-a-v1'){faulted=true;notify('다른 창의 변경을 확인했어요. 현재 생활을 멈추고 새로고침해 주세요.');}});
- window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
- return {render};
+const node = (tag, className, text) => {
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (text !== undefined) e.textContent = text;
+  return e;
+};
+const icon = (name, className) => {
+  const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  if (className) s.setAttribute("class", className);
+  const u = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  u.setAttribute("href", "#" + name);
+  s.append(u);
+  return s;
+};
+const gbtn = (label, iconName, className = "") => {
+  const b = node("button", "gbtn " + className);
+  b.type = "button";
+  if (iconName) b.append(icon(iconName));
+  b.append(node("span", "", label));
+  return b;
+};
+/* 생활 tick(초) → 게임 내 시각. 1 tick = 1분, 08:00 시작 */
+function clockOf(tick) {
+  const minutes = 8 * 60 + tick;
+  const day = Math.floor(minutes / 1440) + 1,
+    h = Math.floor(minutes / 60) % 24,
+    m = minutes % 60;
+  return { text: String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0"), day, h, night: h < 6 || h >= 19, tod: h < 6 ? "night" : h < 8 ? "dawn" : h < 17 ? "day" : h < 19 ? "dusk" : "night" };
+}
+const isMobile = () => (document.getElementById("scene")?.clientWidth || innerWidth) <= 820;
+
+export function mountLifeUI({ store, paint, image, edit, notify, openRelations, showWorld, closeSheets }) {
+  let selected = null,
+    speed = 1,
+    rendering = false,
+    faulted = false,
+    layout = false,
+    wallMode = false,
+    tab = "now",
+    showAllLogs = false,
+    detailOpen = !isMobile();
+  const cache = new Map(),
+    previousPositions = new Map();
+  let lastSeq = null;
+  /* 관계가 바뀐 순간을 숫자가 아니라 장면 위 이펙트로 보여 준다 */
+  function spawnEffects(state) {
+    const logs = state.life.logs;
+    const seqOf = (l) => Number(String(l.id).split("-").pop());
+    if (lastSeq === null) {
+      lastSeq = logs.length ? seqOf(logs.at(-1)) : 0;
+      return;
+    }
+    for (const l of logs) {
+      if (seqOf(l) <= lastSeq) continue;
+      const changes = (l.changes || []).filter((c) => state.pawns.some((p) => p.id === c.from));
+      for (const c of changes) {
+        const el = [...$("lifeActors").children].find((b) => b.dataset.id === c.from);
+        if (!el) continue;
+        const fx = node("span", "fx" + (c.affection + c.trust > 0 ? "" : " cool"));
+        fx.append(pic(A + "relation/affection.png"), node("span", "", (c.affection + c.trust > 0 ? "+" : "") + (c.affection || c.trust)));
+        fx.style.left = el.style.left;
+        fx.style.top = "calc(" + el.style.top + " - " + getComputedStyle(stage).getPropertyValue("--pawn") + ")";
+        stage.append(fx);
+        setTimeout(() => fx.remove(), 1700);
+      }
+    }
+    lastSeq = logs.length ? Math.max(lastSeq, seqOf(logs.at(-1))) : lastSeq;
+  }
+
+  /* ───────── 카메라: 바닥 영역이 화면에 들어오도록 배경을 배치 ───────── */
+  const art = $("sceneArt"),
+    scene = $("scene"),
+    stage = $("lifeStage");
+  const missing = new Set();
+  art.addEventListener("error", () => {
+    missing.add(art.dataset.key);
+    art.dataset.key = "";
+    frameScene();
+  });
+  art.addEventListener("load", () => frameScene());
+  function frameScene() {
+    const W = scene.clientWidth,
+      H = scene.clientHeight;
+    if (!W || !H) return;
+    const orientation = W > H ? "landscape" : "portrait";
+    scene.dataset.orientation = orientation;
+    const key = missing.has(orientation) ? "temp" : orientation,
+      bg = BACKGROUNDS[key],
+      FLOOR = bg.floor;
+    if (art.dataset.key !== key) {
+      art.dataset.key = key;
+      art.src = bg.src;
+      $("sceneBlur").src = bg.src;
+      const page = document.querySelector(".page-blur");
+      if (page) page.src = bg.src;
+      return; // load/error 뒤에 다시 들어온다
+    }
+    if (!art.complete || !art.naturalWidth) return;
+    const iw = art.naturalWidth || 1536,
+      ih = art.naturalHeight || 1024;
+    art.style.width = iw + "px";
+    art.style.height = ih + "px";
+    const topRoom = 64,
+      bottomRoom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--dock-h")) + 40;
+    const availH = Math.max(120, H - topRoom - bottomRoom);
+    // 바닥이 가로로 들어가고, 세로로는 HUD·독 사이에 들어가는 가장 큰 배율
+    let scale;
+    if (key === "temp") {
+      scale = Math.min((W * 0.98) / (FLOOR.w * iw), availH / (FLOOR.h * ih));
+      scale = Math.max(scale, Math.min(W / iw, H / ih));
+      if (FLOOR.w * iw * scale > W) scale = (W * 0.98) / (FLOOR.w * iw);
+    } else scale = Math.max(W / iw, H / ih); // 디자이너 배경은 무대와 같은 비율이라 그대로 덮는다
+    const imgW = iw * scale,
+      imgH = ih * scale;
+    let left = W / 2 - (FLOOR.x + FLOOR.w / 2) * imgW;
+    let top = topRoom + availH / 2 - (FLOOR.y + FLOOR.h / 2) * imgH;
+    if (imgW >= W) left = Math.min(0, Math.max(W - imgW, left));
+    else left = (W - imgW) / 2;
+    if (imgH >= H) top = Math.min(0, Math.max(H - imgH, top));
+    else top = H - imgH > H * 0.35 ? topRoom + 6 : topRoom + (availH - imgH) / 2;
+    scene.classList.toggle("diorama", imgH < H - 40 || imgW < W - 40);
+    art.style.transform = "translate(" + left + "px," + top + "px) scale(" + scale + ")";
+    stage.style.left = left + FLOOR.x * imgW + "px";
+    stage.style.top = top + FLOOR.y * imgH + "px";
+    stage.style.width = FLOOR.w * imgW + "px";
+    stage.style.height = FLOOR.h * imgH + "px";
+    const cell = (FLOOR.w * imgW) / GRID.width;
+    stage.style.setProperty("--pawn", Math.round(Math.max(60, Math.min(132, cell * 1.8))) + "px");
+    previousPositions.clear();
+  }
+  new ResizeObserver(frameScene).observe(scene);
+  frameScene();
+
+  /* ───────── 연출(fx) ───────── */
+  const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const motes = $("motes");
+  for (let i = 0; i < 14; i++) {
+    const m = node("span", "mote");
+    m.style.left = 8 + Math.random() * 84 + "%";
+    m.style.top = 20 + Math.random() * 60 + "%";
+    m.style.setProperty("--d", 7 + Math.random() * 7 + "s");
+    m.style.setProperty("--delay", -Math.random() * 10 + "s");
+    m.style.setProperty("--dx", (Math.random() * 60 - 30).toFixed(0) + "px");
+    m.style.setProperty("--dy", -(60 + Math.random() * 80).toFixed(0) + "px");
+    motes.append(m);
+  }
+  const pct = (x, y) => [((x + 0.5) / GRID.width) * 100 + "%", ((y + 0.5) / GRID.height) * 100 + "%"];
+  function floatAt(x, y, cls, content, opts = {}) {
+    if (reduced()) return;
+    const f = node("span", "float " + cls);
+    if (content instanceof Node) f.append(content);
+    else f.textContent = content;
+    const [l, t] = pct(x, y);
+    f.style.left = "calc(" + l + " + " + (opts.dx || 0) + "px)";
+    f.style.top = "calc(" + t + " - " + getComputedStyle(stage).getPropertyValue("--pawn") + " * " + (opts.up ?? 0.9) + ")";
+    f.style.setProperty("--dx", (Math.random() * 40 - 20).toFixed(0) + "px");
+    f.style.setProperty("--d", (opts.d || 1.8) + "s");
+    stage.append(f);
+    setTimeout(() => f.remove(), (opts.d || 1.8) * 1000 + 100);
+  }
+  function puffAt(x, y) {
+    if (reduced()) return;
+    for (let i = 0; i < 2; i++) {
+      const p = node("span", "puff");
+      const [l, t] = pct(x, y);
+      p.style.left = "calc(" + l + " + " + (Math.random() * 16 - 8).toFixed(0) + "px)";
+      p.style.top = "calc(" + t + " - 6px)";
+      p.style.setProperty("--dx", (i ? 12 : -12) + "px");
+      stage.append(p);
+      setTimeout(() => p.remove(), 800);
+    }
+  }
+  let shownDay = null,
+    lastClockText = "",
+    unreadLogs = false,
+    lastLogCount = null;
+  const prevModes = new Map();
+  function dayBanner(day) {
+    if (reduced()) return;
+    const b = node("div", "day-banner");
+    b.append(node("b", "", T("Day {n}", { n: day })), node("small", "", T("새로운 하루가 시작됐어요")));
+    scene.append(b);
+    setTimeout(() => b.remove(), 2700);
+  }
+  $("openJournal").addEventListener("click", () => {
+    unreadLogs = false;
+    $("openJournal").querySelector(".dot")?.remove();
+  });
+  document.querySelectorAll(".dock-btn").forEach((b) =>
+    b.addEventListener("click", () => {
+      b.classList.remove("bump");
+      void b.offsetWidth;
+      b.classList.add("bump");
+    }),
+  );
+
+  async function artwork(pawn) {
+    const key = pawn.id + "-" + (pawn.appearance_version || 0);
+    if (cache.has(key)) return cache.get(key);
+    const imgs = {};
+    for (const s of SLOTS) imgs[s] = await image(pawn.appearance?.layers[s] || "./assets/six_layers/" + s + "_neutral.png");
+    const art = {
+      imgs,
+      transforms: pawn.appearance?.transforms || Object.fromEntries(SLOTS.map((s) => [s, { x: 0, y: 0, rotation: 0, scale: 1, visible: true }])),
+    };
+    cache.set(key, art);
+    return art;
+  }
+  const face = async (pawn, size, className) => {
+    const c = node("canvas", className);
+    c.width = c.height = size;
+    c.setAttribute("aria-label", pawn.name + (pawn.local_double ? T(" · 방문 폰") : ""));
+    const art = await artwork(pawn);
+    paint(c, art.imgs, art.transforms);
+    return c;
+  };
+  const allOf = (s) => [...s.pawns, ...(s.life.guest ? [s.life.guest] : [])];
+  const actorName = (s, id) => T(allOf(s).find((p) => p.id === id)?.name || T("폰"));
+  const modeOf = (a) => MODE[a?.mode] || MODE.idle;
+
+  /* ───────── 장면 ───────── */
+  async function render() {
+    if (rendering) return;
+    rendering = true;
+    try {
+      const state = store.read(),
+        life = state.life,
+        all = actorsFor(state);
+      selected ??= state.pawns[0]?.id;
+      const clock = clockOf(life.tick);
+      if (clock.text !== lastClockText) {
+        $("lifeClock").textContent = clock.text;
+        $("lifeClock").classList.remove("tick");
+        void $("lifeClock").offsetWidth;
+        $("lifeClock").classList.add("tick");
+        lastClockText = clock.text;
+      }
+      scene.dataset.tod = clock.tod;
+      if (shownDay !== null && clock.day !== shownDay) dayBanner(clock.day);
+      shownDay = clock.day;
+      if (lastLogCount !== null && life.logs.length !== lastLogCount && $("sheet-journal").hidden && !unreadLogs) {
+        unreadLogs = true;
+        if (!$("openJournal").querySelector(".dot")) $("openJournal").append(node("i", "dot"));
+      }
+      lastLogCount = life.logs.length;
+      $("lifeDay").textContent = "Day " + clock.day;
+      $("clockIcon").src = A + "ui/hud/" + (clock.night ? "moon" : "sun") + ".png";
+      $("lifeClock").parentElement.title = T("생활 ") + life.tick + T("초 · ") + (life.paused ? T("일시정지") : T("자율 생활 중"));
+      const pause = $("pauseLife");
+      pause.classList.toggle("paused", life.paused);
+      pause.firstElementChild.src = A + "ui/hud/" + (life.paused ? "play" : "pause") + ".png";
+      pause.setAttribute("aria-label", life.paused ? T("생활 재개") : T("일시정지"));
+      pause.title = life.paused ? T("생활 재개") : T("일시정지");
+      stage.classList.toggle("placing", layout);
+      $("arrangeLegend").hidden = !layout;
+      $("arrangePanel").hidden = !layout;
+      $("arrangeLife").classList.toggle("on", layout);
+
+      $("lifePlaces").replaceChildren();
+      for (const p of life.places) {
+        const b = node("button", "life-place " + p.kind + (p.blocked ? " blocked" : "") + (layout && $("placeSelect").value === p.id ? " selected" : ""));
+        b.type = "button";
+        b.append(pic(A + "furniture/" + p.kind + ".png", "mat"), node("span", "label", T(p.label)));
+        b.style.left = ((p.x + 0.5) / GRID.width) * 100 + "%";
+        b.style.top = ((p.y + 0.5) / GRID.height) * 100 + "%";
+        b.title = T(p.label) + (p.blocked ? T(T(" · 잠시 닫힘")) : "");
+        b.onclick = () => {
+          $("placeSelect").value = p.id;
+          updatePlaceControls();
+          if (!layout) toggleLayout(true);
+          else render();
+        };
+        $("lifePlaces").append(b);
+      }
+      for (const w of life.walls) {
+        const b = node("button", "life-wall");
+        b.type = "button";
+        b.append(pic(A + "furniture/wall.png"));
+        b.setAttribute("aria-label", T("장애물 ") + w.x + "," + w.y);
+        b.style.left = ((w.x + 0.5) / GRID.width) * 100 + "%";
+        b.style.top = ((w.y + 0.5) / GRID.height) * 100 + "%";
+        b.onclick = () => {
+          if (layout) {
+            store.wall(crypto.randomUUID(), w.x, w.y);
+            render();
+          }
+        };
+        $("lifePlaces").append(b);
+      }
+      if (layout) {
+        const occupied = new Set([...life.places.map((p) => p.x + "," + p.y), ...life.walls.map((w) => w.x + "," + w.y), ...Object.values(life.actors).map((a) => a.x + "," + a.y)]);
+        for (const key of occupied) {
+          const [x, y] = key.split(",").map(Number);
+          const h = node("i", "cell-hint no");
+          h.style.left = ((x + 0.5) / GRID.width) * 100 + "%";
+          h.style.top = ((y + 0.5) / GRID.height) * 100 + "%";
+          $("lifePlaces").append(h);
+        }
+      }
+
+      $("lifeActors").replaceChildren();
+      for (const p of all) {
+        const a = life.actors[p.id] || { x: 3 + state.pawns.indexOf(p) * 2, y: 6, mode: "idle" },
+          art = await artwork(p),
+          b = node("button", "life-pawn " + a.mode + (p.local_double ? " visitor" : "") + (p.id === selected ? " chosen" : ""));
+        b.type = "button";
+        b.dataset.id = p.id;
+        b.style.left = ((a.x + 0.5) / GRID.width) * 100 + "%";
+        b.style.top = ((a.y + 0.5) / GRID.height) * 100 + "%";
+        b.style.zIndex = 4 + a.y;
+        const c = node("canvas");
+        c.width = c.height = 160;
+        paint(c, art.imgs, art.transforms);
+        const bubble = pic(A + "bubbles/" + (BUBBLE_KEY[a.mode] || (MODE[a.mode] ? a.mode : "idle")) + ".png", "bubble " + a.mode);
+        bubble.title = modeOf(a).text;
+        b.append(node("span", "say", modeOf(a).text), bubble, c, node("span", "name", T(p.name)));
+        b.setAttribute("aria-label", T(p.name) + " · " + modeOf(a).text + T(" · 상세 보기"));
+        b.onclick = () => {
+          selected = p.id;
+          detailOpen = true;
+          if (layout) toggleLayout(false);
+          else render();
+        };
+        $("lifeActors").append(b);
+        const prev = previousPositions.get(p.id);
+        if (prev && !matchMedia("(prefers-reduced-motion: reduce)").matches && (prev.x !== a.x || prev.y !== a.y)) {
+          const r = stage.getBoundingClientRect();
+          b.animate(
+            [
+              { transform: "translate(-50%,-82%) translate(" + ((prev.x - a.x) / GRID.width) * r.width + "px," + ((prev.y - a.y) / GRID.height) * r.height + "px)" },
+              { transform: "translate(-50%,-82%)" },
+            ],
+            { duration: Math.min(700, 900 / speed), easing: "ease-in-out" },
+          );
+        }
+        if (prev && (prev.x !== a.x || prev.y !== a.y)) puffAt(prev.x, prev.y);
+        if (prevModes.get(p.id) === "moving" && a.mode !== "moving") b.classList.add("land");
+        prevModes.set(p.id, a.mode);
+        previousPositions.set(p.id, { x: a.x, y: a.y });
+        if (!life.paused && !document.hidden) {
+          const r = Math.random();
+          if (a.mode === "resting" && r < 0.35) floatAt(a.x, a.y, "zz", "z", { dx: 18, up: 1.05, d: 2.2 });
+          else if ((a.mode === "talking" || a.mode === "listening") && r < 0.3) floatAt(a.x, a.y, "note", r < 0.15 ? "♪" : pic(A + "relation/affection.png"), { dx: -14, up: 1.1 });
+          else if ((a.mode === "working" || a.mode === "assisting" || a.mode === "repairing") && r < 0.28) floatAt(a.x, a.y, "spark", "✦", { dx: 16, up: 0.8, d: 1.3 });
+        }
+      }
+      spawnEffects(state);
+      await renderDetails(state, all);
+      renderLogs(state);
+      await renderChange(state);
+      await renderRelationList(state, all);
+      await renderVisit(state, all);
+    } finally {
+      rendering = false;
+    }
+  }
+
+  /* ───────── 폰 상세 패널 ───────── */
+  function selectPawn(id) {
+    selected = id;
+    detailOpen = true;
+    render();
+  }
+  async function renderDetails(state, all) {
+    const root = $("pawnDetails");
+    root.replaceChildren();
+    const p = all.find((p) => p.id === selected) || state.pawns[0];
+    root.hidden = !p || !detailOpen || layout;
+    if (root.hidden) return;
+    selected = p.id;
+    const a = state.life.actors[p.id],
+      mode = a ? modeOf(a) : { text: T("새 공간을 둘러보고 있어요"), icon: "i-sparkle" };
+
+    const top = node("div", "detail-top");
+    const title = node("div");
+    title.append(node("h3", "", T(p.name)), node("small", "", p.local_double ? T("방문 폰 · 로컬 테스트") : T("내 폰")));
+    const close = node("button", "close");
+    close.type = "button";
+    close.setAttribute("aria-label", T("상세 닫기"));
+    close.append(pic(A + "ui/icon/close.png"));
+    close.onclick = () => {
+      detailOpen = false;
+      render();
+    };
+    const avatar = node("span", "avatar");
+    avatar.append(await face(p, 160), pic(A + "ui/avatar-ring.png"));
+    top.append(avatar, title, close);
+    root.append(top);
+
+    if (all.length > 1) {
+      const sw = node("div", "switcher");
+      sw.append(node("span", "lbl", T("다른 폰으로 전환")));
+      for (const q of all) {
+        const b = node("button", q.id === p.id ? "on" : "");
+        b.type = "button";
+        b.title = T(q.name);
+        b.setAttribute("aria-label", T(q.name) + T(T(" 보기")));
+        b.append(await face(q, 96));
+        b.onclick = () => selectPawn(q.id);
+        sw.append(b);
+      }
+      root.append(sw);
+    }
+
+    const tabs = node("div", "tabs");
+    tabs.setAttribute("role", "tablist");
+    const list = p.local_double
+      ? [["now", T("현재 상태"), "tab-heart"]]
+      : [["now", T("현재 상태"), "tab-heart"], ["rel", T("관계 요약"), "tab-chat"], ["mem", T("기억"), "tab-book"]];
+    if (!list.some(([k]) => k === tab)) tab = "now";
+    for (const [k, label, ic] of list) {
+      const b = node("button", k === tab ? "on" : "");
+      b.type = "button";
+      b.setAttribute("role", "tab");
+      b.setAttribute("aria-selected", String(k === tab));
+      b.append(pic(A + "ui/icon/" + ic + ".png"), node("span", "", label));
+      b.onclick = () => {
+        tab = k;
+        render();
+      };
+      tabs.append(b);
+    }
+    root.append(tabs);
+
+    const body = node("div", "tab-body");
+    if (tab === "now") {
+      const now = node("div", "block");
+      now.append(node("h4", "", T("현재 행동")));
+      const row = node("div", "now");
+      const ico = pic(A + "bubbles/" + (a ? BUBBLE_KEY[a.mode] || (MODE[a.mode] ? a.mode : "idle") : "idle") + ".png", "ico");
+      const txt = node("div");
+      txt.append(node("strong", "", mode.text + "."));
+      if (a && a.until > state.life.tick && Number.isFinite(a.started)) {
+        const total = Math.max(1, a.until - a.started),
+          done = Math.min(total, state.life.tick - a.started);
+        const bar = node("div", "bar sky");
+        const fill = node("i");
+        fill.style.width = (done / total) * 100 + "%";
+        bar.append(fill);
+        txt.append(bar, node("small", "", T(T("남은 시간 {n}초"), { n: a.until - state.life.tick })));
+      } else if (a && a.mode !== "idle" && !p.local_double && a.reason) txt.append(node("small", "", tLife(a.reason)));
+      row.append(ico, txt);
+      now.append(row);
+      body.append(now);
+      if (!p.local_double) {
+        const needs = node("div", "block");
+        needs.append(node("h4", "", T("필요")));
+        const rest = 100 - (a?.tired ?? 0),
+          feel = [];
+        if (rest < 35) feel.push(T("많이 피곤해요"));
+        else if (rest < 60) feel.push(T("조금 쉬고 싶어요"));
+        if ((a?.social ?? 0) > 70) feel.push(T("누군가와 이야기하고 싶어요"));
+        if ((a?.activity ?? 0) > 70) feel.push(T("손을 움직이고 싶어요"));
+        needs.append(node("p", "need-sum", feel.length ? feel.join(", ") + "." : T("지금은 마음이 편안해요.")));
+        const grid = node("div", "needs");
+        for (const [label, value, tone, key] of [
+          [T("휴식"), 100 - (a?.tired ?? 0), "pink", "rest"],
+          [T("활동"), a?.activity ?? 0, "sky", "activity"],
+          [T("사회"), a?.social ?? 0, "mint", "social"],
+        ]) {
+          const r = node("div", "need");
+          const bar = node("div", "bar " + tone);
+          const fill = node("i");
+          fill.style.width = Math.max(0, Math.min(100, value)) + "%";
+          bar.append(fill);
+          r.append(pic(A + "needs/" + key + ".png"), node("span", "", label), bar, node("b", "", Math.round(value) + "%"));
+          grid.append(r);
+        }
+        needs.append(grid);
+        body.append(needs);
+        const actions = node("div", "detail-actions");
+        const editButton = gbtn(T("얼굴·성격 꾸미기"), null);
+        editButton.prepend(pic(A + "ui/icon/wand.png"));
+        editButton.onclick = () => edit(p);
+        const other = all.find((q) => q.id !== p.id);
+        const relButton = gbtn(T("관계·기억 자세히"), null);
+        relButton.prepend(pic(A + "ui/icon/book-open.png"));
+        relButton.disabled = !other;
+        relButton.onclick = () => other && openRelations(p.id, other.id);
+        actions.append(editButton, relButton);
+        body.append(actions);
+        const traitBlock = node("div", "block");
+        traitBlock.append(node("h4", "", T("성격")));
+        const trows = node("div", "trait-rows");
+        for (const [axis, value] of Object.entries(p.trait.axis_values)) {
+          const r = node("div", "trait-row");
+          const lvl = node("span", "lvl");
+          const n = value === "high" ? 3 : value === "medium" ? 2 : 1;
+          for (let i = 1; i <= 3; i++) lvl.append(node("i", i <= n ? "on" : ""));
+          r.append(node("span", "", AXIS_NAMES[axis] || axis), lvl);
+          trows.append(r);
+        }
+        traitBlock.append(trows);
+        body.append(traitBlock);
+      } else body.append(node("p", "hint note", T("로컬 방문 폰이에요. 공개된 현재 행동만 볼 수 있고 외형·성격·비공개 관계는 수정하거나 조회하지 않아요.")));
+    } else if (tab === "rel") {
+      const block = node("div", "block");
+      block.append(node("h4", "", T("본인 방향 관계")));
+      const others = all.filter((q) => q.id !== p.id);
+      if (!others.length) block.append(node("p", "empty", T("아직 함께 지내는 폰이 없어요.")));
+      for (const q of others) block.append(await relRow(state, p, q));
+      body.append(block);
+    } else if (tab === "mem") {
+      const block = node("div", "block");
+      block.append(node("h4", "", T("확인된 기억")));
+      const rows = state.memories.filter((m) => m.from === p.id && m.known).slice(-8).reverse();
+      if (!rows.length) block.append(node("p", "empty", T("아직 남은 기억이 없어요. 함께 지내면 차곡차곡 쌓여요.")));
+      for (const m of rows) {
+        const r = node("div", "mem-row");
+        const t = node("div");
+        t.append(
+          node("span", "", (m.description ? tLife(m.description) : TOPIC[m.topic] || T(T("확인한 사건이 있어요"))) + (m.to ? " · " + actorName(state, m.to) : "")),
+          node("small", "", (m.reason_known ? T("사유 확인") : T("사유 미상")) + " · " + (m.resolution === "resolved" ? T("해결됨") : T("기억 유지"))),
+        );
+        r.append(icon("i-book"), t);
+        block.append(r);
+      }
+      body.append(block);
+    } else if (tab === "trait") {
+      const block = node("div", "block");
+      block.append(node("h4", "", T("성격 세 축")));
+      const rows = node("div", "trait-rows");
+      for (const [axis, value] of Object.entries(p.trait.axis_values)) {
+        const r = node("div", "trait-row");
+        const lvl = node("span", "lvl");
+        const n = value === "high" ? 3 : value === "medium" ? 2 : 1;
+        for (let i = 1; i <= 3; i++) lvl.append(node("i", i <= n ? "on" : ""));
+        r.append(node("span", "", AXIS_NAMES[axis] || axis), lvl);
+        rows.append(r);
+      }
+      block.append(rows);
+      body.append(block, node("p", "hint", T("행동 경향의 참고값이에요. 실제 선택은 상황·기억·관계에 따라 달라집니다.")));
+    } else if (tab === "info") {
+      const block = node("div", "block");
+      const kv = node("dl", "kv");
+      for (const [k, v] of [
+        [T("이름"), p.name],
+        [T("폰 ID"), p.id],
+        [T("외형 버전"), String(p.appearance_version ?? 1)],
+        [T("현재 칸"), a ? a.x + ", " + a.y : "-"],
+        [T("생활 시간"), state.life.tick + T("초")],
+      ])
+        kv.append(node("dt", "", k), node("dd", "", v));
+      block.append(kv);
+      body.append(block);
+    }
+    root.append(body);
+  }
+  async function relRow(state, p, q) {
+    const dto = store.projection(p.id, q.id);
+    const r = node("div", "rel-row");
+    const t = node("div");
+    t.append(node("strong", "", T(q.name) + (q.local_double ? T(" · 방문") : "")), node("small", "", dto.tags.length ? dto.tags.map((t) => t.label).join(" · ") : T("아직 설명이 확정되지 않았어요")));
+    const mini = node("div", "mini");
+    const chip = (cls, key, text) => {
+      const s = node("span", cls);
+      s.append(pic(A + "relation/" + key + ".png"), document.createTextNode(text));
+      return s;
+    };
+    mini.append(chip("aff", "affection", T("애정 ") + dto.scores.affection), chip("tru", "trust", T("신뢰 ") + dto.scores.trust));
+    if (dto.scores.conflict) mini.append(chip("con", "conflict", T("갈등 ") + dto.scores.conflict));
+    r.append(await face(q, 96), t, mini);
+    r.onclick = () => openRelations(p.id, q.id);
+    return r;
+  }
+
+  /* ───────── 기록 팝업 ───────── */
+  function renderLogs(state) {
+    const root = $("lifeLog");
+    root.replaceChildren();
+    const rows = state.life.logs.slice(showAllLogs ? -120 : -15).reverse();
+    let lastDay = null;
+    for (const entry of rows) {
+      const day = clockOf(entry.tick).day;
+      if (day !== lastDay) {
+        root.append(node("li", "log-day", "Day " + day));
+        lastDay = day;
+      }
+      const li = node("li", "log-row " + entry.kind);
+      const t = node("time", "", clockOf(entry.tick).text);
+      t.title = entry.tick + T("초");
+      const ico = pic(A + "log/" + (LOG_ICON[entry.kind] ? entry.kind : "activity") + ".png", "ico");
+      const txt = node("div");
+      txt.append(node("strong", "", actorName(state, entry.actor) + " · " + tLife(entry.text)));
+      const subs = [];
+      if (entry.target) subs.push(T(T("{name}와 함께"), { name: actorName(state, entry.target) }));
+      for (const c of (entry.changes || []).filter((c) => state.pawns.some((p) => p.id === c.from)))
+        subs.push(actorName(state, c.from) + "→" + actorName(state, c.to) + T(" 애정 +") + c.affection + T(" · 신뢰 +") + c.trust);
+      if (subs.length) {
+        const s = node("small", "", subs.join(" · "));
+        if (entry.changes?.length) s.classList.add("delta");
+        txt.append(s);
+      }
+      li.append(t, ico, txt);
+      root.append(li);
+    }
+    if (!rows.length) root.append(node("li", "empty", T("작은 하루의 첫 기록을 기다리고 있어요.")));
+    $("allLifeLogs").textContent = showAllLogs ? T("최근 기록만") : T("전체 기록");
+    $("allLifeLogs").setAttribute("aria-pressed", String(showAllLogs));
+    const selectedPawn = state.pawns.find((p) => p.id === selected);
+    const memory = selectedPawn ? state.memories.filter((m) => m.from === selectedPawn.id && m.known).at(-1) : null;
+    $("recentMemory").textContent = memory
+      ? T(T("{name}의 최근 기억 · {text}"), { name: T(selectedPawn.name), text: (memory.description ? tLife(memory.description) : TOPIC[memory.topic] || T(T("확인한 사건이 있어요"))) + " · " + (memory.reason_known ? T(T("사유 확인")) : T(T("사유 미상"))) })
+      : T("지금까지의 하루가 차곡차곡 기록돼요.");
+  }
+  $("allLifeLogs").onclick = () => {
+    showAllLogs = !showAllLogs;
+    renderLogs(store.read());
+  };
+
+  /* ───────── 관계 팝업 ───────── */
+  async function renderChange(state) {
+    const root = $("relationChange");
+    root.replaceChildren();
+    const entry = state.life.logs.findLast((l) => l.changes?.some((c) => state.pawns.some((p) => p.id === c.from)));
+    if (!entry) {
+      root.append(node("p", "empty", T("아직 관계 변화가 없어요. 폰들이 함께 지내면 자연스럽게 생겨요.")));
+      return;
+    }
+    const c = entry.changes.find((c) => state.pawns.some((p) => p.id === c.from));
+    const from = allOf(state).find((p) => p.id === c.from),
+      to = allOf(state).find((p) => p.id === c.to);
+    if (!from || !to) return;
+    const head = node("div", "change-head");
+    const arrow = node("span", "arrow");
+    arrow.append(pic(A + "relation/affection.png"));
+    head.append(await face(from, 128), arrow, await face(to, 128));
+    const positive = c.affection + c.trust > 0;
+    root.append(head, node("p", "change-text", T(from.name) + " → " + T(to.name) + " · " + (positive ? T("조금 더 친해졌어요") : T("변화가 있었어요")) + " · " + clockOf(entry.tick).text));
+    const rows = node("div", "change-rows");
+    for (const [label, v] of [[T("친밀"), c.affection], [T("신뢰"), c.trust]]) {
+      const r = node("div", "change-row");
+      r.append(pic(A + "relation/" + (label === T("친밀") ? "affection" : "trust") + ".png"), node("span", "", label), node("span", "v " + (v > 0 ? "up" : v < 0 ? "down" : "flat"), (v > 0 ? "+" : "") + v), node("span", v > 0 ? "up" : v < 0 ? "down" : "flat", v > 0 ? "▲" : v < 0 ? "▼" : "–"));
+      rows.append(r);
+    }
+    root.append(rows);
+  }
+  async function renderRelationList(state, all) {
+    const root = $("relationList");
+    root.replaceChildren();
+    root.append(node("h4", "", T("내 폰이 느끼는 관계")));
+    let any = false;
+    for (const p of state.pawns)
+      for (const q of all)
+        if (q.id !== p.id) {
+          const row = await relRow(state, p, q);
+          row.querySelector("strong").textContent = T(p.name) + " → " + T(q.name) + (q.local_double ? T(" · 방문") : "");
+          root.append(row);
+          any = true;
+        }
+    if (!any) root.append(node("p", "empty", T("폰이 둘 이상이면 서로의 관계가 생겨요.")));
+  }
+
+  /* ───────── 방문 팝업 ───────── */
+  async function renderVisit(state, all) {
+    const life = state.life,
+      guest = life.guest;
+    $("visitorPortraits").replaceChildren();
+    if (guest?.present) $("visitorPortraits").append(await face(guest, 160));
+    else $("visitorPortraits").append(node("span", "ghost"));
+    const allowed = life.host_access && life.owner_scopes.activity_participation && life.owner_scopes.light_auto_events;
+    const together = !!guest?.present && guest.connected && allowed && ["talking", "listening", "assisting", "repairing", "repairListening", "working"].includes(life.actors[guest.id]?.mode);
+    for (const li of $("visitDots").children)
+      li.classList.toggle("on", li.dataset.k === "enter" ? !!guest?.present : li.dataset.k === "together" ? together : !!guest && !guest.present);
+    $("hostAccess").checked = life.host_access;
+    $("guestActivity").checked = life.owner_scopes.activity_participation;
+    $("guestLight").checked = life.owner_scopes.light_auto_events;
+    $("visitorState").textContent = !allowed
+      ? T("허용 범위 밖이라 방문 활동을 진행하지 않아요.")
+      : !guest?.present
+        ? T("아직 방문 중인 폰이 없어요. 루미를 초대해 보세요.")
+        : guest.connected
+          ? T("루미가 같은 공간에서 함께 머무는 중이에요.")
+          : T("루미의 연결이 잠시 끊겼어요. 행동을 멈추고 자리를 비워요.");
+    $("visitEnter").disabled = !!guest?.present;
+    for (const id of ["visitLeave", "visitDisconnect", "visitReconnect"]) $(id).disabled = !guest?.present;
+  }
+
+  /* ───────── 폰 목록 팝업 ───────── */
+  async function renderList() {
+    const state = store.read(),
+      root = $("pawnGrid");
+    root.replaceChildren();
+    if (!state.pawns.length) root.append(node("p", "empty", T("아직 폰이 없어요. 새 폰을 만들어 보세요.")));
+    for (const p of state.pawns) {
+      const tile = node("div", "pawn-tile");
+      const a = state.life.actors[p.id];
+      tile.append(await face(p, 240), node("strong", "", T(p.name)), node("small", "", a ? modeOf(a).text : T("새 공간을 둘러보고 있어요")));
+      const row = node("div", "chips");
+      const see = gbtn(T("보기"), "i-face", "gbtn-sm gbtn-blue");
+      see.onclick = () => {
+        selected = p.id;
+        detailOpen = true;
+        closeSheets();
+        showWorld();
+      };
+      const ed = gbtn(T("꾸미기"), "i-brush", "gbtn-sm");
+      ed.onclick = () => edit(p);
+      row.append(see, ed);
+      tile.append(row);
+      root.append(tile);
+    }
+  }
+
+  /* ───────── 조작 ───────── */
+  function toggleLayout(force) {
+    layout = typeof force === "boolean" ? force : !layout;
+    wallMode = false;
+    $("wallMode").checked = false;
+    $("wallTile").classList.remove("on");
+    markTray();
+    render();
+  }
+  function markTray() {
+    document.querySelectorAll("#placeTray [data-place]").forEach((b) => b.classList.toggle("on", !wallMode && b.dataset.place === $("placeSelect").value));
+    $("wallTile").classList.toggle("on", wallMode);
+  }
+  function updatePlaceControls() {
+    const p = store.life().places.find((p) => p.id === $("placeSelect").value);
+    $("placeX").value = p.x;
+    $("placeY").value = p.y;
+    $("placeBlocked").checked = p.blocked;
+    markTray();
+  }
+  document.querySelectorAll("#placeTray [data-place]").forEach((b) => {
+    b.onclick = () => {
+      $("placeSelect").value = b.dataset.place;
+      wallMode = false;
+      $("wallMode").checked = false;
+      updatePlaceControls();
+      render();
+    };
+  });
+  $("wallTile").onclick = () => {
+    wallMode = !wallMode;
+    $("wallMode").checked = wallMode;
+    markTray();
+    notify(wallMode ? T("바닥을 누르면 장애물을 놓거나 치워요.") : T("활동 지점을 골라 바닥을 눌러 옮겨요."));
+  };
+  $("wallMode").onchange = () => {
+    wallMode = $("wallMode").checked;
+    markTray();
+  };
+  $("arrangeDone").onclick = () => toggleLayout(false);
+  $("pauseLife").onclick = () => {
+    try {
+      store.lifePause(crypto.randomUUID(), !store.life().paused);
+      faulted = false;
+      render();
+    } catch {
+      notify(T("저장하지 못해 생활을 멈췄어요. 기존 기록은 유지합니다."));
+      faulted = true;
+    }
+  };
+  document.querySelectorAll(".plate-speed [data-speed]").forEach((b) => {
+    b.onclick = () => {
+      speed = Number(b.dataset.speed);
+      document.querySelectorAll(".plate-speed [data-speed]").forEach((x) => x.classList.toggle("on", x === b));
+    };
+  });
+  $("placeSelect").onchange = updatePlaceControls;
+  updatePlaceControls();
+  $("placeApply").onclick = () => {
+    try {
+      store.place(crypto.randomUUID(), $("placeSelect").value, Number($("placeX").value), Number($("placeY").value), $("placeBlocked").checked);
+      notify(T("배치를 저장했어요. 폰이 바뀐 공간에서 새 경로를 찾아요."));
+      render();
+    } catch {
+      notify(T("다른 가구나 장애물과 겹쳐 배치할 수 없어요."));
+    }
+  };
+  $("placeBlocked").onchange = () => $("placeApply").click();
+  stage.onclick = (e) => {
+    if (!layout || e.target.closest("button")) return;
+    const r = stage.getBoundingClientRect(),
+      x = Math.min(GRID.width - 1, Math.max(0, Math.floor(((e.clientX - r.left) / r.width) * GRID.width))),
+      y = Math.min(GRID.height - 1, Math.max(0, Math.floor(((e.clientY - r.top) / r.height) * GRID.height)));
+    if (wallMode) {
+      try {
+        store.wall(crypto.randomUUID(), x, y);
+        render();
+      } catch {
+        notify(T("폰이나 활동 지점이 있는 칸에는 장애물을 둘 수 없어요."));
+      }
+    } else {
+      $("placeX").value = x;
+      $("placeY").value = y;
+      $("placeApply").click();
+    }
+  };
+  for (const [id, action] of [["visitEnter", "enter"], ["visitLeave", "leave"], ["visitDisconnect", "disconnect"], ["visitReconnect", "reconnect"]])
+    $(id).onclick = () => {
+      try {
+        store.visit(crypto.randomUUID(), action);
+        render();
+      } catch {
+        notify(T("방문 폰의 현재 상태를 확인해 주세요."));
+      }
+    };
+  for (const [id, scope] of [["hostAccess", "host_access"], ["guestActivity", "activity_participation"], ["guestLight", "light_auto_events"]])
+    $(id).onchange = () => {
+      try {
+        store.visitPermission(crypto.randomUUID(), scope, $(id).checked);
+        render();
+      } catch {
+        notify(T("방문 허용 상태를 저장하지 못했어요."));
+      }
+    };
+  const timer = setInterval(async () => {
+    if (document.hidden || document.querySelector(".screen:not([hidden])") || rendering || faulted || store.life().paused || !store.read().pawns.length) return;
+    try {
+      for (let i = 0; i < speed; i++) store.lifeStep(store.life().tick + 1);
+      await render();
+    } catch {
+      faulted = true;
+      notify(T("저장 충돌 또는 저장 실패로 생활을 멈췄어요. 현재 기록을 보존한 채 새로고침해 주세요."));
+    }
+  }, 1000);
+  window.addEventListener("storage", (event) => {
+    if (event.key === "game1-local-a-v1") {
+      faulted = true;
+      notify(T("다른 창의 변경을 확인했어요. 현재 생활을 멈추고 새로고침해 주세요."));
+    }
+  });
+  window.addEventListener("pagehide", () => clearInterval(timer), { once: true });
+  return { render, renderList, toggleLayout };
 }

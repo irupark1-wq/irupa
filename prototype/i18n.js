@@ -1,0 +1,205 @@
+/* ─────────────────────────────────────────────────────────────
+   다국어(i18n). 기본 한국어. 사전의 키는 "한국어 원문" 그대로다(gettext 방식).
+   - t("저장하기")              → 현재 언어 문자열, 없으면 한국어 원문
+   - t("남은 시간 {n}초", {n})   → 치환
+   - tLife(text)              → 시뮬레이션이 저장한 문장(장소 이름 + "로 가요" 같은 합성문) 번역
+   - applyStatic(root)        → HTML 정적 글자(텍스트 노드·placeholder·aria-label·title·alt) 치환
+   - 언어 추가: DICT 에 코드 하나와 사전 하나를 더하고 LANGS 에 이름을 적는다.
+   언어를 바꾸면 저장 후 새로고침한다(모든 문자열이 로드 시점에 고정되므로).
+   ───────────────────────────────────────────────────────────── */
+export const LANGS = { ko: "한국어", en: "English", ja: "日本語" };
+const KEY = "game1-lang";
+
+const en = {
+  // ── 공통·HUD·독
+  "동그란 사이": "Little Circles", "내 월드": "My World", "폰 목록": "Pawns", "기록": "Journal", "관계": "Bonds", "폰 만들기": "New Pawn", "배치": "Arrange", "방문": "Visit", "더보기": "More",
+  "게임 메뉴": "Game menu", "생활 속도": "Life speed", "자율 생활 시간": "Life clock", "일시정지": "Pause", "생활 재개": "Resume", "자율 생활 중": "living", "생활 ": "Life ", "초 · ": "s · ", "초": "s",
+  "동그란 사이 · 내 월드": "Little Circles · My World", "12 곱하기 8 자율 생활 바닥": "12 by 8 living floor",
+  // ── 배치
+  "가구 배치": "Arrange", "끝내기": "Done", "활동 지점을 고른 뒤 바닥을 누르면 그 칸으로 옮겨요.": "Pick a spot, then tap the floor to move it there.", "쉼터": "Rest spot", "작업대": "Workbench", "이야기 자리": "Chat spot", "장애물": "Obstacle", "가로": "X", "세로": "Y", "잠시 닫기": "Close for now", "장애물 모드": "Obstacle mode", "좌표로 저장": "Save by coords", "활동 지점": "Activity spot",
+  "배치 가능": "Free", "막힘": "Blocked", "선택 중": "Selected", " · 잠시 닫힘": " · closed", "장애물 ": "Obstacle ",
+  "바닥을 누르면 장애물을 놓거나 치워요.": "Tap the floor to place or remove an obstacle.", "활동 지점을 골라 바닥을 눌러 옮겨요.": "Pick a spot and tap the floor to move it.", "배치를 저장했어요. 폰이 바뀐 공간에서 새 경로를 찾아요.": "Saved. Pawns will find new paths in the changed room.", "다른 가구나 장애물과 겹쳐 배치할 수 없어요.": "Can't place it over another spot or obstacle.", "폰이나 활동 지점이 있는 칸에는 장애물을 둘 수 없어요.": "Can't put an obstacle where a pawn or spot is.",
+  // ── 폰 상세
+  "내 폰": "My pawn", "방문 폰 · 로컬 테스트": "Visitor · local test", "상세 닫기": "Close details", "다른 폰으로 전환": "Switch pawn", " 보기": " details", " · 상세 보기": " · details", "폰": "pawn", " · 방문 폰": " · visitor", " · 방문": " · visitor",
+  "현재 상태": "Status", "관계 요약": "Bonds", "기억": "Memories", "현재 행동": "Doing now", "남은 시간 ": "Time left ", "필요": "Needs", "휴식": "Rest", "활동": "Activity", "사회": "Social",
+  "많이 피곤해요": "Very tired", "조금 쉬고 싶어요": "Could use a rest", "누군가와 이야기하고 싶어요": "Wants to talk to someone", "손을 움직이고 싶어요": "Wants to make something", "지금은 마음이 편안해요.": "Feeling at ease right now.",
+  "얼굴·성격 꾸미기": "Face & personality", "관계·기억 자세히": "Bonds & memories", "성격": "Personality", "본인 방향 관계": "How I feel about others", "아직 함께 지내는 폰이 없어요.": "No other pawns yet.", "확인된 기억": "Known memories", "아직 남은 기억이 없어요. 함께 지내면 차곡차곡 쌓여요.": "No memories yet. They'll pile up as they live together.", "확인한 사건이 있어요": "Something happened", "사유 확인": "reason known", "사유 미상": "reason unknown", "해결됨": "resolved", "기억 유지": "still remembered",
+  "로컬 방문 폰이에요. 공개된 현재 행동만 볼 수 있고 외형·성격·비공개 관계는 수정하거나 조회하지 않아요.": "A local visitor. You can only see their public activity; looks, personality and private bonds stay theirs.",
+  "아직 설명이 확정되지 않았어요": "Nothing settled yet", "애정 ": "Affection ", "신뢰 ": "Trust ", "갈등 ": "Conflict ", "새 공간을 둘러보고 있어요": "Looking around the new room",
+  "공정성 민감도": "Fairness", "친밀 지향": "Closeness", "위험 회피": "Caution", "낮음": "Low", "중간": "Mid", "높음": "High",
+  // ── 행동
+  "주변을 살펴봐요": "Looking around", "이동하고 있어요": "On the move", "만들고 있어요": "Making something", "쉬고 있어요": "Resting", "대화하고 있어요": "Chatting", "이야기를 듣고 있어요": "Listening", "함께 만들고 있어요": "Making together", "함께 문제를 보완해요": "Working things out together", "보완 기록을 확인해요": "Reviewing the fix", "잠깐 기다려요": "Waiting a moment",
+  // ── 기록 팝업
+  "최근 행동과 기억": "Recent activity & memories", "전체 기록": "All", "최근 기록만": "Recent only", "작은 하루의 첫 기록을 기다리고 있어요.": "Waiting for the first entry of a small day.", "지금까지의 하루가 차곡차곡 기록돼요.": "The day is being written down, bit by bit.", "의 최근 기억 · ": "'s latest memory · ", "와 함께": " with", " 애정 +": " affection +", " · 신뢰 +": " · trust +",
+  // ── 관계 팝업
+  "관계 변화": "Bond changes", "자동 발생": "automatic", "아직 관계 변화가 없어요. 폰들이 함께 지내면 자연스럽게 생겨요.": "No bond changes yet. They come naturally as pawns live together.", "조금 더 친해졌어요": "grew a little closer", "변화가 있었어요": "something shifted", "친밀": "Closeness", "신뢰": "Trust", "내 폰이 느끼는 관계": "How my pawns feel", "폰이 둘 이상이면 서로의 관계가 생겨요.": "Bonds appear once there are two or more pawns.", "관계와 기억 자세히 보기": "Open bonds & memories",
+  // ── 방문 팝업
+  "방문 폰": "Visitor", "로컬 테스트": "local test", "입장": "Arrived", "함께 활동": "Doing things together", "퇴장": "Leave", "루미 초대": "Invite Rumi", "끊김 시험": "Drop test", "재접속": "Reconnect", "연결 끊김 시험": "Connection drop test", "방문 허용 설정": "Visit permissions", "호스트의 공간 접근 허용": "Allow host room access", "소유자의 활동 참여 허용": "Allow joining activities", "소유자의 가벼운 자율 사건 허용": "Allow light autonomous events", "방문 폰은 소유 폰 목록에 추가되지 않아요. 실제 온라인 초대는 아직 연결 전이에요.": "Visitors aren't added to your pawns. Real online invites aren't connected yet.",
+  "허용 범위 밖이라 방문 활동을 진행하지 않아요.": "Outside the allowed scope, so no visit activity.", "아직 방문 중인 폰이 없어요. 루미를 초대해 보세요.": "No visitor right now. Try inviting Rumi.", "루미가 같은 공간에서 함께 머무는 중이에요.": "Rumi is hanging out in the same room.", "루미의 연결이 잠시 끊겼어요. 행동을 멈추고 자리를 비워요.": "Rumi's connection dropped. She stops and steps aside.", "방문 폰의 현재 상태를 확인해 주세요.": "Check the visitor's current state.", "방문 허용 상태를 저장하지 못했어요.": "Couldn't save the visit permission.", "루미": "Rumi",
+  // ── 폰 목록
+  "새 폰": "New", "아직 폰이 없어요. 새 폰을 만들어 보세요.": "No pawns yet. Make one!", "보기": "View", "꾸미기": "Edit",
+  // ── 더보기
+  "현재 월드 저장": "Save this world", "폰, 가구, 관계, 기억을 파일로 내려받아요.": "Download pawns, furniture, bonds and memories as a file.", "저장하기": "Save", "저장 데이터 불러오기": "Load a save", "이전에 내려받은 파일로 되돌려요.": "Restore from a downloaded file.", "불러오기": "Load", "이 브라우저에는 자동으로 저장돼요. 브라우저 데이터를 지우면 복구할 수 없으니 파일로도 저장해 두세요.": "Saved automatically in this browser. Clearing browser data loses it, so keep a file too.", "공간 표현 비교": "Space rendering test", "2D 바닥과 3D 기하 공간 합성 비교": "2D floor vs. 3D composite", "공동 공방 시험 (보존)": "Workshop trial (archived)", "이전 선택형 흐름, 주요 UX에서 제외됨": "Old choice-based flow, out of the main UX", "언어": "Language",
+  "아직 저장된 월드가 없어요.": "Nothing saved yet.", "저장 파일을 내려받았어요. 이 브라우저에도 계속 자동 저장돼요.": "Downloaded. It also keeps auto-saving in this browser.", "저장 파일이 너무 큽니다.": "That file is too large.", "저장 데이터를 불러왔어요. 화면을 다시 엽니다.": "Loaded. Reopening the world.", "이 파일은 동그란 사이 저장 데이터가 아니거나 손상됐어요. 기존 기록은 그대로예요.": "That isn't a Little Circles save, or it's damaged. Your current data is untouched.",
+  // ── 편집기
+  "그리기": "Draw", "지우개": "Eraser", "되돌리기": "Undo", "다시하기": "Redo", "그리기 도구": "Drawing tools", "얼굴 그리기 캔버스": "Face canvas", "동그라미 위에 눈 두 개, 그 아래 입 하나. 삐뚤어도 괜찮아요, 그게 이 친구예요.": "Two eyes on the circle, one mouth below. Wobbly is fine — that's who they are.", "파츠": "Parts", "눈": "Eyes", "입": "Mouth", "앞머리": "Bangs", "뒷머리": "Back hair", "장식": "Accessory", "몸체": "Body", "색상": "Color", "굵기": "Brush size", "이름": "Name", "이름을 지어주세요": "Give them a name", "직접 고르기": "Pick a color", "진한 갈색": "Dark brown", "분홍": "Pink", "노랑": "Yellow", "민트": "Mint", "하늘": "Sky blue", "보라": "Purple", "연두": "Light green",
+  "편집할 레이어": "Layer", "도구": "Tool", "브러시": "Brush", "파츠 위치·크기·회전": "Part position · size · rotation", "회전": "Rotate", "크기": "Size", "이 파츠 숨기기": "Hide this part", "눈·입의 원 밖 획 숨기기": "Clip eyes & mouth to the circle", "그리기가 어렵다면 참고 예시 불러오기": "Hard to draw? Load a reference example", "성격 고르기": "Pick personality", "월드로": "Back to world", "그림으로": "Back to drawing",
+  "몸체는 정원 비율을 유지합니다. 파츠를 선택해 그려주세요.": "The body stays a perfect circle. Pick a part to draw on.", "지금 그린 그림을 참고 예시로 바꿀까요? 되돌리기로 돌아올 수 없어요.": "Replace your drawing with the example? Undo won't bring it back.", "참고 예시예요. 위에 덧그리거나 지우개로 고쳐서 나만의 얼굴로 만들어 보세요.": "Just a reference. Draw over it or erase bits to make it yours.", "빈 원에서 새 폰을 그려주세요.": "Draw a new pawn on the blank circle.", "이 시험 버전은 자기 폰 3명까지 지원합니다.": "This test build supports up to 3 of your own pawns.", " 꾸미기": " · edit", "수정 후 저장하기를 눌러 주세요.": "Edit, then press Save.", "첫 폰을 그려 볼까요? 빈 원에 눈과 입을 그려 주세요.": "Let's draw your first pawn. Eyes and a mouth on the blank circle.", "초안 저장 실패 · 현재 그림은 화면에 유지됩니다.": "Couldn't save the draft · your drawing stays on screen.", "이전 그림·성격 초안을 복구했습니다. 아직 폰 저장은 확정되지 않았습니다.": "Restored your previous draft. The pawn isn't saved yet.", "초안을 읽지 못했습니다. 저장 기록은 유지합니다.": "Couldn't read the draft. Saved data is intact.", "저장 기록을 읽지 못했습니다. 기존 데이터를 덮어쓰지 않습니다. ": "Couldn't read saved data. Nothing will be overwritten. ",
+  // ── 성격
+  "이 친구는 어떤 성격일까요?": "What are they like?", "성격 프리셋": "Presets", "무작위 조합": "Random mix", "세 가지 성향": "Three traits", "정답은 없어요. 실제 행동은 상황·기억·관계에 따라 달라집니다.": "There's no right answer. Real behavior depends on situation, memory and bonds.", "저장 점검 도구": "Save test tools", "다음 저장 실패 재현": "Make the next save fail", "저장하고 월드에 배치하기": "Save & place in world", "동일 명령 결과 확인·재시도": "Check result · retry", "직접 조합": "Custom mix", "폰 미리보기": "Pawn preview",
+  "예시: 작업 범위와 조건을 먼저 확인할 수 있어요.": "e.g. may check scope and terms first.", "예시: 기록을 확인하거나 함께 시도할 방법을 제안할 수 있어요.": "e.g. may check the records or suggest trying together.",
+  "저장 중이에요…": "Saving…", "저장 완료 · 내 월드에 반영됐어요.": "Saved · it's in your world.", "의 첫 하루가 시작됐어요. 폰을 눌러 무엇을 하는지 지켜보세요.": "'s first day has begun. Tap them to see what they do.", "다른 창에서 저장된 변경이 있어요. 현재 그림은 초안에 보관했습니다. 새로고침 후 다시 저장해 주세요.": "Another window saved changes. Your drawing is kept as a draft. Refresh and save again.", "이름을 1~20자로 지어 주세요. 현재 그림은 유지됩니다.": "Name must be 1–20 characters. Your drawing is kept.", "저장하지 못했어요. 현재 그림은 유지됩니다. 다시 시도해 주세요.": "Couldn't save. Your drawing is kept. Please try again.", "시험 저장 실패": "Test save failure",
+  "신중한 조율자": "Careful mediator", "다정한 탐험가": "Warm explorer", "조용한 공방인": "Quiet crafter", "느긋한 이웃": "Easygoing neighbor", "독립적인 개척자": "Independent pioneer", "균형형": "Balanced",
+  // ── 관계와 기억 전체 창
+  "관계와 기억": "Bonds & memories", "평가하는 폰": "From", "대상 폰": "To", "공개 범위 점검": "Visibility check", "타인 비공개 방향": "Private to others", "서로 다른 폰을 선택해 주세요.": "Pick two different pawns.", "공개된 정보가 없습니다.": "Nothing is public.", "관계 설명 ": "Bond label ", "아직 확정된 설명 없음": "nothing settled yet", "공동 결정 기록 없음": "No joint decisions on record", "아직 확인된 기억이 없습니다.": "No known memories yet.", "사건은 확인됨 · ": "Event known · ", "사유 확인됨": "reason known", "이유는 아직 모릅니다": "reason still unknown", "해결됨 · 기억은 남아 있습니다": "resolved · the memory remains", "미해결": "unresolved",
+  "애정": "Affection", "존중": "Respect", "호혜성": "Reciprocity", "의존": "Dependence", "권력": "Power", "의무": "Obligation", "갈등": "Conflict",
+  // ── 공방(보존)·비교
+  "공동 공방 · 세 번의 선택": "Workshop · three choices", "비용은 테스트 포인트입니다. 실제 재화나 시간 단위가 아닙니다.": "Costs are test points, not real currency or time.", "새 공방 시작": "Start workshop", "시나리오 점검 도구": "Scenario tools", "로컬 시나리오 확인": "Local scenario checks", "새 역할·전환 제안 수락": "Accept new role / transition", "정정 기록·고객 전달 확인": "Correction logged · customer notified", "연결 상태 정상": "Connection OK", "당사자 사건 인지": "Parties aware", "대안 학습 완료": "Alternative learned", "인계·정산 합의": "Handover settled", "본인 즉시 퇴장": "Leave now", "갈등 해결하기": "Resolve conflict", "실질 복구 확인": "Real repair check", "공로 정정만으로 실질 복구가 완료되지는 않습니다.": "Correcting credit alone doesn't complete a real repair.", "새 복구 계획 실행 확인": "New repair plan executed", "대상자 수용 확인": "Accepted by the other party", "대상 갈등 복구 확정": "Confirm repair", "보존된 이전 선택형 시험": "Archived choice-based trial",
+  "현재 자율 생활은 2D 바닥을 기준으로 검증합니다. 아래는 같은 폰을 3D 기하 공간에 합성하는 기술 비교이며 최종 아트가 아닙니다.": "Life runs on a 2D floor. Below is a technical test compositing the same pawns into 3D geometry, not final art.", "3D 기하 공간과 2D 폰 비교": "3D geometry vs. 2D pawns", "2D: 편집·경로·원형 가독성에 유리합니다. 3D 공간: 카메라·깊이·가림·가구 자산 제작이 추가됩니다. 초기 제작은 2D를 추천합니다.": "2D: easier editing, pathing and round readability. 3D: adds camera, depth, occlusion and furniture assets. 2D is recommended first.",
+  "라운드 ": "Round ", " · 시간 테스트 포인트 ": " · time points ", " · 재료 ": " · materials ", " · 시간 ": " · time ", " / 재료 ": " / materials ", "새 공방을 시작해 주세요.": "Start a new workshop.", "처리 상태: ": "Status: ", "처리하지 못했습니다. 기존 저장 상태를 유지합니다. ": "Couldn't process. Saved state unchanged. ", "확정 사건: ": "Confirmed events: ", "확정 수치 변화 없음": "no confirmed change", "선택이 로컬 저장에 확정됐습니다. 관계·기억에서 변화와 남은 문제를 확인하세요.": "Choice saved locally. Check bonds & memories for changes and open issues.", "확정되지 않았습니다. 다른 선택이나 퇴장이 가능합니다.": "Not confirmed. You can choose again or leave.", "먼저 자기 폰 3명을 만들어 주세요.": "Make 3 of your own pawns first.", "새 주문의 공로 문제를 확인합니다. 고의는 단정하지 않습니다.": "Checking the credit issue on the new order. No intent is assumed.", "대상 주문의 갈등을 정리했습니다. 기억은 유지되며 자동 친구가 되지는 않습니다.": "Conflict on that order is settled. The memory stays; they don't become friends automatically.", "복구를 확정하지 못했습니다. 별도 실행·수용 근거를 확인해 주세요. ": "Couldn't confirm the repair. Check execution and acceptance evidence. ",
+  "이름 정정 후 재발송": "Fix the name and resend", "작업 우선, 해결 유예": "Work first, settle later", "기여 기록 확인": "Check contribution log", "밤에게 도움 요청": "Ask Bam for help", "노을에게 대안 배우기": "Learn an alternative from Noeul", "역할 새로 합의": "Renegotiate roles", "합의하고 동업 지속": "Agree and continue", "수락한 역할 분리": "Split accepted roles", "퇴장·인계": "Leave · hand over",
+  "이번 도움 제안은 성립하지 않았습니다. 대안을 선택하거나 퇴장할 수 있어요.": "This help offer didn't go through. Choose another option or leave.", "연결 문제로 활동을 잠시 멈췄습니다.": "Paused due to a connection problem.", "고객 전달을 아직 확인하지 못했습니다. 확인하거나 다른 선택을 해주세요.": "Customer delivery not confirmed yet. Confirm it or choose differently.", "새 책임이 수락되지 않았습니다. 기존 역할은 유지돼요.": "New responsibility not accepted. Roles stay as they were.", "동업 지속 합의가 아직 없습니다. 다른 선택이나 퇴장이 가능해요.": "No agreement to continue yet. You can choose again or leave.", "대안 학습을 아직 확인하지 못했습니다.": "Alternative not confirmed as learned.", "본인은 퇴장했습니다. 인계·정산은 별도 합의 대기입니다.": "You left. Handover and settlement await a separate agreement.",
+  // ── 생활 시스템 안내
+  "저장하지 못해 생활을 멈췄어요. 기존 기록은 유지합니다.": "Couldn't save, so life is paused. Existing data is intact.", "저장 충돌 또는 저장 실패로 생활을 멈췄어요. 현재 기록을 보존한 채 새로고침해 주세요.": "Life paused after a save conflict or failure. Refresh to continue; data is preserved.", "다른 창의 변경을 확인했어요. 현재 생활을 멈추고 새로고침해 주세요.": "Another window made changes. Life is paused; please refresh.",
+  // ── 시뮬레이션이 저장한 문장(life.js / store.js)
+  "포근한 쉼터": "Cozy rest spot", "함께 만드는 작업대": "Shared workbench", "노을": "Noeul", "모래": "Morae", "밤": "Bam",
+  "{place}로 가요": "Heading to {place}", "{place}에서 쉬는 중": "Resting at {place}", "{place}에서 만드는 중": "Making at {place}", "{place}에서 주변을 살펴봐요": "Looking around at {place}",
+  "살펴보는 중": "looking around", "방문한 공간을 둘러봐요": "exploring the room", "피로를 풀고 싶어요": "wants to rest", "작업 욕구와 공정성 성향": "urge to make, sense of fairness", "이야기 욕구와 친밀 성향": "urge to talk, closeness", "욕구·성격·현재 관계를 보고 접근해요": "approaching based on needs, personality and bonds", "남은 갈등의 구체적인 문제를 함께 보완하려 해요": "trying to fix a leftover conflict together", "작업 중인 폰에게 도움을 제안해요": "offering help to a working pawn",
+  "같이 잠깐 이야기해요": "a quick chat together", "지금 하던 일을 마치고 싶어요": "wants to finish what they're doing", "지금은 쉬고 싶어요": "wants to rest right now", "조금 거리를 두고 싶어요": "wants a little distance", "잠깐 혼자 있고 싶어요": "wants to be alone for a bit", "지금 도움을 받기 어려워요": "can't take help right now", "지금은 보완 이야기를 할 준비가 아니에요": "not ready to talk repairs yet", "관계 벌점 없음": "no bond penalty",
+  "작업을 마쳤어요": "finished the work", "함께 작업을 마쳤어요": "finished the work together", "푹 쉬었어요": "had a good rest", "인사를 나누고 이야기를 나눴어요": "said hello and chatted", "인사를 나누고 수락한 짧은 대화를 마쳤어요": "greeted and finished a short chat", "함께 남은 문제를 확인하고 보완했어요": "checked and fixed the leftover issue together", "수락한 기록 확인과 보완 작업을 실제로 마쳤어요": "actually finished the agreed review and fix", "수락한 도움을 작업대에서 끝냈어요": "finished the accepted help at the bench",
+  "다른 폰에게 다가가요": "approaching another pawn", "도움을 제안하러 가요": "going to offer help", "남은 문제를 보완하러 가요": "going to fix a leftover issue", "도움 제안을 상대가 수락했어요": "they accepted the help offer", "도움을 수락하고 함께 만들어요": "accepted help, making together", "상대가 이야기를 수락했어요": "they agreed to talk", "상대가 구체적인 보완 제안을 수락했어요": "they accepted the repair proposal", "이동 대신 휴식이나 다른 장소를 찾아요": "looking for rest or another place instead", "경로가 막혀 다른 일을 찾아요": "path blocked, finding something else", "대상이 사라져 다른 일을 찾아요": "the other left, finding something else", "상대가 떠나 다른 일을 살펴봐요": "the other left, looking around", "이야기는 남지만 반복 관계 효과는 제한해요": "the story stays, but repeated bond effects are limited",
+  "이야기를 나눴어요": "had a chat", "도움을 주고받았어요": "exchanged help", "공로를 확인했어요": "checked who did what",
+  // ── 템플릿
+  "{name}의 첫 하루가 시작됐어요. 폰을 눌러 무엇을 하는지 지켜보세요.": "{name}'s first day has begun. Tap them to see what they do.", "{name} 꾸미기": "Edit {name}", "{name}의 최근 기억 · {text}": "{name}'s latest memory · {text}", "남은 시간 {n}초": "{n}s left", "{name}와 함께": "with {name}", "새로운 하루가 시작됐어요": "A new day begins", "Day {n}": "Day {n}",
+  "한국어": "Korean", "English": "English", "日本語": "Japanese", "닫기": "Close",
+};
+
+const ja = {
+  "동그란 사이": "まるい縁", "내 월드": "マイワールド", "폰 목록": "ポン一覧", "기록": "きろく", "관계": "なかよし", "폰 만들기": "ポンを作る", "배치": "はいち", "방문": "ほうもん", "더보기": "その他",
+  "게임 메뉴": "ゲームメニュー", "생활 속도": "生活スピード", "자율 생활 시간": "生活時計", "일시정지": "一時停止", "생활 재개": "再開", "자율 생활 중": "生活中", "생활 ": "生活 ", "초 · ": "秒 · ", "초": "秒",
+  "동그란 사이 · 내 월드": "まるい縁 · マイワールド", "12 곱하기 8 자율 생활 바닥": "12×8 の生活フロア",
+  "가구 배치": "はいち", "끝내기": "完了", "활동 지점을 고른 뒤 바닥을 누르면 그 칸으로 옮겨요.": "スポットを選んで床をタップすると、そこへ移動します。", "쉼터": "休み場所", "작업대": "作業台", "이야기 자리": "おしゃべり席", "장애물": "しょうがい物", "가로": "横", "세로": "縦", "잠시 닫기": "しばらく閉じる", "장애물 모드": "しょうがい物モード", "좌표로 저장": "座標で保存", "활동 지점": "スポット",
+  "배치 가능": "置ける", "막힘": "ふさがり", "선택 중": "選択中", " · 잠시 닫힘": " · 閉鎖中", "장애물 ": "しょうがい物 ",
+  "바닥을 누르면 장애물을 놓거나 치워요.": "床をタップすると、しょうがい物を置いたり外したりします。", "활동 지점을 골라 바닥을 눌러 옮겨요.": "スポットを選び、床をタップして移動します。", "배치를 저장했어요. 폰이 바뀐 공간에서 새 경로를 찾아요.": "保存しました。ポンが新しい道を探します。", "다른 가구나 장애물과 겹쳐 배치할 수 없어요.": "ほかのスポットやしょうがい物と重ねて置けません。", "폰이나 활동 지점이 있는 칸에는 장애물을 둘 수 없어요.": "ポンやスポットのあるマスには置けません。",
+  "내 폰": "わたしのポン", "방문 폰 · 로컬 테스트": "来客 · ローカルテスト", "상세 닫기": "閉じる", "다른 폰으로 전환": "ほかのポンへ", " 보기": " を見る", " · 상세 보기": " · 詳細", "폰": "ポン", " · 방문 폰": " · 来客", " · 방문": " · 来客",
+  "현재 상태": "いまの様子", "관계 요약": "なかよし", "기억": "思い出", "현재 행동": "いまの行動", "남은 시간 ": "のこり ", "필요": "ほしいもの", "휴식": "休息", "활동": "活動", "사회": "交流",
+  "많이 피곤해요": "とても疲れています", "조금 쉬고 싶어요": "少し休みたい", "누군가와 이야기하고 싶어요": "だれかと話したい", "손을 움직이고 싶어요": "何か作りたい", "지금은 마음이 편안해요.": "いまは気持ちが落ち着いています。",
+  "얼굴·성격 꾸미기": "顔・性格を編集", "관계·기억 자세히": "なかよしと思い出", "성격": "性格", "본인 방향 관계": "この子から見た相手", "아직 함께 지내는 폰이 없어요.": "まだ一緒に暮らすポンがいません。", "확인된 기억": "思い出", "아직 남은 기억이 없어요. 함께 지내면 차곡차곡 쌓여요.": "まだ思い出がありません。一緒に暮らすと増えていきます。", "확인한 사건이 있어요": "出来事がありました", "사유 확인": "理由あり", "사유 미상": "理由不明", "해결됨": "解決", "기억 유지": "覚えている",
+  "로컬 방문 폰이에요. 공개된 현재 행동만 볼 수 있고 외형·성격·비공개 관계는 수정하거나 조회하지 않아요.": "ローカルの来客です。公開中の行動だけ見られます。見た目・性格・非公開の関係は変更も閲覧もしません。",
+  "아직 설명이 확정되지 않았어요": "まだ決まっていません", "애정 ": "愛情 ", "신뢰 ": "信頼 ", "갈등 ": "対立 ", "새 공간을 둘러보고 있어요": "新しい部屋を見回しています",
+  "공정성 민감도": "公平さ", "친밀 지향": "親しさ", "위험 회피": "慎重さ", "낮음": "低", "중간": "中", "높음": "高",
+  "주변을 살펴봐요": "あたりを見ています", "이동하고 있어요": "移動中", "만들고 있어요": "作っています", "쉬고 있어요": "休んでいます", "대화하고 있어요": "おしゃべり中", "이야기를 듣고 있어요": "話を聞いています", "함께 만들고 있어요": "一緒に作っています", "함께 문제를 보완해요": "一緒に直しています", "보완 기록을 확인해요": "直した記録を確認中", "잠깐 기다려요": "ちょっと待っています",
+  "최근 행동과 기억": "最近の行動と思い出", "전체 기록": "すべて", "최근 기록만": "最近だけ", "작은 하루의 첫 기록을 기다리고 있어요.": "小さな一日の最初の記録を待っています。", "지금까지의 하루가 차곡차곡 기록돼요.": "今日の出来事が少しずつ記録されます。", "의 최근 기억 · ": "の最近の思い出 · ", "와 함께": "と一緒に", " 애정 +": " 愛情 +", " · 신뢰 +": " · 信頼 +",
+  "관계 변화": "なかよしの変化", "자동 발생": "自動", "아직 관계 변화가 없어요. 폰들이 함께 지내면 자연스럽게 생겨요.": "まだ変化はありません。一緒に暮らすうちに生まれます。", "조금 더 친해졌어요": "少し仲良くなりました", "변화가 있었어요": "変化がありました", "친밀": "親密", "신뢰": "信頼", "내 폰이 느끼는 관계": "わたしのポンの気持ち", "폰이 둘 이상이면 서로의 관계가 생겨요.": "ポンが2人以上になると関係が生まれます。", "관계와 기억 자세히 보기": "なかよしと思い出を見る",
+  "방문 폰": "来客", "로컬 테스트": "ローカルテスト", "입장": "入室", "함께 활동": "一緒に活動", "퇴장": "退室", "루미 초대": "ルミを招く", "끊김 시험": "切断テスト", "재접속": "再接続", "연결 끊김 시험": "切断テスト", "방문 허용 설정": "来客の許可設定", "호스트의 공간 접근 허용": "部屋への入室を許可", "소유자의 활동 참여 허용": "活動への参加を許可", "소유자의 가벼운 자율 사건 허용": "軽い自動イベントを許可", "방문 폰은 소유 폰 목록에 추가되지 않아요. 실제 온라인 초대는 아직 연결 전이에요.": "来客はポン一覧に追加されません。オンライン招待はまだ未接続です。",
+  "허용 범위 밖이라 방문 활동을 진행하지 않아요.": "許可の範囲外なので来客の活動は行いません。", "아직 방문 중인 폰이 없어요. 루미를 초대해 보세요.": "いま来客はいません。ルミを招いてみましょう。", "루미가 같은 공간에서 함께 머무는 중이에요.": "ルミが同じ部屋で過ごしています。", "루미의 연결이 잠시 끊겼어요. 행동을 멈추고 자리를 비워요.": "ルミの接続が切れました。行動を止めて席を外します。", "방문 폰의 현재 상태를 확인해 주세요.": "来客の状態を確認してください。", "방문 허용 상태를 저장하지 못했어요.": "許可設定を保存できませんでした。", "루미": "ルミ",
+  "새 폰": "新しく", "아직 폰이 없어요. 새 폰을 만들어 보세요.": "まだポンがいません。作ってみましょう。", "보기": "見る", "꾸미기": "編集",
+  "현재 월드 저장": "ワールドを保存", "폰, 가구, 관계, 기억을 파일로 내려받아요.": "ポン・家具・関係・思い出をファイルに保存します。", "저장하기": "保存", "저장 데이터 불러오기": "セーブを読み込む", "이전에 내려받은 파일로 되돌려요.": "保存したファイルから戻します。", "불러오기": "読み込む", "이 브라우저에는 자동으로 저장돼요. 브라우저 데이터를 지우면 복구할 수 없으니 파일로도 저장해 두세요.": "このブラウザに自動保存されます。データを消すと戻せないので、ファイルにも保存してください。", "공간 표현 비교": "空間表現の比較", "2D 바닥과 3D 기하 공간 합성 비교": "2D床と3D合成の比較", "공동 공방 시험 (보존)": "工房テスト（保存）", "이전 선택형 흐름, 주요 UX에서 제외됨": "旧選択式フロー、メインUXからは除外", "언어": "言語",
+  "아직 저장된 월드가 없어요.": "まだ保存がありません。", "저장 파일을 내려받았어요. 이 브라우저에도 계속 자동 저장돼요.": "ダウンロードしました。ブラウザにも自動保存され続けます。", "저장 파일이 너무 큽니다.": "ファイルが大きすぎます。", "저장 데이터를 불러왔어요. 화면을 다시 엽니다.": "読み込みました。画面を開き直します。", "이 파일은 동그란 사이 저장 데이터가 아니거나 손상됐어요. 기존 기록은 그대로예요.": "このファイルは「まるい縁」のセーブではないか、壊れています。今のデータはそのままです。",
+  "그리기": "描く", "지우개": "消しゴム", "되돌리기": "もどす", "다시하기": "やり直す", "그리기 도구": "描画ツール", "얼굴 그리기 캔버스": "顔キャンバス", "동그라미 위에 눈 두 개, 그 아래 입 하나. 삐뚤어도 괜찮아요, 그게 이 친구예요.": "丸の上に目をふたつ、その下に口をひとつ。ゆがんでも大丈夫、それがこの子です。", "파츠": "パーツ", "눈": "目", "입": "口", "앞머리": "前髪", "뒷머리": "後ろ髪", "장식": "かざり", "몸체": "からだ", "색상": "色", "굵기": "太さ", "이름": "名前", "이름을 지어주세요": "名前をつけてね", "직접 고르기": "色を選ぶ", "진한 갈색": "こげ茶", "분홍": "ピンク", "노랑": "黄色", "민트": "ミント", "하늘": "水色", "보라": "むらさき", "연두": "黄緑",
+  "편집할 레이어": "レイヤー", "도구": "ツール", "브러시": "ブラシ", "파츠 위치·크기·회전": "パーツの位置・大きさ・回転", "회전": "回転", "크기": "大きさ", "이 파츠 숨기기": "このパーツを隠す", "눈·입의 원 밖 획 숨기기": "目と口を丸の中に収める", "그리기가 어렵다면 참고 예시 불러오기": "描きにくければ参考例を読み込む", "성격 고르기": "性格を選ぶ", "월드로": "ワールドへ", "그림으로": "絵にもどる",
+  "몸체는 정원 비율을 유지합니다. 파츠를 선택해 그려주세요.": "からだはまん丸のままです。パーツを選んで描いてください。", "지금 그린 그림을 참고 예시로 바꿀까요? 되돌리기로 돌아올 수 없어요.": "今の絵を参考例に置き換えますか？ もどすで戻せません。", "참고 예시예요. 위에 덧그리거나 지우개로 고쳐서 나만의 얼굴으로 만들어 보세요.": "参考例です。描き足したり消したりして、自分の顔にしてみましょう。", "참고 예시예요. 위에 덧그리거나 지우개로 고쳐서 나만의 얼굴로 만들어 보세요.": "参考例です。描き足したり消したりして、自分の顔にしてみましょう。", "빈 원에서 새 폰을 그려주세요.": "白い丸に新しいポンを描いてください。", "이 시험 버전은 자기 폰 3명까지 지원합니다.": "このテスト版では自分のポンは3人までです。", " 꾸미기": " を編集", "수정 후 저장하기를 눌러 주세요.": "直したら保存を押してください。", "첫 폰을 그려 볼까요? 빈 원에 눈과 입을 그려 주세요.": "最初のポンを描いてみましょう。丸に目と口を。", "초안 저장 실패 · 현재 그림은 화면에 유지됩니다.": "下書きを保存できませんでした · 絵は画面に残ります。", "이전 그림·성격 초안을 복구했습니다. 아직 폰 저장은 확정되지 않았습니다.": "前回の下書きを復元しました。ポンはまだ保存されていません。", "초안을 읽지 못했습니다. 저장 기록은 유지합니다.": "下書きを読めませんでした。セーブはそのままです。", "저장 기록을 읽지 못했습니다. 기존 데이터를 덮어쓰지 않습니다. ": "セーブを読めませんでした。上書きはしません。 ",
+  "이 친구는 어떤 성격일까요?": "この子はどんな性格？", "성격 프리셋": "プリセット", "무작위 조합": "ランダム", "세 가지 성향": "3つの傾向", "정답은 없어요. 실제 행동은 상황·기억·관계에 따라 달라집니다.": "正解はありません。実際の行動は状況・思い出・関係で変わります。", "저장 점검 도구": "保存テスト", "다음 저장 실패 재현": "次の保存を失敗させる", "저장하고 월드에 배치하기": "保存してワールドへ", "동일 명령 결과 확인·재시도": "結果を確認・再試行", "직접 조합": "自分で組み合わせ", "폰 미리보기": "ポンのプレビュー",
+  "예시: 작업 범위와 조건을 먼저 확인할 수 있어요.": "例：先に作業範囲と条件を確かめるかも。", "예시: 기록을 확인하거나 함께 시도할 방법을 제안할 수 있어요.": "例：記録を見たり、一緒にやる方法を提案するかも。",
+  "저장 중이에요…": "保存中…", "저장 완료 · 내 월드에 반영됐어요.": "保存しました · ワールドに反映。", "의 첫 하루가 시작됐어요. 폰을 눌러 무엇을 하는지 지켜보세요.": "の最初の一日が始まりました。タップして様子を見てみましょう。", "다른 창에서 저장된 변경이 있어요. 현재 그림은 초안에 보관했습니다. 새로고침 후 다시 저장해 주세요.": "別のウィンドウで変更が保存されました。絵は下書きに保管。更新してもう一度保存してください。", "이름을 1~20자로 지어 주세요. 현재 그림은 유지됩니다.": "名前は1〜20文字で。絵はそのままです。", "저장하지 못했어요. 현재 그림은 유지됩니다. 다시 시도해 주세요.": "保存できませんでした。絵はそのままです。もう一度お試しください。", "시험 저장 실패": "テスト用の保存失敗",
+  "신중한 조율자": "慎重な調整役", "다정한 탐험가": "やさしい探検家", "조용한 공방인": "静かな職人", "느긋한 이웃": "のんびりご近所", "독립적인 개척자": "ひとり開拓者", "균형형": "バランス型",
+  "관계와 기억": "なかよしと思い出", "평가하는 폰": "見る側", "대상 폰": "相手", "공개 범위 점검": "公開範囲の確認", "타인 비공개 방향": "他人には非公開", "서로 다른 폰을 선택해 주세요.": "別々のポンを選んでください。", "공개된 정보가 없습니다.": "公開情報はありません。", "관계 설명 ": "関係のラベル ", "아직 확정된 설명 없음": "まだ決まっていません", "공동 결정 기록 없음": "共同決定の記録なし", "아직 확인된 기억이 없습니다.": "まだ思い出はありません。", "사건은 확인됨 · ": "出来事あり · ", "사유 확인됨": "理由あり", "이유는 아직 모릅니다": "理由はまだ不明", "해결됨 · 기억은 남아 있습니다": "解決 · 思い出は残る", "미해결": "未解決",
+  "애정": "愛情", "존중": "尊重", "호혜성": "助け合い", "의존": "依存", "권력": "力", "의무": "義務", "갈등": "対立",
+  "공동 공방 · 세 번의 선택": "工房 · 3つの選択", "비용은 테스트 포인트입니다. 실제 재화나 시간 단위가 아닙니다.": "コストはテスト用ポイントです。実際の通貨や時間ではありません。", "새 공방 시작": "工房を始める", "시나리오 점검 도구": "シナリオ確認", "로컬 시나리오 확인": "ローカルシナリオ", "새 역할·전환 제안 수락": "新しい役割・転換を受け入れる", "정정 기록·고객 전달 확인": "訂正記録・顧客へ伝達", "연결 상태 정상": "接続正常", "당사자 사건 인지": "当事者が認知", "대안 학습 완료": "代替案を習得", "인계·정산 합의": "引き継ぎ・精算に合意", "본인 즉시 퇴장": "すぐに退場", "갈등 해결하기": "対立を解決", "실질 복구 확인": "実際の修復確認", "공로 정정만으로 실질 복구가 완료되지는 않습니다.": "功績の訂正だけでは修復は完了しません。", "새 복구 계획 실행 확인": "新しい修復計画を実行", "대상자 수용 확인": "相手が受け入れ", "대상 갈등 복구 확정": "修復を確定", "보존된 이전 선택형 시험": "保存された旧選択式テスト",
+  "현재 자율 생활은 2D 바닥을 기준으로 검증합니다. 아래는 같은 폰을 3D 기하 공간에 합성하는 기술 비교이며 최종 아트가 아닙니다.": "生活は2D床で動いています。下は同じポンを3D空間に合成する技術比較で、最終アートではありません。", "3D 기하 공간과 2D 폰 비교": "3D空間と2Dポンの比較", "2D: 편집·경로·원형 가독성에 유리합니다. 3D 공간: 카메라·깊이·가림·가구 자산 제작이 추가됩니다. 초기 제작은 2D를 추천합니다.": "2D：編集・経路・丸の見やすさに有利。3D：カメラ・奥行き・遮蔽・家具アセットが必要。まずは2Dを推奨。",
+  "라운드 ": "ラウンド ", " · 시간 테스트 포인트 ": " · 時間ポイント ", " · 재료 ": " · 材料 ", " · 시간 ": " · 時間 ", " / 재료 ": " / 材料 ", "새 공방을 시작해 주세요.": "工房を始めてください。", "처리 상태: ": "状態: ", "처리하지 못했습니다. 기존 저장 상태를 유지합니다. ": "処理できませんでした。保存はそのままです。 ", "확정 사건: ": "確定した出来事: ", "확정 수치 변화 없음": "数値の変化なし", "선택이 로컬 저장에 확정됐습니다. 관계·기억에서 변화와 남은 문제를 확인하세요.": "選択を保存しました。なかよしと思い出で変化を確認してください。", "확정되지 않았습니다. 다른 선택이나 퇴장이 가능합니다.": "確定していません。別の選択や退場ができます。", "먼저 자기 폰 3명을 만들어 주세요.": "先に自分のポンを3人作ってください。", "새 주문의 공로 문제를 확인합니다. 고의는 단정하지 않습니다.": "新しい注文の功績問題を確認します。故意とは決めつけません。", "대상 주문의 갈등을 정리했습니다. 기억은 유지되며 자동 친구가 되지는 않습니다.": "対立を整理しました。思い出は残り、自動で友達にはなりません。", "복구를 확정하지 못했습니다. 별도 실행·수용 근거를 확인해 주세요. ": "修復を確定できませんでした。実行と受け入れの根拠を確認してください。 ",
+  "이름 정정 후 재발송": "名前を直して再送", "작업 우선, 해결 유예": "作業優先、解決は保留", "기여 기록 확인": "貢献記録を確認", "밤에게 도움 요청": "バムに助けを求める", "노을에게 대안 배우기": "ノウルに代替案を学ぶ", "역할 새로 합의": "役割を再合意", "합의하고 동업 지속": "合意して協業を続ける", "수락한 역할 분리": "受け入れた役割を分離", "퇴장·인계": "退場・引き継ぎ",
+  "이번 도움 제안은 성립하지 않았습니다. 대안을 선택하거나 퇴장할 수 있어요.": "この助けの提案は成立しませんでした。別の選択か退場ができます。", "연결 문제로 활동을 잠시 멈췄습니다.": "接続の問題で一時停止しました。", "고객 전달을 아직 확인하지 못했습니다. 확인하거나 다른 선택을 해주세요.": "顧客への伝達が未確認です。確認するか別の選択を。", "새 책임이 수락되지 않았습니다. 기존 역할은 유지돼요.": "新しい責任は受け入れられませんでした。役割はそのまま。", "동업 지속 합의가 아직 없습니다. 다른 선택이나 퇴장이 가능해요.": "協業継続の合意がまだありません。別の選択か退場ができます。", "대안 학습을 아직 확인하지 못했습니다.": "代替案の習得が未確認です。", "본인은 퇴장했습니다. 인계·정산은 별도 합의 대기입니다.": "退場しました。引き継ぎと精算は別途合意待ちです。",
+  "저장하지 못해 생활을 멈췄어요. 기존 기록은 유지합니다.": "保存できなかったので生活を止めました。データはそのままです。", "저장 충돌 또는 저장 실패로 생활을 멈췄어요. 현재 기록을 보존한 채 새로고침해 주세요.": "保存の競合か失敗で生活を止めました。データは保持されています。更新してください。", "다른 창의 변경을 확인했어요. 현재 생활을 멈추고 새로고침해 주세요.": "別のウィンドウの変更を検知しました。生活を止めています。更新してください。",
+  "포근한 쉼터": "ふかふか休み場所", "함께 만드는 작업대": "みんなの作業台", "노을": "ノウル", "모래": "モレ", "밤": "バム",
+  "{place}로 가요": "{place}へ向かう", "{place}에서 쉬는 중": "{place}で休み中", "{place}에서 만드는 중": "{place}で作業中", "{place}에서 주변을 살펴봐요": "{place}であたりを見る",
+  "살펴보는 중": "見回り中", "방문한 공간을 둘러봐요": "部屋を見て回る", "피로를 풀고 싶어요": "疲れをとりたい", "작업 욕구와 공정성 성향": "作りたい気持ちと公平さ", "이야기 욕구와 친밀 성향": "話したい気持ちと親しさ", "욕구·성격·현재 관계를 보고 접근해요": "気持ち・性格・関係を見て近づく", "남은 갈등의 구체적인 문제를 함께 보완하려 해요": "残った対立を一緒に直そうとする", "작업 중인 폰에게 도움을 제안해요": "作業中のポンに手伝いを申し出る",
+  "같이 잠깐 이야기해요": "少しおしゃべり", "지금 하던 일을 마치고 싶어요": "今のことを終えたい", "지금은 쉬고 싶어요": "今は休みたい", "조금 거리를 두고 싶어요": "少し距離をおきたい", "잠깐 혼자 있고 싶어요": "少しひとりでいたい", "지금 도움을 받기 어려워요": "今は手伝いを受けられない", "지금은 보완 이야기를 할 준비가 아니에요": "まだ直す話をする準備ができていない", "관계 벌점 없음": "関係のマイナスなし",
+  "작업을 마쳤어요": "作業を終えた", "함께 작업을 마쳤어요": "一緒に作業を終えた", "푹 쉬었어요": "ぐっすり休んだ", "인사를 나누고 이야기를 나눴어요": "あいさつしておしゃべりした", "인사를 나누고 수락한 짧은 대화를 마쳤어요": "あいさつして短いおしゃべりを終えた", "함께 남은 문제를 확인하고 보완했어요": "一緒に残った問題を直した", "수락한 기록 확인과 보완 작업을 실제로 마쳤어요": "約束した確認と修正を実際に終えた", "수락한 도움을 작업대에서 끝냈어요": "引き受けた手伝いを作業台で終えた",
+  "다른 폰에게 다가가요": "ほかのポンに近づく", "도움을 제안하러 가요": "手伝いを申し出に行く", "남은 문제를 보완하러 가요": "残った問題を直しに行く", "도움 제안을 상대가 수락했어요": "手伝いを受け入れてもらえた", "도움을 수락하고 함께 만들어요": "手伝いを受け入れて一緒に作る", "상대가 이야기를 수락했어요": "話を受け入れてもらえた", "상대가 구체적인 보완 제안을 수락했어요": "修正の提案を受け入れてもらえた", "이동 대신 휴식이나 다른 장소를 찾아요": "移動の代わりに休みや別の場所を探す", "경로가 막혀 다른 일을 찾아요": "道がふさがり別のことを探す", "대상이 사라져 다른 일을 찾아요": "相手がいなくなり別のことを探す", "상대가 떠나 다른 일을 살펴봐요": "相手が去り、別のことを見る", "이야기는 남지만 반복 관계 효과는 제한해요": "思い出は残るが、くり返しの効果は制限",
+  "이야기를 나눴어요": "おしゃべりした", "도움을 주고받았어요": "助け合った", "공로를 확인했어요": "功績を確かめた",
+  "{name}의 첫 하루가 시작됐어요. 폰을 눌러 무엇을 하는지 지켜보세요.": "{name}の最初の一日が始まりました。タップして様子を見てみましょう。", "{name} 꾸미기": "{name} を編集", "{name}의 최근 기억 · {text}": "{name}の最近の思い出 · {text}", "남은 시간 {n}초": "のこり {n}秒", "{name}와 함께": "{name}と一緒に", "새로운 하루가 시작됐어요": "新しい一日が始まりました", "Day {n}": "{n}日目",
+  "한국어": "韓国語", "English": "英語", "日本語": "日本語", "닫기": "閉じる",
+};
+
+const DICT = { ko: null, en, ja };
+
+function detect() {
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved && DICT[saved] !== undefined) return saved;
+  } catch {}
+  for (const l of navigator.languages || [navigator.language || "ko"]) {
+    const code = String(l).slice(0, 2).toLowerCase();
+    if (DICT[code] !== undefined) return code;
+  }
+  return "ko";
+}
+let lang = detect();
+const missing = new Set();
+
+export const getLang = () => lang;
+export function setLang(code) {
+  if (DICT[code] === undefined) return;
+  try {
+    localStorage.setItem(KEY, code);
+  } catch {}
+  lang = code;
+}
+export function t(ko, vars) {
+  const d = DICT[lang];
+  let s = d ? d[ko] : undefined;
+  if (s === undefined) {
+    if (d && /[가-힣]/.test(ko)) missing.add(ko);
+    s = ko;
+  }
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.split("{" + k + "}").join(String(v));
+  return s;
+}
+/* 시뮬레이션이 조립해 저장한 문장: "포근한 쉼터로 가요" 처럼 장소 이름 + 어미 */
+const PLACE_SUFFIX = [
+  [/^(.*)로 가요$/, "{place}로 가요"],
+  [/^(.*)에서 쉬는 중$/, "{place}에서 쉬는 중"],
+  [/^(.*)에서 만드는 중$/, "{place}에서 만드는 중"],
+  [/^(.*)에서 주변을 살펴봐요$/, "{place}에서 주변을 살펴봐요"],
+];
+export function tLife(text) {
+  if (!text || lang === "ko") return text || "";
+  return String(text)
+    .split(" · ")
+    .map((part) => {
+      part = part.trim();
+      if (DICT[lang][part]) return t(part);
+      for (const [re, key] of PLACE_SUFFIX) {
+        const m = part.match(re);
+        if (m) return t(key, { place: t(m[1]) });
+      }
+      return t(part);
+    })
+    .join(" · ");
+}
+/* HTML 정적 글자 치환. 한 번만 호출(언어 변경은 새로고침). */
+const ATTRS = ["placeholder", "aria-label", "title", "alt"];
+export function applyStatic(root = document) {
+  document.documentElement.lang = lang;
+  document.title = t("동그란 사이");
+  if (lang === "ko") return;
+  const walker = document.createTreeWalker(root.body || root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  for (const n of nodes) {
+    const raw = n.nodeValue;
+    const core = raw.trim();
+    if (!core || !/[가-힣]/.test(core)) continue;
+    const parent = n.parentElement;
+    if (!parent || ["SCRIPT", "STYLE"].includes(parent.tagName)) continue;
+    const tr = t(core);
+    if (tr !== core) n.nodeValue = raw.replace(core, tr);
+  }
+  for (const el of (root.body || root).querySelectorAll("*"))
+    for (const a of ATTRS) {
+      const v = el.getAttribute(a);
+      if (v && /[가-힣]/.test(v)) el.setAttribute(a, t(v));
+    }
+}
+export const missingKeys = () => [...missing];

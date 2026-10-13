@@ -1,74 +1,766 @@
-import {mountLifeUI} from './life-ui.js';
-import {renderSpaceComparison} from './space-comparison.js';
-import {createLocalStore} from './store.js';
-import {AXES,LEVELS,DEFAULT_AXES,PRESETS} from './core/game1-traits.js';
-import {CHOICES,TEST_READY} from './core/game1-workshop.js';
-const $=id=>document.getElementById(id),say=text=>$('notice').textContent=text;
-let lifeUI=null;let store;try{store=createLocalStore(localStorage);}catch(e){say('저장 기록을 읽지 못했습니다. 기존 데이터를 덮어쓰지 않습니다. '+e.message);throw e;}
-const slots=['back_hair','base','eyes_pair','mouth','front_hair','frame_accessory'];
-const layers=Object.fromEntries(slots.map(s=>{const c=document.createElement('canvas');c.width=c.height=512;return [s,c];}));
-let transforms={},history=[],future=[],axes={...DEFAULT_AXES},saveCommand=null,editingTrait=null,editingPawn=null,savePending=false,drawing=false,last=null;
-const uid=()=>crypto.randomUUID(),image=src=>new Promise((resolve,reject)=>{const i=new Image;i.onload=()=>resolve(i);i.onerror=reject;i.src=src;});
-function blank(){for(const s of slots){layers[s].getContext('2d').clearRect(0,0,512,512);transforms[s]={x:0,y:0,rotation:0,scale:1,visible:true};}const c=layers.base.getContext('2d');c.fillStyle='#fff5df';c.beginPath();c.arc(256,256,192,0,Math.PI*2);c.fill();history=[];future=[];axes={...DEFAULT_AXES};$('name').value='';saveCommand=null;editingTrait=null;editingPawn=null;$('editorTitle').textContent='나만의 동그란 폰을 그려요';$('traitLabel').textContent='직접 조합';render();}
-function appearance(){return {layers:Object.fromEntries(slots.map(s=>[s,layers[s].toDataURL()])),transforms:structuredClone(transforms),schema_version:1};}
-function paint(target,source=layers,t=transforms,clip=$('clip').checked){const c=target.getContext('2d');c.clearRect(0,0,target.width,target.height);c.save();c.scale(target.width/512,target.height/512);for(const s of slots){const v=t[s];if(!v.visible)continue;c.save();if(s==='base'||((s==='eyes_pair'||s==='mouth')&&clip)){c.beginPath();c.arc(256,256,192,0,Math.PI*2);c.clip();}c.translate(256+v.x,256+v.y);c.rotate(v.rotation*Math.PI/180);c.scale(v.scale,v.scale);c.drawImage(source[s],-256,-256);c.restore();if(s==='base'){c.save();c.strokeStyle='#98765d';c.lineWidth=3;c.beginPath();c.arc(256,256,192,0,Math.PI*2);c.stroke();c.restore();}}c.restore();}
-function render(){paint($('drawing'));$('undo').disabled=!history.length;$('redo').disabled=!future.length;}
-function draft(){saveCommand=null;try{localStorage.setItem('game1-draft-v1',JSON.stringify({appearance:appearance(),axes,name:$('name').value,editingPawn,editingTrait}));}catch{say('초안 저장 실패 · 현재 그림은 화면에 유지됩니다.');}}
-async function loadAppearance(a){for(const s of slots){layers[s].getContext('2d').clearRect(0,0,512,512);if(a.layers[s])layers[s].getContext('2d').drawImage(await image(a.layers[s]),0,0);transforms[s]={...a.transforms[s]};}render();}
-function show(id){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',({edit:'editor',world:'worldPanel',relations:'relationPanel',workshop:'workshopPanel'})[b.id]===id));for(const panel of ['editor','traitPanel','worldPanel','relationPanel','workshopPanel','comparePanel'])$(panel).hidden=panel!==id;}
-function axisUI(){const names=['공정성 민감도','친밀 지향','위험 회피'];$('axes').replaceChildren();AXES.forEach((axis,i)=>{const label=document.createElement('label');label.textContent=names[i]+' ';const select=document.createElement('select');select.id='axis-'+axis;for(const [j,value]of LEVELS.entries()){const o=new Option(['낮음','중간','높음'][j],value);select.add(o);}select.value=axes[axis];select.onchange=()=>{axes[axis]=select.value;$('traitLabel').textContent='직접 조합';preview();draft();};label.append(select);$('axes').append(label);});preview();}
-function preview(){$('preview').textContent=axes.risk_aversion==='high'?'예시: 작업 범위와 조건을 먼저 확인할 수 있어요.':'예시: 기록을 확인하거나 함께 시도할 방법을 제안할 수 있어요.';}
-for(const p of PRESETS){const b=document.createElement('button');b.textContent=p.label;b.onclick=()=>{axes={...p.axis_values};axisUI();$('traitLabel').textContent=p.label;draft();};$('presets').append(b);}
-$('random').onclick=()=>{axes=Object.fromEntries(AXES.map(a=>[a,LEVELS[Math.floor(Math.random()*3)]]));axisUI();$('traitLabel').textContent='직접 조합';draft();};
-const coordinate=e=>{const r=$('drawing').getBoundingClientRect();let x=(e.clientX-r.left)*512/r.width-256,y=(e.clientY-r.top)*512/r.height-256;const t=transforms[$('layer').value],angle=-t.rotation*Math.PI/180;x-=t.x;y-=t.y;return {x:(x*Math.cos(angle)-y*Math.sin(angle))/t.scale+256,y:(x*Math.sin(angle)+y*Math.cos(angle))/t.scale+256};};
-$('drawing').onpointerdown=e=>{if($('layer').value==='base'){say('몸체는 정원 비율을 유지합니다. 파츠를 선택해 그려주세요.');return;}e.preventDefault();const slot=$('layer').value;history.push({slot,png:layers[slot].toDataURL()});if(history.length>25)history.shift();future=[];drawing=true;last=coordinate(e);$('drawing').setPointerCapture(e.pointerId);stroke(last,last);};
-function stroke(a,b){const c=layers[$('layer').value].getContext('2d');c.save();c.globalCompositeOperation=$('tool').value==='eraser'?'destination-out':'source-over';c.strokeStyle=$('color').value;c.lineWidth=Number($('width').value);c.lineCap='round';c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x+.01,b.y+.01);c.stroke();c.restore();render();}
-$('drawing').onpointermove=e=>{if(drawing){const point=coordinate(e);stroke(last,point);last=point;}};
-$('drawing').onpointerup=$('drawing').onpointercancel=()=>{if(drawing){drawing=false;draft();say('저장하지 않은 그림이 있어요.');}};
-async function historyMove(from,to){const entry=from.pop();if(!entry)return;to.push({slot:entry.slot,png:layers[entry.slot].toDataURL()});const c=layers[entry.slot].getContext('2d');c.clearRect(0,0,512,512);c.drawImage(await image(entry.png),0,0);render();draft();}
-$('undo').onclick=()=>historyMove(history,future);$('redo').onclick=()=>historyMove(future,history);$('clip').onchange=render;
-$('layer').onchange=()=>{document.querySelectorAll('[data-slot]').forEach(b=>b.classList.toggle('selected',b.dataset.slot===$('layer').value));const t=transforms[$('layer').value];for(const [id,k]of [['dx','x'],['dy','y'],['rotation','rotation'],['scale','scale']]){$(id).value=t[k];$(id).disabled=$('layer').value==='base';}$('hide').checked=!t.visible;};
-for(const [id,key]of [['dx','x'],['dy','y'],['rotation','rotation'],['scale','scale']])$(id).oninput=()=>{transforms[$('layer').value][key]=Number($(id).value);render();draft();};
-$('hide').onchange=()=>{if($('layer').value==='base')return;transforms[$('layer').value].visible=!$('hide').checked;render();draft();};
-$('samples').onclick=async()=>{for(const slot of slots){layers[slot].getContext('2d').clearRect(0,0,512,512);layers[slot].getContext('2d').drawImage(await image('/assets/six_layers/'+slot+'_neutral.png'),0,0);}render();draft();say('시험용 파츠입니다. 최종 아트가 아닙니다.');};
-$('traits').onclick=()=>{axisUI();paint($('traitCanvas'));show('traitPanel');};$('back').onclick=()=>show('editor');
-async function save(){
- if(savePending)return;savePending=true;saveCommand??=uid();
- const command=saveCommand,target=editingPawn,traitTarget=editingTrait,name=$('name').value,art=appearance(),selectedAxes={...axes};
- for(const id of ['save','saveFace','retry'])$(id).disabled=true;
- say('저장 중이에요…');
- try{
-  if($('failSave').checked){$('failSave').checked=false;throw Error('시험 저장 실패');}
-  if(target)store.updatePawn(command,target,name,art,selectedAxes);
-  else if(traitTarget)store.saveTraits(command,traitTarget,selectedAxes);
-  else store.createPawn(command,name,art,selectedAxes);
-  try{localStorage.removeItem('game1-draft-v1');}catch{}
-  saveCommand=null;$('retry').hidden=true;
-  await world();say('저장 완료 · 수정한 모습이 내 월드에 반영됐어요.');
- }catch(e){
-  try{localStorage.setItem('game1-draft-v1',JSON.stringify({appearance:art,axes:selectedAxes,name,editingPawn:target,editingTrait:traitTarget}));}catch{}
-  say(e.message==='save.version_conflict'?'다른 창에서 저장된 변경이 있어요. 현재 그림은 초안에 보관했습니다. 새로고침 후 다시 저장해 주세요.':'저장하지 못했어요. 현재 그림은 유지됩니다. 다시 시도해 주세요.');$('retry').hidden=false;
- }finally{savePending=false;for(const id of ['save','saveFace','retry'])$(id).disabled=false;}
+import { t as T, applyStatic, setLang, getLang, LANGS } from "./i18n.js";
+applyStatic();
+import { mountLifeUI } from "./life-ui.js";
+import { renderSpaceComparison } from "./space-comparison.js";
+import { createLocalStore, STORE_KEY } from "./store.js";
+import { AXES, LEVELS, DEFAULT_AXES, PRESETS } from "./core/game1-traits.js";
+import { CHOICES, TEST_READY } from "./core/game1-workshop.js";
+
+const $ = (id) => document.getElementById(id);
+let toastTimer = null;
+const say = (text) => {
+  const t = $("notice");
+  t.textContent = text;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 4200);
+};
+let lifeUI = null;
+let store;
+try {
+  store = createLocalStore(localStorage);
+} catch (e) {
+  say(T("저장 기록을 읽지 못했습니다. 기존 데이터를 덮어쓰지 않습니다. ") + e.message);
+  throw e;
 }
-$('save').onclick=$('saveFace').onclick=$('retry').onclick=save;$('name').oninput=draft;
-async function editExisting(p){editingPawn=p.id;editingTrait=null;saveCommand=null;history=[];future=[];axes={...p.trait.axis_values};$('name').value=p.name;await loadAppearance(p.appearance);$('layer').onchange();$('editorTitle').textContent=p.name+'의 얼굴 꾸미기';show('editor');say('수정 후 저장하기를 눌러 주세요.');}
-async function world(){show('worldPanel');if(lifeUI)await lifeUI.render();}
-function newPawn(){if(store.read().pawns.length>=3){say('이 시험 버전은 자기 폰 3명까지 지원합니다.');return;}blank();show('editor');say('빈 원에서 새 폰을 그려주세요.');}
-$('edit').onclick=$('newPawn').onclick=newPawn;$('world').onclick=async()=>{await world();say('함께 지내는 내 폰들이에요. 얼굴이나 성격을 꾸며보세요.');};
-const labels={affection:'애정',trust:'신뢰',respect:'존중',reciprocity:'호혜성',dependence:'의존',power:'권력',obligation:'의무',conflict:'갈등'};
-function relationship(){const from=$('from').value,to=$('to').value;$('relationship').replaceChildren();if(!from||!to||from===to){$('relationship').textContent='서로 다른 폰을 선택해 주세요.';return;}const dto=store.projection(from,to,$('restricted').checked);if(dto.visibility==='restricted'){$('relationship').textContent='공개된 정보가 없습니다.';return;}for(const [a,n]of Object.entries(dto.scores)){const row=document.createElement('p');row.textContent=labels[a]+' '+n+' ';const bar=document.createElement('progress');bar.max=1000;bar.value=n;row.append(bar);$('relationship').append(row);}if(dto.basis_status==='no_active_basis'){const p=document.createElement('p');p.textContent='공동 결정 기록 없음';$('relationship').append(p);}const t=document.createElement('p');t.textContent='관계 설명: '+(dto.tags.map(t=>t.label).join(' · ')||'아직 확정된 설명 없음');$('relationship').append(t);if(!dto.memories.length){const p=document.createElement('p');p.textContent='아직 확인된 기억이 없습니다.';$('relationship').append(p);}for(const m of dto.memories){const p=document.createElement('p');p.textContent='사건은 확인됨 · '+(m.reason==='known'?'사유 확인됨':'이유는 아직 모릅니다')+' · '+(m.resolution==='resolved'?'해결됨 · 기억은 남아 있습니다':'미해결');$('relationship').append(p);}}
-$('relations').onclick=()=>{show('relationPanel');for(const id of ['from','to']){$(id).replaceChildren();for(const p of [...store.read().pawns,...(id==='to'&&store.read().life.guest?.present?[store.read().life.guest]:[])])$(id).add(new Option(p.name+(p.local_double?' · 방문 대역':''),p.id));}if($('to').options.length>1)$('to').selectedIndex=1;relationship();};$('from').onchange=$('to').onchange=$('restricted').onchange=relationship;
-const copy={C:'이름 정정 후 재발송',D:'작업 우선, 해결 유예',V:'기여 기록 확인',H:'밤에게 도움 요청',A:'노을에게 대안 배우기',R:'역할 새로 합의',P:'합의하고 동업 지속',S:'수락한 역할 분리',E:'퇴장·인계'};
-function conditions(){return {...TEST_READY,role_consent:$('consent').checked,role_change_accepted:$('consent').checked,major_transition_accepted:$('consent').checked,delivery_committed:$('delivery').checked,connected:$('connected').checked,bam_knows:$('aware').checked,morae_knows:$('aware').checked,method_learned:$('learned').checked,settlement_accepted:$('settlement').checked};}
-const reasons={'workshop.help_unconfirmed':'이번 도움 제안은 성립하지 않았습니다. 대안을 선택하거나 퇴장할 수 있어요.','workshop.technical_pause':'연결 문제로 활동을 잠시 멈췄습니다.','workshop.delivery_unconfirmed':'고객 전달을 아직 확인하지 못했습니다. 확인하거나 다른 선택을 해주세요.','workshop.role_change_unconfirmed':'새 책임이 수락되지 않았습니다. 기존 역할은 유지돼요.','workshop.transition_unconfirmed':'동업 지속 합의가 아직 없습니다. 다른 선택이나 퇴장이 가능해요.','workshop.method_unavailable':'대안 학습을 아직 확인하지 못했습니다.','workshop.handover_pending':'본인은 퇴장했습니다. 인계·정산은 별도 합의 대기입니다.'};
-function workshop(){show('workshopPanel');const state=store.workshop();$('choices').replaceChildren();$('round').textContent=state?('라운드 '+Math.min(state.round,3)+' · 시간 테스트 포인트 '+state.test_balance.work_time+' · 재료 '+state.test_balance.material):'새 공방을 시작해 주세요.';if(!state||state.status==='completed')return;for(const [code,c]of Object.entries(CHOICES))if(c.round===state.round){const b=document.createElement('button');b.className='card';b.textContent=copy[code]+' · 시간 '+c.time+' / 재료 '+c.material;b.onclick=()=>submit(code);$('choices').append(b);}}
-function submit(code){try{const result=store.submit(uid(),code,conditions());workshop();$('result').textContent=reasons[result.reason_key]||(['committed','exited'].includes(result.status)?'선택이 로컬 저장에 확정됐습니다. 관계·기억에서 변화와 남은 문제를 확인하세요.':'확정되지 않았습니다. 다른 선택이나 퇴장이 가능합니다.');if(result.source_event_ids?.length){const p=document.createElement('p');p.textContent='확정 사건: '+result.source_event_ids.join(', ');$('result').append(p);}for(const relation of result.relations||[]){const pawns=store.read().pawns,from=pawns.find(p=>p.id===relation.from_pawn_id),to=pawns.find(p=>p.id===relation.to_pawn_id),p=document.createElement('p');const changed=Object.keys(labels).filter(k=>relation.before[k]!==relation.after[k]).map(k=>labels[k]+' '+relation.before[k]+' → '+relation.after[k]);p.textContent=from.name+' → '+to.name+' · '+(changed.join(' · ')||'확정 수치 변화 없음');$('result').append(p);}say('처리 상태: '+result.status);}catch(e){say('처리하지 못했습니다. 기존 저장 상태를 유지합니다. '+e.message);}}
-$('begin').onclick=()=>{try{store.begin(uid());workshop();$('result').textContent='새 주문의 공로 문제를 확인합니다. 고의는 단정하지 않습니다.';}catch(e){say(e.message==='workshop.requires_three'?'먼저 자기 폰 3명을 만들어 주세요.':e.message);}};$('exit').onclick=()=>submit('E');
-$('repair').onclick=()=>{try{store.repair(uid(),{accepted:$('repairAccepted').checked,executed:$('repairDone').checked});$('result').textContent='대상 주문의 갈등을 정리했습니다. 기억은 유지되며 자동 친구가 되지는 않습니다.';}catch(e){say('복구를 확정하지 못했습니다. 별도 실행·수용 근거를 확인해 주세요. '+e.message);}};
-blank();try{const d=JSON.parse(localStorage.getItem('game1-draft-v1')||'null');if(d){await loadAppearance(d.appearance);axes=d.axes;editingPawn=d.editingPawn||null;editingTrait=d.editingTrait||null;$('name').value=d.name;$('editorTitle').textContent=editingPawn?d.name+'의 얼굴 꾸미기':'나만의 동그란 폰을 그려요';say('이전 그림·성격 초안을 복구했습니다. 아직 폰 저장은 확정되지 않았습니다.');}else if(store.read().pawns.length)await world();}catch{say('초안을 읽지 못했습니다. 저장 기록은 유지합니다.');}
 
-document.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{$('layer').value=b.dataset.slot;$('layer').onchange();document.querySelectorAll('[data-slot]').forEach(x=>x.classList.toggle('selected',x===b));});
-document.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{$('color').value=b.dataset.color;});
+/* ───────── 얼굴 편집 상태 ───────── */
+const slots = ["back_hair", "base", "eyes_pair", "mouth", "front_hair", "frame_accessory"];
+const layers = Object.fromEntries(
+  slots.map((s) => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 512;
+    return [s, c];
+  }),
+);
+let transforms = {},
+  history = [],
+  future = [],
+  axes = { ...DEFAULT_AXES },
+  saveCommand = null,
+  editingTrait = null,
+  editingPawn = null,
+  savePending = false,
+  drawing = false,
+  last = null;
+const uid = () => crypto.randomUUID(),
+  image = (src) =>
+    new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = src;
+    });
 
-lifeUI=mountLifeUI({store,paint,image,edit:editExisting,notify:say,openRelations:(from,to)=>{$('relations').click();$('from').value=from;$('to').value=to;relationship();}});if(!$('worldPanel').hidden)await lifeUI.render();
-$('artCompare').onclick=async()=>{show('comparePanel');await renderSpaceComparison($('compareCanvas'),store.read(),paint,image);};$('compareBack').onclick=world;
+function blank() {
+  for (const s of slots) {
+    layers[s].getContext("2d").clearRect(0, 0, 512, 512);
+    transforms[s] = { x: 0, y: 0, rotation: 0, scale: 1, visible: true };
+  }
+  const c = layers.base.getContext("2d");
+  c.fillStyle = "#fff5df";
+  c.beginPath();
+  c.arc(256, 256, 192, 0, Math.PI * 2);
+  c.fill();
+  history = [];
+  future = [];
+  axes = { ...DEFAULT_AXES };
+  $("name").value = "";
+  saveCommand = null;
+  editingTrait = null;
+  editingPawn = null;
+  $("editorTitle").textContent = T("폰 만들기");
+  $("traitLabel").textContent = T("직접 조합");
+  render();
+}
+function appearance() {
+  return {
+    layers: Object.fromEntries(slots.map((s) => [s, layers[s].toDataURL()])),
+    transforms: structuredClone(transforms),
+    schema_version: 1,
+  };
+}
+/* 공용 합성기: 모든 초상은 사용자가 그린 6개 파츠로만 그린다 */
+function paint(target, source = layers, t = transforms, clip = $("clip").checked) {
+  const c = target.getContext("2d");
+  c.clearRect(0, 0, target.width, target.height);
+  c.save();
+  c.scale(target.width / 512, target.height / 512);
+  for (const s of slots) {
+    const v = t[s];
+    if (!v.visible) continue;
+    c.save();
+    if (s === "base" || ((s === "eyes_pair" || s === "mouth") && clip)) {
+      c.beginPath();
+      c.arc(256, 256, 192, 0, Math.PI * 2);
+      c.clip();
+    }
+    c.translate(256 + v.x, 256 + v.y);
+    c.rotate((v.rotation * Math.PI) / 180);
+    c.scale(v.scale, v.scale);
+    c.drawImage(source[s], -256, -256);
+    c.restore();
+    if (s === "base") {
+      c.save();
+      c.strokeStyle = "#5d4a3c";
+      c.lineWidth = 7;
+      c.beginPath();
+      c.arc(256, 256, 192, 0, Math.PI * 2);
+      c.stroke();
+      c.restore();
+    }
+  }
+  c.restore();
+}
+function renderPartThumbs() {
+  document.querySelectorAll("#partGrid .part").forEach((b) => {
+    const slot = b.dataset.slot,
+      c = b.querySelector("canvas"),
+      ctx = c.getContext("2d");
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.save();
+    ctx.scale(c.width / 512, c.height / 512);
+    // 흐린 몸체 위에 해당 파츠만 보여 준다
+    ctx.globalAlpha = 0.25;
+    ctx.drawImage(layers.base, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.drawImage(layers[slot], 0, 0);
+    ctx.restore();
+    if (!transforms[slot]?.visible) b.style.opacity = 0.45;
+    else b.style.opacity = "";
+  });
+}
+function hasStrokes() {
+  return slots.some((s) => {
+    if (s === "base") return false;
+    const d = layers[s].getContext("2d").getImageData(0, 0, 512, 512).data;
+    for (let i = 3; i < d.length; i += 4 * 97) if (d[i]) return true;
+    return false;
+  });
+}
+function render() {
+  paint($("drawing"));
+  $("canvasGuide").classList.toggle("off", hasStrokes());
+  renderPartThumbs();
+  $("undo").disabled = !history.length;
+  $("redo").disabled = !future.length;
+}
+function draft() {
+  saveCommand = null;
+  try {
+    localStorage.setItem(
+      "game1-draft-v1",
+      JSON.stringify({ appearance: appearance(), axes, name: $("name").value, editingPawn, editingTrait }),
+    );
+  } catch {
+    say(T("초안 저장 실패 · 현재 그림은 화면에 유지됩니다."));
+  }
+}
+async function loadAppearance(a) {
+  for (const s of slots) {
+    layers[s].getContext("2d").clearRect(0, 0, 512, 512);
+    if (a.layers[s]) layers[s].getContext("2d").drawImage(await image(a.layers[s]), 0, 0);
+    transforms[s] = { ...a.transforms[s] };
+  }
+  render();
+}
+
+/* ───────── 화면 전환: 전체 창(screen) · 팝업(sheet) ───────── */
+const SCREENS = ["editor", "traitPanel", "relationPanel", "workshopPanel", "comparePanel"];
+function closeSheets() {
+  document.querySelectorAll(".sheet").forEach((s) => (s.hidden = true));
+}
+function openSheet(id) {
+  closeSheets();
+  $(id).hidden = false;
+  $(id).querySelector(".sheet-body")?.scrollTo?.(0, 0);
+}
+function show(id) {
+  closeSheets();
+  for (const panel of SCREENS) $(panel).hidden = panel !== id;
+  document.querySelector(".screen:not([hidden]) .screen-body")?.scrollTo?.(0, 0);
+}
+document.querySelectorAll(".sheet").forEach((sheet) => {
+  sheet.addEventListener("click", (e) => {
+    if (e.target === sheet || e.target.closest("[data-close]")) sheet.hidden = true;
+  });
+});
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeSheets();
+});
+
+/* ───────── 성격 ───────── */
+const AXIS_NAMES = { fairness_sensitivity: T("공정성 민감도"), closeness_orientation: T("친밀 지향"), risk_aversion: T("위험 회피") };
+const LEVEL_NAMES = [T("낮음"), T("중간"), T("높음")];
+function markPreset() {
+  const hit = PRESETS.find((p) => AXES.every((a) => p.axis_values[a] === axes[a]));
+  $("traitLabel").textContent = hit ? hit.label : T("직접 조합");
+  document.querySelectorAll("#presets button").forEach((b) => b.classList.toggle("on", hit?.label === b.textContent));
+}
+function axisUI() {
+  $("axes").replaceChildren();
+  for (const axis of AXES) {
+    const box = document.createElement("div");
+    box.className = "axis";
+    const title = document.createElement("strong");
+    title.textContent = AXIS_NAMES[axis] || axis;
+    const seg = document.createElement("div");
+    seg.className = "seg";
+    seg.setAttribute("role", "group");
+    seg.setAttribute("aria-label", title.textContent);
+    LEVELS.forEach((value, j) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = LEVEL_NAMES[j];
+      b.classList.toggle("on", axes[axis] === value);
+      b.setAttribute("aria-pressed", String(axes[axis] === value));
+      b.onclick = () => {
+        axes[axis] = value;
+        axisUI();
+        draft();
+      };
+      seg.append(b);
+    });
+    box.append(title, seg);
+    $("axes").append(box);
+  }
+  markPreset();
+  preview();
+}
+function preview() {
+  $("preview").textContent =
+    axes.risk_aversion === "high"
+      ? T("예시: 작업 범위와 조건을 먼저 확인할 수 있어요.")
+      : T("예시: 기록을 확인하거나 함께 시도할 방법을 제안할 수 있어요.");
+}
+for (const p of PRESETS) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = p.label;
+  b.onclick = () => {
+    axes = { ...p.axis_values };
+    axisUI();
+    draft();
+  };
+  $("presets").append(b);
+}
+$("random").onclick = () => {
+  axes = Object.fromEntries(AXES.map((a) => [a, LEVELS[Math.floor(Math.random() * 3)]]));
+  axisUI();
+  draft();
+};
+
+/* ───────── 그리기 ───────── */
+const coordinate = (e) => {
+  const r = $("drawing").getBoundingClientRect();
+  let x = ((e.clientX - r.left) * 512) / r.width - 256,
+    y = ((e.clientY - r.top) * 512) / r.height - 256;
+  const t = transforms[$("layer").value],
+    angle = (-t.rotation * Math.PI) / 180;
+  x -= t.x;
+  y -= t.y;
+  return {
+    x: (x * Math.cos(angle) - y * Math.sin(angle)) / t.scale + 256,
+    y: (x * Math.sin(angle) + y * Math.cos(angle)) / t.scale + 256,
+  };
+};
+$("drawing").onpointerdown = (e) => {
+  if ($("layer").value === "base") {
+    say(T("몸체는 정원 비율을 유지합니다. 파츠를 선택해 그려주세요."));
+    return;
+  }
+  e.preventDefault();
+  const slot = $("layer").value;
+  history.push({ slot, png: layers[slot].toDataURL() });
+  if (history.length > 25) history.shift();
+  future = [];
+  drawing = true;
+  last = coordinate(e);
+  $("drawing").setPointerCapture(e.pointerId);
+  stroke(last, last);
+};
+function stroke(a, b) {
+  const c = layers[$("layer").value].getContext("2d");
+  c.save();
+  c.globalCompositeOperation = $("tool").value === "eraser" ? "destination-out" : "source-over";
+  c.strokeStyle = $("color").value;
+  c.lineWidth = Number($("width").value);
+  c.lineCap = "round";
+  c.lineJoin = "round";
+  c.beginPath();
+  c.moveTo(a.x, a.y);
+  c.lineTo(b.x + 0.01, b.y + 0.01);
+  c.stroke();
+  c.restore();
+  paint($("drawing"));
+}
+$("drawing").onpointermove = (e) => {
+  if (drawing) {
+    const point = coordinate(e);
+    stroke(last, point);
+    last = point;
+  }
+};
+$("drawing").onpointerup = $("drawing").onpointercancel = () => {
+  if (drawing) {
+    drawing = false;
+    render();
+    draft();
+  }
+};
+async function historyMove(from, to) {
+  const entry = from.pop();
+  if (!entry) return;
+  to.push({ slot: entry.slot, png: layers[entry.slot].toDataURL() });
+  const c = layers[entry.slot].getContext("2d");
+  c.clearRect(0, 0, 512, 512);
+  c.drawImage(await image(entry.png), 0, 0);
+  render();
+  draft();
+}
+$("undo").onclick = () => historyMove(history, future);
+$("redo").onclick = () => historyMove(future, history);
+$("clip").onchange = render;
+$("layer").onchange = () => {
+  document.querySelectorAll("#partGrid .part").forEach((b) => b.classList.toggle("on", b.dataset.slot === $("layer").value));
+  const t = transforms[$("layer").value];
+  for (const [id, k] of [["dx", "x"], ["dy", "y"], ["rotation", "rotation"], ["scale", "scale"]]) {
+    $(id).value = t[k];
+    $(id).disabled = $("layer").value === "base";
+  }
+  $("hide").checked = !t.visible;
+};
+for (const [id, key] of [["dx", "x"], ["dy", "y"], ["rotation", "rotation"], ["scale", "scale"]])
+  $(id).oninput = () => {
+    transforms[$("layer").value][key] = Number($(id).value);
+    render();
+    draft();
+  };
+$("hide").onchange = () => {
+  if ($("layer").value === "base") return;
+  transforms[$("layer").value].visible = !$("hide").checked;
+  render();
+  draft();
+};
+document.querySelectorAll(".tools [data-tool]").forEach((b) => {
+  b.onclick = () => {
+    $("tool").value = b.dataset.tool;
+    document.querySelectorAll(".tools [data-tool]").forEach((x) => x.classList.toggle("on", x === b));
+  };
+});
+document.querySelectorAll("#partGrid .part").forEach((b) => {
+  b.onclick = () => {
+    $("layer").value = b.dataset.slot;
+    $("layer").onchange();
+  };
+});
+function markColor() {
+  document.querySelectorAll(".palette [data-color]").forEach((b) => b.classList.toggle("on", b.dataset.color === $("color").value));
+}
+document.querySelectorAll(".palette [data-color]").forEach((b) => {
+  b.style.setProperty("--c", b.dataset.color);
+  b.onclick = () => {
+    $("color").value = b.dataset.color;
+    markColor();
+  };
+});
+$("color").oninput = markColor;
+markColor();
+$("samples").onclick = async () => {
+  if (hasStrokes() && !confirm(T("지금 그린 그림을 참고 예시로 바꿀까요? 되돌리기로 돌아올 수 없어요."))) return;
+  for (const slot of slots) {
+    layers[slot].getContext("2d").clearRect(0, 0, 512, 512);
+    layers[slot].getContext("2d").drawImage(await image("./assets/six_layers/" + slot + "_neutral.png"), 0, 0);
+  }
+  render();
+  draft();
+  say(T("참고 예시예요. 위에 덧그리거나 지우개로 고쳐서 나만의 얼굴로 만들어 보세요."));
+};
+$("traits").onclick = () => {
+  axisUI();
+  paint($("traitCanvas"));
+  show("traitPanel");
+};
+$("back").onclick = () => show("editor");
+
+/* ───────── 저장 ───────── */
+async function save() {
+  if (savePending) return;
+  savePending = true;
+  saveCommand ??= uid();
+  const command = saveCommand,
+    target = editingPawn,
+    traitTarget = editingTrait,
+    name = $("name").value,
+    art = appearance(),
+    selectedAxes = { ...axes };
+  for (const id of ["save", "saveFace", "retry"]) $(id).disabled = true;
+  say(T("저장 중이에요…"));
+  try {
+    if ($("failSave").checked) {
+      $("failSave").checked = false;
+      throw Error(T("시험 저장 실패"));
+    }
+    const created = !target && !traitTarget;
+    if (target) store.updatePawn(command, target, name, art, selectedAxes);
+    else if (traitTarget) store.saveTraits(command, traitTarget, selectedAxes);
+    else store.createPawn(command, name, art, selectedAxes);
+    try {
+      localStorage.removeItem("game1-draft-v1");
+    } catch {}
+    saveCommand = null;
+    $("retry").hidden = true;
+    await world();
+    say(created ? T(T("{name}의 첫 하루가 시작됐어요. 폰을 눌러 무엇을 하는지 지켜보세요."), { name }) : T(T("저장 완료 · 내 월드에 반영됐어요.")));
+  } catch (e) {
+    try {
+      localStorage.setItem(
+        "game1-draft-v1",
+        JSON.stringify({ appearance: art, axes: selectedAxes, name, editingPawn: target, editingTrait: traitTarget }),
+      );
+    } catch {}
+    say(
+      e.message === "save.version_conflict"
+        ? T("다른 창에서 저장된 변경이 있어요. 현재 그림은 초안에 보관했습니다. 새로고침 후 다시 저장해 주세요.")
+        : e.message === "pawn.name_invalid" || /name/.test(e.message)
+          ? T("이름을 1~20자로 지어 주세요. 현재 그림은 유지됩니다.")
+          : T("저장하지 못했어요. 현재 그림은 유지됩니다. 다시 시도해 주세요."),
+    );
+    $("retry").hidden = false;
+  } finally {
+    savePending = false;
+    for (const id of ["save", "saveFace", "retry"]) $(id).disabled = false;
+  }
+}
+$("save").onclick = $("saveFace").onclick = $("retry").onclick = save;
+$("name").oninput = draft;
+
+async function editExisting(p) {
+  editingPawn = p.id;
+  editingTrait = null;
+  saveCommand = null;
+  history = [];
+  future = [];
+  axes = { ...p.trait.axis_values };
+  $("name").value = p.name;
+  await loadAppearance(p.appearance);
+  $("layer").onchange();
+  $("editorTitle").textContent = T(T("{name} 꾸미기"), { name: p.name });
+  show("editor");
+  say(T("수정 후 저장하기를 눌러 주세요."));
+}
+async function world() {
+  show(null);
+  if (lifeUI) await lifeUI.render();
+}
+function newPawn() {
+  if (store.read().pawns.length >= 3) {
+    say(T("이 시험 버전은 자기 폰 3명까지 지원합니다."));
+    return;
+  }
+  blank();
+  $("layer").value = "eyes_pair";
+  $("layer").onchange();
+  show("editor");
+  say(T("빈 원에서 새 폰을 그려주세요."));
+}
+$("newPawn").onclick = $("listNew").onclick = newPawn;
+$("editorToWorld").onclick = $("relationBack").onclick = () => world();
+$("pawnList").onclick = async () => {
+  openSheet("sheet-list");
+  if (lifeUI) await lifeUI.renderList();
+};
+$("openJournal").onclick = () => openSheet("sheet-journal");
+$("openRelation").onclick = () => openSheet("sheet-relation");
+$("openVisit").onclick = () => openSheet("sheet-visit");
+$("openMore").onclick = () => openSheet("sheet-more");
+$("arrangeLife").onclick = () => {
+  show(null);
+  if (lifeUI) lifeUI.toggleLayout();
+};
+
+/* ───────── 관계·기억 ───────── */
+const labels = {
+  affection: T("애정"),
+  trust: T("신뢰"),
+  respect: T("존중"),
+  reciprocity: T("호혜성"),
+  dependence: T("의존"),
+  power: T("권력"),
+  obligation: T("의무"),
+  conflict: T("갈등"),
+};
+const barTone = { affection: "pink", trust: "sky", respect: "mint", reciprocity: "butter", dependence: "lilac", power: "lilac", obligation: "butter", conflict: "pink" };
+const el = (tag, className, text) => {
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (text !== undefined) e.textContent = text;
+  return e;
+};
+const svgIcon = (name) => {
+  const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const u = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  u.setAttribute("href", "#" + name);
+  s.append(u);
+  return s;
+};
+function relationship() {
+  const from = $("from").value,
+    to = $("to").value;
+  $("relationship").replaceChildren();
+  if (!from || !to || from === to) {
+    $("relationship").append(el("p", "empty", T("서로 다른 폰을 선택해 주세요.")));
+    return;
+  }
+  const dto = store.projection(from, to, $("restricted").checked);
+  if (dto.visibility === "restricted") {
+    $("relationship").append(el("p", "empty", T("공개된 정보가 없습니다.")));
+    return;
+  }
+  for (const [a, n] of Object.entries(dto.scores)) {
+    const row = el("div", "score-row");
+    const bar = el("div", "bar " + (barTone[a] || ""));
+    const fill = el("i");
+    fill.style.width = Math.min(100, (n / 1000) * 100) + "%";
+    bar.append(fill);
+    row.append(el("span", "", labels[a] || a), bar, el("b", "", String(n)));
+    $("relationship").append(row);
+  }
+  const tagRow = el("div", "tag-row", T("관계 설명 "));
+  if (dto.tags.length) for (const t of dto.tags) tagRow.append(el("span", "tag", t.label));
+  else tagRow.append(el("span", "", T("아직 확정된 설명 없음")));
+  $("relationship").append(tagRow);
+  if (dto.basis_status === "no_active_basis") $("relationship").append(el("p", "hint", T("공동 결정 기록 없음")));
+  if (!dto.memories.length) $("relationship").append(el("p", "hint", T("아직 확인된 기억이 없습니다.")));
+  for (const m of dto.memories) {
+    const row = el("div", "memory-row");
+    row.append(
+      svgIcon("i-book"),
+      el(
+        "span",
+        "",
+        T("사건은 확인됨 · ") +
+          (m.reason === "known" ? T("사유 확인됨") : T("이유는 아직 모릅니다")) +
+          " · " +
+          (m.resolution === "resolved" ? T("해결됨 · 기억은 남아 있습니다") : T("미해결")),
+      ),
+    );
+    $("relationship").append(row);
+  }
+}
+$("relations").onclick = () => {
+  show("relationPanel");
+  for (const id of ["from", "to"]) {
+    $(id).replaceChildren();
+    for (const p of [
+      ...store.read().pawns,
+      ...(id === "to" && store.read().life.guest?.present ? [store.read().life.guest] : []),
+    ])
+      $(id).add(new Option(T(p.name) + (p.local_double ? T(" · 방문 폰") : ""), p.id));
+  }
+  if ($("to").options.length > 1) $("to").selectedIndex = 1;
+  relationship();
+};
+$("from").onchange = $("to").onchange = $("restricted").onchange = relationship;
+
+/* ───────── 보존된 공방 시험 ───────── */
+const copy = {
+  C: T("이름 정정 후 재발송"),
+  D: T("작업 우선, 해결 유예"),
+  V: T("기여 기록 확인"),
+  H: T("밤에게 도움 요청"),
+  A: T("노을에게 대안 배우기"),
+  R: T("역할 새로 합의"),
+  P: T("합의하고 동업 지속"),
+  S: T("수락한 역할 분리"),
+  E: T("퇴장·인계"),
+};
+function conditions() {
+  return {
+    ...TEST_READY,
+    role_consent: $("consent").checked,
+    role_change_accepted: $("consent").checked,
+    major_transition_accepted: $("consent").checked,
+    delivery_committed: $("delivery").checked,
+    connected: $("connected").checked,
+    bam_knows: $("aware").checked,
+    morae_knows: $("aware").checked,
+    method_learned: $("learned").checked,
+    settlement_accepted: $("settlement").checked,
+  };
+}
+const reasons = {
+  "workshop.help_unconfirmed": T("이번 도움 제안은 성립하지 않았습니다. 대안을 선택하거나 퇴장할 수 있어요."),
+  "workshop.technical_pause": T("연결 문제로 활동을 잠시 멈췄습니다."),
+  "workshop.delivery_unconfirmed": T("고객 전달을 아직 확인하지 못했습니다. 확인하거나 다른 선택을 해주세요."),
+  "workshop.role_change_unconfirmed": T("새 책임이 수락되지 않았습니다. 기존 역할은 유지돼요."),
+  "workshop.transition_unconfirmed": T("동업 지속 합의가 아직 없습니다. 다른 선택이나 퇴장이 가능해요."),
+  "workshop.method_unavailable": T("대안 학습을 아직 확인하지 못했습니다."),
+  "workshop.handover_pending": T("본인은 퇴장했습니다. 인계·정산은 별도 합의 대기입니다."),
+};
+function workshop() {
+  show("workshopPanel");
+  const state = store.workshop();
+  $("choices").replaceChildren();
+  $("round").textContent = state
+    ? T("라운드 ") + Math.min(state.round, 3) + T(" · 시간 테스트 포인트 ") + state.test_balance.work_time + T(" · 재료 ") + state.test_balance.material
+    : T("새 공방을 시작해 주세요.");
+  if (!state || state.status === "completed") return;
+  for (const [code, c] of Object.entries(CHOICES))
+    if (c.round === state.round) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = copy[code] + T(" · 시간 ") + c.time + T(" / 재료 ") + c.material;
+      b.onclick = () => submit(code);
+      $("choices").append(b);
+    }
+}
+function submit(code) {
+  try {
+    const result = store.submit(uid(), code, conditions());
+    workshop();
+    $("result").textContent =
+      reasons[result.reason_key] ||
+      (["committed", "exited"].includes(result.status)
+        ? T("선택이 로컬 저장에 확정됐습니다. 관계·기억에서 변화와 남은 문제를 확인하세요.")
+        : T("확정되지 않았습니다. 다른 선택이나 퇴장이 가능합니다."));
+    if (result.source_event_ids?.length) $("result").append(el("p", "", T("확정 사건: ") + result.source_event_ids.join(", ")));
+    for (const relation of result.relations || []) {
+      const pawns = store.read().pawns,
+        from = pawns.find((p) => p.id === relation.from_pawn_id),
+        to = pawns.find((p) => p.id === relation.to_pawn_id);
+      const changed = Object.keys(labels)
+        .filter((k) => relation.before[k] !== relation.after[k])
+        .map((k) => labels[k] + " " + relation.before[k] + " → " + relation.after[k]);
+      $("result").append(el("p", "", from.name + " → " + to.name + " · " + (changed.join(" · ") || T("확정 수치 변화 없음"))));
+    }
+    say(T("처리 상태: ") + result.status);
+  } catch (e) {
+    say(T("처리하지 못했습니다. 기존 저장 상태를 유지합니다. ") + e.message);
+  }
+}
+$("begin").onclick = () => {
+  try {
+    store.begin(uid());
+    workshop();
+    $("result").textContent = T("새 주문의 공로 문제를 확인합니다. 고의는 단정하지 않습니다.");
+  } catch (e) {
+    say(e.message === "workshop.requires_three" ? T("먼저 자기 폰 3명을 만들어 주세요.") : e.message);
+  }
+};
+$("exit").onclick = () => submit("E");
+$("repair").onclick = () => {
+  try {
+    store.repair(uid(), { accepted: $("repairAccepted").checked, executed: $("repairDone").checked });
+    $("result").textContent = T("대상 주문의 갈등을 정리했습니다. 기억은 유지되며 자동 친구가 되지는 않습니다.");
+  } catch (e) {
+    say(T("복구를 확정하지 못했습니다. 별도 실행·수용 근거를 확인해 주세요. ") + e.message);
+  }
+};
+$("openWorkshop").onclick = workshop;
+$("workshopBack").onclick = () => world();
+
+/* ───────── 저장 파일 내보내기·불러오기 ───────── */
+$("exportSave").onclick = () => {
+  const raw = localStorage.getItem(STORE_KEY);
+  if (!raw) {
+    say(T("아직 저장된 월드가 없어요."));
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([raw], { type: "application/json" }));
+  a.download = "donggeuran-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  $("saveNote").textContent = T("저장 파일을 내려받았어요. 이 브라우저에도 계속 자동 저장돼요.");
+};
+$("importSave").onclick = () => $("importFile").click();
+$("importFile").onchange = async () => {
+  const file = $("importFile").files[0];
+  $("importFile").value = "";
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) {
+    say(T("저장 파일이 너무 큽니다."));
+    return;
+  }
+  try {
+    const text = await file.text();
+    // 실제 저장소에 쓰기 전에 같은 검증기로 먼저 확인한다
+    const probe = {};
+    createLocalStore({ getItem: () => text, setItem: (k, v) => (probe[k] = v) });
+    const previous = localStorage.getItem(STORE_KEY);
+    if (previous) localStorage.setItem(STORE_KEY + ".before-import", previous);
+    localStorage.setItem(STORE_KEY, text);
+    localStorage.removeItem("game1-draft-v1");
+    say(T("저장 데이터를 불러왔어요. 화면을 다시 엽니다."));
+    setTimeout(() => location.reload(), 600);
+  } catch (e) {
+    say(T("이 파일은 동그란 사이 저장 데이터가 아니거나 손상됐어요. 기존 기록은 그대로예요."));
+  }
+};
+
+/* ───────── 시작 ───────── */
+blank();
+try {
+  const d = JSON.parse(localStorage.getItem("game1-draft-v1") || "null");
+  if (d) {
+    await loadAppearance(d.appearance);
+    axes = d.axes;
+    editingPawn = d.editingPawn || null;
+    editingTrait = d.editingTrait || null;
+    $("name").value = d.name;
+    $("editorTitle").textContent = editingPawn ? T(T("{name} 꾸미기"), { name: d.name }) : T(T("폰 만들기"));
+    show("editor");
+    say(T("이전 그림·성격 초안을 복구했습니다. 아직 폰 저장은 확정되지 않았습니다."));
+  } else if (!store.read().pawns.length) {
+    show("editor");
+    say(T("첫 폰을 그려 볼까요? 빈 원에 눈과 입을 그려 주세요."));
+  } else show(null);
+} catch {
+  say(T("초안을 읽지 못했습니다. 저장 기록은 유지합니다."));
+}
+$("layer").onchange();
+
+lifeUI = mountLifeUI({
+  store,
+  paint,
+  image,
+  edit: editExisting,
+  notify: say,
+  openRelations: (from, to) => {
+    $("relations").click();
+    $("from").value = from;
+    $("to").value = to;
+    relationship();
+  },
+  showWorld: world,
+  closeSheets,
+});
+await lifeUI.render();
+$("artCompare").onclick = async () => {
+  show("comparePanel");
+  await renderSpaceComparison($("compareCanvas"), store.read(), paint, image);
+};
+$("compareBack").onclick = world;
+
+/* ───────── 언어 ───────── */
+for (const [code, label] of Object.entries(LANGS)) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "gbtn gbtn-sm" + (code === getLang() ? " gbtn-blue" : "");
+  b.textContent = label;
+  b.setAttribute("aria-pressed", String(code === getLang()));
+  b.onclick = () => {
+    if (code === getLang()) return;
+    setLang(code);
+    location.reload();
+  };
+  $("langPicker").append(b);
+}
+if (getLang() !== "ko") {
+  const plate = document.querySelector(".title-plate"),
+    alt = "./assets/brand/title-" + getLang() + ".png",
+    probe = new Image();
+  probe.onload = () => (plate.src = alt);
+  probe.src = alt;
+}

@@ -1,3 +1,5 @@
+> **2026-10-13 갱신:** 메인 개발자는 Claude. 최신 작업 규칙은 `CLAUDE.md`, 인수인계는 `docs/planning/00_클로드_인수인계_2026-10-13.md`. 계정(사용자 확정): GitHub `irupark1-wq/irupa`, Supabase `yvsqivhdwzbshpapfcsy`, 공개 도메인 neinom.com — 상세는 `CLAUDE.md` "계정" 절. 아래 `C:\code\game`·역할 참조 경로는 이전 개발자(ChatGPT) 환경이며 쓰지 않는다(작업 폴더 `C:\claude\donggeuran`). 이 프로젝트의 GitHub·Supabase 는 다른 프로젝트와 완전히 별개다. 보안 기준(1~10)은 그대로 유효.
+
 # 게임1 작업 규칙
 
 - 최신 제작 방향은 PO11 자율 폰·공간 공존이며 수동 공방 선택 흐름을 주요 UX에서 제외한다. 최신 회신은 docs/planning/replies/11_자율생활_공간공존_통합개발회신.md. 디자인 v1.0 및 관계 v0.6의 설계 QA를 실행 통과로 오인하지 않는다. 로컬 방문 대역은 온라인으로 표시하지 않는다.
@@ -8,7 +10,7 @@
 - 사전 문의 기술 답변과 정책 충돌은 `docs/planning/replies/`에 있다. 익명 인증/복구, Pages/로그인 없는 UX의 전달된 결정과 최신 직접 요청을 구분한다. 미확정 Auth/게임 스키마 설정은 회신 검토 전에 배포하지 않는다.
 - 2026-10-13 PO v0.3 착수 기준은 `docs/planning/replies/05_김PO_v0.3_개발수용_및_착수변경.md`와 `docs/reference/po-v0.3/00_김PO_검토결정서.md`다. U-09/성격3축/6프리셋/당시snapshot, A로맨스보류, v0.1태그기본·v0.3시드A실험 분리를 적용한다. reference/ 수신자료는 수정하지 않는다.
 
-- 사용자가 요청한 게임 복사 대상은 `C:\code\game`이다. 샌드박스 외부 쓰기는 승인 절차를 따른다. 원본을 삭제하지 않는다.
+- (이전 환경) 게임 복사 대상 `C:\code\game` 은 더 이상 쓰지 않는다. 작업 폴더는 `C:\claude\donggeuran`.
 - Supabase 프로젝트: `yvsqivhdwzbshpapfcsy`. 같은 프로젝트에 다른 게임이 공존할 수 있다.
 - 새 리소스 이름은 `게임1` 접두사, ASCII가 필요한 DB 객체/Edge Function은 `game1_`, 환경변수/시크릿은 `GAME1_` 접두사를 쓴다. 플랫폼 예약 이름은 변경하지 않는다.
 - 접두사는 보안 경계가 아니다. 다른 게임 객체를 읽거나 변경하지 않는다. Auth 사용자는 프로젝트에서 공유되므로 게임별 참여/역할을 서버에서 확인한다.

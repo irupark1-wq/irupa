@@ -1,0 +1,79 @@
+/* ─────────────────────────────────────────────────────────────
+   모션·연출(fx). 참고: 종이 위 손그림 모션그래픽 — 통통 튀는 등장, 마커 강조, 가벼운 입자.
+   모든 효과는 CSS 애니메이션이며 prefers-reduced-motion 이면 꺼진다(style.css 전역 규칙).
+   ───────────────────────────────────────────────────────────── */
+
+/* 시간대 색조: 장면 위 얇은 막. data-tod = dawn | day | dusk | night */
+.tod { position: absolute; inset: 0; z-index: 4; pointer-events: none; transition: background 2s linear, opacity 2s linear; opacity: 0; mix-blend-mode: multiply; }
+.scene[data-tod="dawn"] .tod { opacity: 0.45; background: linear-gradient(180deg, #ffd9b8 0%, #fff1dc 60%, #ffffff 100%); }
+.scene[data-tod="dusk"] .tod { opacity: 0.4; background: linear-gradient(180deg, #ffb37a 0%, #ffd3a1 55%, #fff0d0 100%); }
+.scene[data-tod="night"] .tod { opacity: 0.7; background: linear-gradient(180deg, #6f7fb8 0%, #9aa3cf 50%, #c9c3c0 100%); }
+.scene[data-tod="night"] .scene-art { filter: brightness(0.92) saturate(0.9); }
+/* 밤에는 창문·램프 자리에 은은한 빛 */
+.glow { position: absolute; z-index: 4; pointer-events: none; opacity: 0; transition: opacity 2s; border-radius: 50%; background: radial-gradient(circle, rgba(255, 222, 150, 0.55) 0%, rgba(255, 200, 110, 0.25) 40%, transparent 70%); mix-blend-mode: screen; animation: flicker 3.4s ease-in-out infinite; }
+.scene[data-tod="night"] .glow, .scene[data-tod="dusk"] .glow { opacity: 1; }
+@keyframes flicker { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.06); opacity: 1; } }
+
+/* 햇살 속 먼지(낮) */
+.motes { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+.mote { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: rgba(255, 250, 225, 0.9); box-shadow: 0 0 6px rgba(255, 240, 190, 0.9); opacity: 0; animation: mote var(--d, 9s) linear var(--delay, 0s) infinite; }
+.scene[data-tod="night"] .mote { background: rgba(255, 236, 170, 0.8); }
+@keyframes mote { 0% { transform: translate(0, 0); opacity: 0; } 10% { opacity: 0.9; } 90% { opacity: 0.6; } 100% { transform: translate(var(--dx, 20px), var(--dy, -90px)); opacity: 0; } }
+
+/* 폰: 발걸음 먼지, 쿵 착지, 선택 링 */
+.puff { position: absolute; z-index: 3; width: 14px; height: 14px; border-radius: 50%; background: rgba(255, 245, 225, 0.85); pointer-events: none; transform: translate(-50%, -50%); animation: puff 0.7s ease-out forwards; }
+@keyframes puff { 0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0.9; } 100% { transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% - 10px)) scale(1.8); opacity: 0; } }
+.life-pawn.chosen:before { content: ""; position: absolute; left: 50%; bottom: 6px; width: 78%; height: 22px; transform: translateX(-50%); border-radius: 50%; border: 3px solid rgba(74, 169, 240, 0.85); box-shadow: 0 0 10px rgba(74, 169, 240, 0.6); animation: ring 1.4s ease-in-out infinite; pointer-events: none; }
+@keyframes ring { 0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; } 50% { transform: translateX(-50%) scale(1.08); opacity: 0.5; } }
+.life-pawn.land canvas { animation: land 0.45s cubic-bezier(0.3, 1.6, 0.4, 1) 1; }
+@keyframes land { 0% { transform: scale(1.12, 0.86); } 45% { transform: scale(0.94, 1.08); } 100% { transform: scale(1, 1); } }
+
+/* 떠오르는 작은 그림: zzz, 하트, 음표, 반짝 */
+.float { position: absolute; z-index: 30; pointer-events: none; transform: translate(-50%, -50%); font-size: 16px; font-weight: 900; animation: floatUp var(--d, 1.8s) ease-out forwards; filter: drop-shadow(0 1px 0 #fff); }
+.float img { width: 22px; height: 22px; display: block; }
+.float.zz { color: #7b68c9; font-family: Georgia, serif; font-style: italic; letter-spacing: 1px; }
+.float.note { color: #4aa9f0; }
+.float.spark { color: #f5c445; }
+@keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(-8deg); } 15% { opacity: 1; transform: translate(-50%, -70%) scale(1.1) rotate(4deg); } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 10px)), -170%) scale(1) rotate(-4deg); } }
+
+/* Day 배너: 마커로 긋는 듯한 강조 */
+.day-banner { position: absolute; left: 50%; top: 22%; transform: translate(-50%, -50%); z-index: 40; pointer-events: none; display: grid; justify-items: center; gap: 6px; animation: bannerIn 2.6s cubic-bezier(0.2, 1, 0.3, 1) forwards; }
+.day-banner b { font-size: 46px; font-weight: 900; color: #4a3a2e; letter-spacing: -1px; padding: 4px 22px; position: relative; text-shadow: 0 2px 0 #fff, 0 0 10px #fff; }
+.day-banner b:before { content: ""; position: absolute; left: 6px; right: 6px; bottom: 10px; height: 44%; background: linear-gradient(90deg, #ffd978, #f5c445); border-radius: 6px; z-index: -1; transform: scaleX(0); transform-origin: left center; animation: marker 0.6s 0.25s cubic-bezier(0.3, 1, 0.3, 1) forwards; opacity: 0.9; }
+.day-banner small { font-size: 15px; font-weight: 800; color: #7d6652; background: rgba(255, 252, 245, 0.92); padding: 4px 14px; border-radius: 999px; border: 2px solid #fff; }
+@keyframes bannerIn { 0% { opacity: 0; transform: translate(-50%, -30%) scale(0.8); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); } 20% { transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -70%) scale(1); } }
+@keyframes marker { to { transform: scaleX(1); } }
+
+/* 하단 독: 누르면 통통, 알림 점 */
+.dock-btn img { transition: transform 0.12s cubic-bezier(0.3, 1.6, 0.4, 1); }
+.dock-btn:hover img { transform: translateY(-3px) rotate(-3deg); }
+.dock-btn.bump img { animation: bump 0.45s cubic-bezier(0.3, 1.6, 0.4, 1); }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.25, 0.8); } 70% { transform: scale(0.92, 1.1); } 100% { transform: scale(1); } }
+.dock-btn .dot { position: absolute; top: 2px; right: 8px; width: 14px; height: 14px; border-radius: 50%; background: #ff6b6b; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); animation: pop 0.3s ease-out; }
+.dock-btn { position: relative; }
+
+/* 팝업·패널 등장: 종이가 튀어나오듯 */
+.sheet-box { animation: sheetIn 0.32s cubic-bezier(0.2, 1.3, 0.3, 1); }
+@keyframes sheetIn { 0% { transform: translateY(30px) scale(0.92) rotate(-1deg); opacity: 0; } 60% { transform: translateY(-4px) scale(1.01) rotate(0.3deg); opacity: 1; } 100% { transform: none; opacity: 1; } }
+.detail-panel { animation: panelIn 0.3s cubic-bezier(0.2, 1.3, 0.3, 1); }
+@keyframes panelIn { 0% { transform: translateX(24px) scale(0.96); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.life-pawn .say { animation: sayIn 0.35s cubic-bezier(0.3, 1.6, 0.4, 1); }
+@keyframes sayIn { 0% { transform: scale(0.4) rotate(-6deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.bar > i { transition: width 0.7s cubic-bezier(0.3, 1, 0.3, 1); }
+.plate-clock b { display: inline-block; }
+.plate-clock b.tick { animation: tick 0.3s ease-out; }
+@keyframes tick { 0% { transform: translateY(-3px); } 100% { transform: none; } }
+
+@container game (max-width: 820px) {
+  .day-banner b { font-size: 32px; }
+  .day-banner small { font-size: 12.5px; }
+}
+
+.scene[data-orientation="landscape"] .glow.g1 { left: 24%; top: -4%; width: 22%; height: 34%; }
+.scene[data-orientation="landscape"] .glow.g2 { left: 60%; top: -6%; width: 14%; height: 24%; }
+.scene[data-orientation="portrait"] .glow.g1 { left: 34%; top: 1%; width: 30%; height: 16%; }
+.scene[data-orientation="portrait"] .glow.g2 { left: 68%; top: 3%; width: 18%; height: 12%; }
+.lang-block .chips { gap: 8px; }
+
+.dock-btn span { white-space: nowrap; letter-spacing: -0.3px; }
+@container game (max-width: 820px) { .dock-btn span { font-size: 9.5px; } .dock-btn { width: 48px; } }

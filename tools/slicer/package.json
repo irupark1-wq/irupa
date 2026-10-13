@@ -1,0 +1,9 @@
+{
+  "name": "donggeuran-slicer",
+  "private": true,
+  "type": "module",
+  "description": "디자이너 스프라이트 시트(투명 WebP)를 조각 PNG로 자르는 도구. 게임 런타임과 무관.",
+  "dependencies": {
+    "sharp": "0.33.5"
+  }
+}

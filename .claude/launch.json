@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "donggeuran",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/game1_prototype_server.mjs"],
+      "port": 4173
+    }
+  ]
+}

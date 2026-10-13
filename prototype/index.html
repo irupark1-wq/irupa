@@ -1,18 +1,386 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>동그란 사이 · 로컬 단계 A</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/world-design.css"></head><body>
-<header><h1>동그란 사이<span class="sprout">♧</span></h1><p>내가 만든 동그란 폰들과, 함께 쌓아가는 이야기</p><nav><button id="edit">새 폰 그리기</button><button id="world">내 월드</button><button id="relations">관계·기억</button><button id="artCompare">공간 표현 비교</button></nav></header>
-<p id="notice" role="status" aria-live="polite">우리의 작은 이야기는 이 브라우저에 저장돼요.</p>
-<main><section id="editor">
-<div class="section-heading"><div><span class="eyebrow">MY LITTLE PAWN</span><h2 id="editorTitle">나만의 동그란 폰을 그려요</h2><p>작은 눈, 삐뚤한 미소도 좋아요. 나만의 표정을 자유롭게 그려보세요.</p></div><span class="badge">✦ 얼굴 편집기</span></div>
-<div class="editor-layout">
-<aside class="tool-rail"><span class="panel-label">꾸미기</span><button data-slot="eyes_pair" class="selected">◉<span>눈</span></button><button data-slot="mouth">⌣<span>입</span></button><button data-slot="front_hair">♧<span>앞머리</span></button><button data-slot="back_hair">♧<span>뒷머리</span></button><button data-slot="frame_accessory">☆<span>장식</span></button><div class="rail-line"></div><button id="undo" title="되돌리기">↶<span>되돌리기</span></button><button id="redo" title="다시 실행">↷<span>다시 실행</span></button></aside>
-<div class="drawing-space"><span class="sketch-note">세상에 하나뿐인<br>너의 동그라미 ✧</span><canvas id="drawing" width="512" height="512" aria-label="얼굴 그리기 캔버스"></canvas><div class="canvas-caption">완전한 동그라미에서 시작하는 작은 친구</div><div class="editor-actions"><button id="samples">✧ 꾸미기 예시</button><button id="traits">성격 선택 →</button></div></div>
-<aside class="controls"><h3>나의 폰</h3><label>이름<input id="name" maxlength="20" placeholder="이름을 지어주세요"></label><label>편집할 레이어<select id="layer"><option value="eyes_pair">눈 · 자유 그리기</option><option value="mouth">입</option><option value="front_hair">앞머리</option><option value="back_hair">뒷머리</option><option value="frame_accessory">프레임 / 장식</option><option value="base">원형 몸체 · 고정</option></select></label><div class="control-pair"><label>도구<select id="tool"><option value="brush">✎ 브러시</option><option value="eraser">지우개</option></select></label><label>색상<input id="color" type="color" value="#473735"></label></div><div class="palette"><button data-color="#473735" aria-label="진한 갈색" class="swatch brown"></button><button data-color="#ed9c9c" aria-label="분홍" class="swatch pink"></button><button data-color="#f3c976" aria-label="노랑" class="swatch yellow"></button><button data-color="#97bde5" aria-label="하늘색" class="swatch blue"></button><button data-color="#a8c7a2" aria-label="초록" class="swatch green"></button><button data-color="#b3a5d7" aria-label="보라" class="swatch purple"></button></div><label>브러시 굵기<input id="width" type="range" min="1" max="32" value="8"></label><details><summary>레이어 이동 · 크기 · 회전</summary><label>가로<input id="dx" type="range" min="-180" max="180" value="0"></label><label>세로<input id="dy" type="range" min="-180" max="180" value="0"></label><label>회전<input id="rotation" type="range" min="-180" max="180" value="0"></label><label>크기<input id="scale" type="range" min="0.3" max="2" step="0.1" value="1"></label><label><input type="checkbox" id="hide">레이어 숨기기</label></details><details><summary>미리보기 설정</summary><label><input type="checkbox" id="clip">눈·입의 원 밖 획 숨기기</label></details><button id="saveFace" class="primary save-face">저장하기 ✓</button><small>이 브라우저에 안전하게 저장해요.</small></aside>
-</div></section>
-<section id="traitPanel" hidden><div class="section-heading"><div><span class="eyebrow">A LITTLE PERSONALITY</span><h2>이 친구는 어떤 성격일까요?</h2><p>정답은 없어요. 함께 살아가며 알아가 보세요.</p></div><canvas id="traitCanvas" width="160" height="160" aria-label="폰 미리보기"></canvas></div><div id="axes"></div><div id="presets"></div><button id="random">무작위 조합</button><p id="traitLabel">직접 조합</p><p>행동 경향의 예시예요. 실제 선택은 상황·기억·목표에 따라 달라집니다.</p><p id="preview"></p><details class="qa"><summary>저장 점검 도구</summary><label><input type="checkbox" id="failSave">다음 저장 실패 재현</label></details><div><button id="back">← 그림으로</button><button id="save" class="primary">폰 저장</button><button id="retry" hidden>동일 명령 결과 확인·재시도</button></div></section>
-<section id="worldPanel" hidden><div class="section-heading"><div><span class="eyebrow">함께 살아가는 공간</span><h2>나의 작은 월드</h2><p>선택하지 않아도, 저마다의 하루를 보내요.</p></div><span class="badge" id="lifeClock">자율 생활</span></div>
-<div class="life-toolbar"><button id="pauseLife">Ⅱ 일시정지</button><label>생활 속도 <select id="lifeSpeed"><option value="1">×1</option><option value="2">×2</option><option value="4">×4</option></select></label><button id="toggleDetails">폰 상세 접기·펼치기</button><button id="arrangeLife">♧ 가구 배치</button><button id="newPawn">＋ 폰 만들기</button></div>
-<div id="arrangePanel" hidden><label>활동 지점<select id="placeSelect"><option value="game1-rest">쉼터</option><option value="game1-work">작업대</option><option value="game1-social">이야기 자리</option></select></label><label>가로 칸<input id="placeX" type="number" min="0" max="11" value="2"></label><label>세로 칸<input id="placeY" type="number" min="0" max="7" value="2"></label><label><input id="placeBlocked" type="checkbox">이 장소 잠시 닫기</label><button id="placeApply">배치 저장</button><label><input id="wallMode" type="checkbox">빈 바닥 클릭: 장애물 추가·제거</label><p>12×8 바닥에서 자리를 클릭하거나 좌표를 바꿔 주세요. 경로와 만남의 기회가 달라집니다.</p></div>
-<div class="life-layout"><div class="world-room life-room"><div id="lifeStage" aria-label="12 곱하기 8 자율 생활 바닥"><div id="lifePlaces"></div><div id="lifeActors"></div></div></div><aside id="pawnDetails" class="life-details"><p>폰을 눌러 현재 상태를 살펴보세요.</p></aside></div>
-<section class="journal-panel"><div class="journal-heading"><h3><span class="journal-icon" aria-hidden="true">▤</span>최근 행동과 기억</h3><p id="recentMemory">지금까지의 하루가 차곡차곡 기록돼요.</p><button id="allLifeLogs">▤ 전체 기록 보기</button></div><div class="journal-body"><div class="journal-art"><p>우리가 함께한<br>시간들이에요! <span>♥</span></p><canvas id="journalPawn" width="320" height="320" aria-label="기록을 살펴보는 내 폰"></canvas><span class="journal-book" aria-hidden="true">▱</span></div><ol id="lifeLog" aria-live="off"></ol></div></section><aside class="visit-panel"><div class="visit-heading"><h3><span aria-hidden="true">♧</span>친구 폰 방문 · 로컬 대역</h3><p>실제 온라인 초대가 연결되기 전의 공간 참여 시험입니다.</p></div><div class="visit-scene"><p id="visitorState"></p><div id="visitorPortraits" aria-label="함께 지내는 폰들"></div></div><div class="visit-actions"><button id="visitEnter"><span aria-hidden="true">⌂</span><strong>루미 방문 대역 입장</strong><small>친구의 공간을 함께 체험해요</small></button><button id="visitLeave"><span aria-hidden="true">⇥</span><strong>참여 철회·퇴장</strong><small>현재 참여를 종료해요</small></button><button id="visitDisconnect"><span aria-hidden="true">♧</span><strong>연결 끊김 시험</strong><small>연결이 끊긴 상황을 확인해요</small></button><button id="visitReconnect"><span aria-hidden="true">⟳</span><strong>대역 재접속</strong><small>다시 연결해요</small></button></div><details><summary>대역의 공간·소유자 허용 설정</summary><label><input id="hostAccess" type="checkbox" checked>호스트의 공간 접근 허용</label><label><input id="guestActivity" type="checkbox" checked>소유자의 활동 참여 허용</label><label><input id="guestLight" type="checkbox" checked>소유자의 가벼운 자율 사건 허용</label></details><p class="visit-assurance"><span aria-hidden="true">♧</span>방문은 소유권·외형 수정·영구 약속 권한을 부여하지 않아요.</p></aside><div id="pawns" hidden></div></section>
-<section id="relationPanel" hidden><h2>관계와 기억</h2><label>평가하는 폰 <select id="from"></select></label><label>대상 폰 <select id="to"></select></label><details class="qa"><summary>공개 범위 점검</summary><label><input type="checkbox" id="restricted">타인 비공개 방향</label></details><div id="relationship"></div></section>
-<section id="workshopPanel" hidden aria-label="보존된 이전 선택형 시험"><h2>공동 공방 · 세 번의 선택</h2><p>비용은 테스트 포인트입니다. 실제 재화나 시간 단위가 아닙니다.</p><button id="begin">새 공방 시작</button><details class="qa"><summary>시나리오 점검 도구</summary><fieldset><legend>로컬 시나리오 확인</legend><label><input type="checkbox" id="consent" checked>새 역할·전환 제안 수락</label><label><input type="checkbox" id="delivery" checked>정정 기록·고객 전달 확인</label><label><input type="checkbox" id="connected" checked>연결 상태 정상</label><label><input type="checkbox" id="aware" checked>당사자 사건 인지</label><label><input type="checkbox" id="learned" checked>대안 학습 완료</label><label><input type="checkbox" id="settlement" checked>인계·정산 합의</label></fieldset></details><div id="round"></div><div id="choices" class="cards"></div><button id="exit">본인 즉시 퇴장</button><div id="result" aria-live="polite"></div><details class="qa"><summary>갈등 해결하기</summary><fieldset><legend>실질 복구 확인</legend><p>공로 정정만으로 실질 복구가 완료되지는 않습니다.</p><label><input type="checkbox" id="repairDone">새 복구 계획 실행 확인</label><label><input type="checkbox" id="repairAccepted">대상자 수용 확인</label><button id="repair">대상 갈등 복구 확정</button></fieldset></details></section><section id="comparePanel" hidden><h2>공간 표현 비교</h2><p>현재 자율 생활은 2D 바닥을 기준으로 검증합니다. 아래는 같은 폰을 3D 기하 공간에 합성하는 기술 비교이며 최종 아트가 아닙니다.</p><canvas id="compareCanvas" width="900" height="500" aria-label="3D 기하 공간과 2D 폰 비교"></canvas><p>2D: 편집·경로·원형 가독성에 유리합니다. 3D 공간: 카메라·깊이·가림·가구 자산 제작이 추가됩니다. 초기 제작은 2D를 추천합니다.</p><button id="compareBack">내 월드로</button></section></main><footer>로컬 플레이 · 이 브라우저에 저장됩니다.</footer><script type="module" src="/app.js"></script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f6e3c6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>동그란 사이</title>
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./world-design.css">
+<link rel="stylesheet" href="./skin.css">
+<link rel="stylesheet" href="./fx.css">
+</head>
+<body>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-face" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10.5" r=".9" fill="currentColor" stroke="none"/><circle cx="15" cy="10.5" r=".9" fill="currentColor" stroke="none"/><path d="M9 14.5c1.6 1.6 4.4 1.6 6 0"/></symbol>
+  <symbol id="i-chair" viewBox="0 0 24 24"><path d="M6 4h12v8H6zM5 12h14v4H5zM7 16v4M17 16v4"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2 2M16.7 16.7l2 2M5.3 18.7l2-2M16.7 7.3l2-2"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke-width="3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z" fill="currentColor"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4 3.5V16H6a2 2 0 0 1-2-2z"/><path d="M8 9h8M8 12h5"/></symbol>
+  <symbol id="i-coffee" viewBox="0 0 24 24"><path d="M5 9h11v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM16 10h1.5a2 2 0 0 1 0 4H16M8 5.5c0 1 .8 1 .8 2M11 5.5c0 1 .8 1 .8 2"/></symbol>
+  <symbol id="i-zzz" viewBox="0 0 24 24"><path d="M5 9h5l-5 6h5M13 5h5l-5 6h5M14 15h4l-4 4h4"/></symbol>
+  <symbol id="i-hammer" viewBox="0 0 24 24"><path d="M14 4l6 6-2.5 2.5-6-6zM12.5 9.5 4 18l2 2 8.5-8.5"/></symbol>
+  <symbol id="i-steps" viewBox="0 0 24 24"><path d="M7 4c2 0 3 2 3 5s-1 4-2 4-2-1-2-4 0-5 1-5zM7 14.5c1.2 0 2 .6 2 1.8S8.2 18 7 18s-2-.5-2-1.7.8-1.8 2-1.8zM17 7c-2 0-3 2-3 5s1 4 2 4 2-1 2-4 0-5-1-5zM17 17.5c-1.2 0-2 .6-2 1.8S15.8 21 17 21s2-.5 2-1.7-.8-1.8-2-1.8z"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.5 4.5a4.5 4.5 0 0 0-4.2 6.1L4 16.9 7.1 20l6.3-6.3a4.5 4.5 0 0 0 6.1-4.2l-2.8 2.8-2.9-.7-.7-2.9z"/></symbol>
+  <symbol id="i-plant" viewBox="0 0 24 24"><path d="M12 20v-7M12 13c0-4 2.5-6 6-6 0 4-2.5 6-6 6zM12 13c0-3-2-5-5-5 0 3 2 5 5 5zM8 20h8"/></symbol>
+  <symbol id="i-brush" viewBox="0 0 24 24"><path d="M17 3l4 4-9.5 9.5-4-4zM7.5 12.5c-2.5 0-3.5 2-3.5 4.5-1 1-1.5 2-1.5 2 3 .5 7 .5 8.5-2.5"/></symbol>
+  <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M15 4l5 5-9 9H7l-3-3 11-11zM6 20h14"/><path d="M9.5 9.5l5 5"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M8 7H4v4"/><path d="M4.5 10.5A8 8 0 1 1 6 16"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M16 7h4v4"/><path d="M19.5 10.5A8 8 0 1 0 18 16"/></symbol>
+  <symbol id="i-parts" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="2.6"/></symbol>
+  <symbol id="i-door" viewBox="0 0 24 24"><path d="M5 20V5a1 1 0 0 1 1-1h8v16M14 12h.01M5 20h14M14 4l5 2v14"/></symbol>
+  <symbol id="i-exit" viewBox="0 0 24 24"><path d="M10 6H5v12h5M14 8l4 4-4 4M9 12h9"/></symbol>
+  <symbol id="i-link-off" viewBox="0 0 24 24"><path d="M9 15l6-6M8 11l-2 2a3.5 3.5 0 0 0 5 5l2-2M16 13l2-2a3.5 3.5 0 0 0-5-5l-2 2M4 4l16 16"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-cloud-up" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6 1.5A3.5 3.5 0 0 1 17 18z"/><path d="M12 15v-5M9.5 12.5 12 10l2.5 2.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M14 6l-6 6 6 6" stroke-width="2.6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke-width="2.6"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/></symbol>
+  <symbol id="i-block" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 8l8 8M16 8l-8 8"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18M10.5 10.6A2 2 0 0 0 13.4 13.5M7.3 7.4C4.9 8.9 3 12 3 12s3.5 6 9 6c1.6 0 3-.4 4.3-1M10 6.2C10.6 6.1 11.3 6 12 6c5.5 0 9 6 9 6s-.8 1.4-2.2 2.9"/></symbol>
+  <symbol id="i-compare" viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="14" rx="2"/><rect x="13" y="5" width="8" height="14" rx="2"/></symbol>
+  <symbol id="i-wand" viewBox="0 0 24 24"><path d="M4 20 15 9M15 4l.9 2.1L18 7l-2.1.9L15 10l-.9-2.1L12 7l2.1-.9zM19.5 12l.5 1.2 1.2.5-1.2.5-.5 1.3-.5-1.3-1.2-.5 1.2-.5z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="10" r="2.5"/><path d="M15.5 15c2.8 0 5.5 2 5.5 5"/></symbol>
+</svg>
+
+<img class="page-blur" src="./assets/game1-cozy-room-v1.png" alt="" aria-hidden="true" draggable="false">
+<div class="game" id="game">
+  <!-- ───────── 월드 장면 (전체 화면) ───────── -->
+  <div class="scene" id="scene">
+    <img class="scene-blur" id="sceneBlur" src="./assets/game1-cozy-room-v1.png" alt="" draggable="false">
+    <img class="scene-art" id="sceneArt" src="./assets/game1-cozy-room-v1.png" alt="" draggable="false">
+    <div id="lifeStage" aria-label="12 곱하기 8 자율 생활 바닥">
+      <div class="grid-overlay" aria-hidden="true"></div>
+      <div id="lifePlaces"></div>
+      <div id="lifeActors"></div>
+    </div>
+    <div class="tod" aria-hidden="true"></div>
+    <div class="glow g1" aria-hidden="true"></div>
+    <div class="glow g2" aria-hidden="true"></div>
+    <div class="motes" id="motes" aria-hidden="true"></div>
+
+    <!-- HUD 위 -->
+    <div class="hud hud-top">
+      <img class="title-plate" src="./assets/brand/title.png" alt="동그란 사이 · 내 월드" draggable="false">
+      <div class="hud-spacer"></div>
+      <div class="plate plate-clock" title="자율 생활 시간"><img id="clockIcon" src="./assets/ui/hud/sun.png" alt="" draggable="false"><b id="lifeClock">08:00</b><small id="lifeDay">Day 1</small></div>
+      <button id="pauseLife" class="pause-btn" type="button" aria-label="일시정지"><img src="./assets/ui/hud/pause.png" alt="" draggable="false"></button>
+      <div class="plate plate-speed" role="group" aria-label="생활 속도">
+        <button type="button" class="speed on" data-speed="1">×1</button>
+        <button type="button" class="speed" data-speed="2">×2</button>
+        <button type="button" class="speed" data-speed="4">×4</button>
+      </div>
+    </div>
+
+    <!-- 배치 모드 범례 -->
+    <div class="legend" id="arrangeLegend" hidden>
+      <span><i class="sw ok"></i>배치 가능</span><span><i class="sw no"></i>막힘</span><span><i class="sw spot"></i>활동 지점</span><span><i class="sw sel"></i>선택 중</span>
+    </div>
+
+    <!-- 폰 상세 패널 (데스크톱: 오른쪽 떠 있는 패널 / 모바일: 바텀시트) -->
+    <aside id="pawnDetails" class="panel detail-panel" hidden></aside>
+
+    <!-- 배치 트레이 -->
+    <div id="arrangePanel" class="panel tray-panel" hidden>
+      <div class="panel-head">
+        <h3><svg><use href="#i-chair"/></svg>가구 배치 <small>12×8</small></h3>
+        <button id="arrangeDone" class="gbtn gbtn-sm gbtn-blue" type="button"><svg><use href="#i-check"/></svg>끝내기</button>
+      </div>
+      <p class="hint">활동 지점을 고른 뒤 바닥을 누르면 그 칸으로 옮겨요.</p>
+      <div class="tray" id="placeTray">
+        <button type="button" class="tile" data-place="game1-rest"><img class="" src="./assets/furniture/rest.png" alt="" draggable="false"><span>쉼터</span></button>
+        <button type="button" class="tile" data-place="game1-work"><img class="" src="./assets/furniture/work.png" alt="" draggable="false"><span>작업대</span></button>
+        <button type="button" class="tile" data-place="game1-social"><img class="" src="./assets/furniture/social.png" alt="" draggable="false"><span>이야기 자리</span></button>
+        <button type="button" class="tile" id="wallTile"><img class="" src="./assets/furniture/wall.png" alt="" draggable="false"><span>장애물</span></button>
+      </div>
+      <div class="arrange-fields">
+        <label class="sr-only">활동 지점<select id="placeSelect">
+          <option value="game1-rest">쉼터</option><option value="game1-work">작업대</option><option value="game1-social">이야기 자리</option>
+        </select></label>
+        <label>가로 <input id="placeX" type="number" min="0" max="11" value="2"></label>
+        <label>세로 <input id="placeY" type="number" min="0" max="7" value="2"></label>
+        <label class="check"><input id="placeBlocked" type="checkbox">잠시 닫기</label>
+        <label class="check"><input id="wallMode" type="checkbox">장애물 모드</label>
+        <button id="placeApply" class="gbtn gbtn-sm" type="button">좌표로 저장</button>
+      </div>
+    </div>
+
+    <!-- 하단 독 -->
+    <nav class="dock" aria-label="게임 메뉴">
+      <button id="pawnList" class="dock-btn" type="button"><img class="" src="./assets/ui/dock/pawns.png" alt="" draggable="false"><span>폰 목록</span></button>
+      <button id="openJournal" class="dock-btn" type="button"><img class="" src="./assets/ui/dock/journal.png" alt="" draggable="false"><span>기록</span></button>
+      <button id="openRelation" class="dock-btn" type="button"><img class="" src="./assets/ui/dock/relation.png" alt="" draggable="false"><span>관계</span></button>
+      <button id="newPawn" class="dock-btn main" type="button"><img class="" src="./assets/ui/dock/create.png" alt="" draggable="false"><span>폰 만들기</span></button>
+      <button id="arrangeLife" class="dock-btn" type="button"><img class="" src="./assets/ui/dock/arrange.png" alt="" draggable="false"><span>배치</span></button>
+      <button id="openVisit" class="dock-btn" type="button"><img class="" src="./assets/ui/dock/visit.png" alt="" draggable="false"><span>방문</span></button>
+      <button id="openMore" class="dock-btn" type="button"><img class="" src="./assets/ui/dock/more.png" alt="" draggable="false"><span>더보기</span></button>
+    </nav>
+  </div>
+
+  <!-- ───────── 팝업 창 (sheet) ───────── -->
+  <div class="sheet" id="sheet-journal" hidden>
+    <div class="sheet-box">
+      <div class="sheet-head"><h3><img class="h-ico" src="./assets/ui/icon/tab-book.png" alt="" draggable="false">최근 행동과 기억</h3><button id="allLifeLogs" class="gbtn gbtn-sm" type="button">전체 기록</button><button class="close" type="button" data-close aria-label="닫기"><img class="" src="./assets/ui/icon/close.png" alt="" draggable="false"></button></div>
+      <div class="sheet-body">
+        <p id="recentMemory" class="hint"></p>
+        <ol id="lifeLog" aria-live="off"></ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet-relation" hidden>
+    <div class="sheet-box">
+      <div class="sheet-head"><h3><img class="h-ico" src="./assets/ui/icon/tab-heart.png" alt="" draggable="false">관계 변화 <small>자동 발생</small></h3><button class="close" type="button" data-close aria-label="닫기"><img class="" src="./assets/ui/icon/close.png" alt="" draggable="false"></button></div>
+      <div class="sheet-body">
+        <div id="relationChange"></div>
+        <div id="relationList" class="block"></div>
+        <button id="relations" class="gbtn gbtn-blue wide" type="button"><img class="" src="./assets/ui/icon/book-open.png" alt="" draggable="false">관계와 기억 자세히 보기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet-visit" hidden>
+    <div class="sheet-box">
+      <div class="sheet-head"><h3><img class="h-ico" src="./assets/ui/icon/door.png" alt="" draggable="false">방문 폰 <small>로컬 테스트</small></h3><button class="close" type="button" data-close aria-label="닫기"><img class="" src="./assets/ui/icon/close.png" alt="" draggable="false"></button></div>
+      <div class="sheet-body">
+        <img class="visit-hero" src="./assets/ui/visit-header.png" alt="" draggable="false">
+        <div class="visit-body">
+          <div class="visit-portrait" id="visitorPortraits"></div>
+          <div class="visit-state">
+            <p id="visitorState"></p>
+            <ul class="state-dots" id="visitDots">
+              <li data-k="enter"><i></i>입장</li><li data-k="together"><i></i>함께 활동</li><li data-k="leave"><i></i>퇴장</li>
+            </ul>
+          </div>
+        </div>
+        <div class="visit-actions">
+          <button id="visitEnter" class="gbtn gbtn-blue" type="button"><img class="" src="./assets/ui/icon/door.png" alt="" draggable="false">루미 초대</button>
+          <button id="visitLeave" class="gbtn" type="button"><img class="" src="./assets/ui/icon/exit.png" alt="" draggable="false">퇴장</button>
+          <button id="visitDisconnect" class="gbtn" type="button" title="연결 끊김 시험"><img class="" src="./assets/ui/icon/link-off.png" alt="" draggable="false">끊김 시험</button>
+          <button id="visitReconnect" class="gbtn" type="button" title="재접속"><img class="" src="./assets/ui/icon/refresh.png" alt="" draggable="false">재접속</button>
+        </div>
+        <details class="soft">
+          <summary>방문 허용 설정</summary>
+          <label class="check"><input id="hostAccess" type="checkbox" checked>호스트의 공간 접근 허용</label>
+          <label class="check"><input id="guestActivity" type="checkbox" checked>소유자의 활동 참여 허용</label>
+          <label class="check"><input id="guestLight" type="checkbox" checked>소유자의 가벼운 자율 사건 허용</label>
+        </details>
+        <p class="hint note">방문 폰은 소유 폰 목록에 추가되지 않아요. 실제 온라인 초대는 아직 연결 전이에요.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet-list" hidden>
+    <div class="sheet-box">
+      <div class="sheet-head"><h3><img class="h-ico" src="./assets/ui/dock/pawns.png" alt="" draggable="false">폰 목록</h3><button id="listNew" class="gbtn gbtn-sm gbtn-blue" type="button"><svg><use href="#i-plus"/></svg>새 폰</button><button class="close" type="button" data-close aria-label="닫기"><img class="" src="./assets/ui/icon/close.png" alt="" draggable="false"></button></div>
+      <div class="sheet-body"><div id="pawnGrid" class="pawn-grid"></div></div>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet-more" hidden>
+    <div class="sheet-box">
+      <div class="sheet-head"><h3><img class="h-ico" src="./assets/ui/icon/gear.png" alt="" draggable="false">더보기</h3><button class="close" type="button" data-close aria-label="닫기"><img class="" src="./assets/ui/icon/close.png" alt="" draggable="false"></button></div>
+      <div class="sheet-body">
+        <div class="save-grid">
+          <div class="save-tile">
+            <img class="big" src="./assets/ui/icon/cloud-up.png" alt="" draggable="false">
+            <strong>현재 월드 저장</strong>
+            <p>폰, 가구, 관계, 기억을 파일로 내려받아요.</p>
+            <button id="exportSave" class="gbtn gbtn-sm gbtn-blue" type="button">저장하기</button>
+          </div>
+          <div class="save-tile">
+            <img class="big" src="./assets/ui/icon/folder.png" alt="" draggable="false">
+            <strong>저장 데이터 불러오기</strong>
+            <p>이전에 내려받은 파일로 되돌려요.</p>
+            <input id="importFile" type="file" accept="application/json" hidden>
+            <button id="importSave" class="gbtn gbtn-sm" type="button">불러오기</button>
+          </div>
+        </div>
+        <p class="hint note" id="saveNote">이 브라우저에는 자동으로 저장돼요. 브라우저 데이터를 지우면 복구할 수 없으니 파일로도 저장해 두세요.</p>
+        <div class="block lang-block"><h4>언어</h4><div class="chips" id="langPicker"></div></div>
+        <div class="settings-list">
+          <button id="artCompare" class="row-btn" type="button"><img class="" src="./assets/ui/icon/compare.png" alt="" draggable="false"><span><strong>공간 표현 비교</strong><small>2D 바닥과 3D 기하 공간 합성 비교</small></span></button>
+          <button id="openWorkshop" class="row-btn" type="button"><img class="" src="./assets/ui/icon/hammer.png" alt="" draggable="false"><span><strong>공동 공방 시험 (보존)</strong><small>이전 선택형 흐름, 주요 UX에서 제외됨</small></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── 전체 화면 창 (screen) ───────── -->
+  <section id="editor" class="screen" hidden>
+    <div class="screen-head">
+      <button id="editorToWorld" class="gbtn gbtn-round" type="button" aria-label="월드로"><svg><use href="#i-back"/></svg></button>
+      <h2><svg><use href="#i-brush"/></svg><span id="editorTitle">폰 만들기</span></h2>
+    </div>
+    <div class="screen-body">
+      <div class="editor-layout">
+        <aside class="tools" aria-label="그리기 도구">
+          <button type="button" class="tool on" data-tool="brush"><svg><use href="#i-brush"/></svg><span>그리기</span></button>
+          <button type="button" class="tool" data-tool="eraser"><svg><use href="#i-eraser"/></svg><span>지우개</span></button>
+          <button type="button" class="tool" id="undo"><svg><use href="#i-undo"/></svg><span>되돌리기</span></button>
+          <button type="button" class="tool" id="redo"><svg><use href="#i-redo"/></svg><span>다시하기</span></button>
+        </aside>
+        <div class="canvas-wrap">
+          <div class="canvas-stack">
+            <canvas id="drawing" width="512" height="512" aria-label="얼굴 그리기 캔버스"></canvas>
+            <div class="canvas-guide" id="canvasGuide" aria-hidden="true"><i class="g-eye l"></i><i class="g-eye r"></i><i class="g-mouth"></i></div>
+          </div>
+          <p class="canvas-tip" id="canvasTip">동그라미 위에 눈 두 개, 그 아래 입 하나. 삐뚤어도 괜찮아요, 그게 이 친구예요.</p>
+        </div>
+        <aside class="parts panel">
+          <h3>파츠</h3>
+          <div class="part-grid" id="partGrid">
+            <button type="button" class="part on" data-slot="eyes_pair"><canvas width="96" height="96"></canvas><span>눈</span></button>
+            <button type="button" class="part" data-slot="mouth"><canvas width="96" height="96"></canvas><span>입</span></button>
+            <button type="button" class="part" data-slot="front_hair"><canvas width="96" height="96"></canvas><span>앞머리</span></button>
+            <button type="button" class="part" data-slot="back_hair"><canvas width="96" height="96"></canvas><span>뒷머리</span></button>
+            <button type="button" class="part" data-slot="frame_accessory"><canvas width="96" height="96"></canvas><span>장식</span></button>
+          </div>
+          <h3>색상</h3>
+          <div class="palette">
+            <button type="button" data-color="#473735" aria-label="진한 갈색"></button>
+            <button type="button" data-color="#f28b9d" aria-label="분홍"></button>
+            <button type="button" data-color="#f6c85f" aria-label="노랑"></button>
+            <button type="button" data-color="#7fd1c2" aria-label="민트"></button>
+            <button type="button" data-color="#4aa9f0" aria-label="하늘"></button>
+            <button type="button" data-color="#8f7fe0" aria-label="보라"></button>
+            <button type="button" data-color="#9ccc75" aria-label="연두"></button>
+            <label class="custom" title="직접 고르기"><input id="color" type="color" value="#473735"></label>
+          </div>
+          <label class="range">굵기<input id="width" type="range" min="1" max="32" value="8"></label>
+          <label class="field">이름<input id="name" maxlength="20" placeholder="이름을 지어주세요"></label>
+          <label class="sr-only">편집할 레이어<select id="layer">
+            <option value="eyes_pair">눈</option><option value="mouth">입</option><option value="front_hair">앞머리</option><option value="back_hair">뒷머리</option><option value="frame_accessory">장식</option><option value="base">몸체</option>
+          </select></label>
+          <label class="sr-only">도구<select id="tool"><option value="brush">브러시</option><option value="eraser">지우개</option></select></label>
+          <details class="soft">
+            <summary>파츠 위치·크기·회전</summary>
+            <label class="range">가로<input id="dx" type="range" min="-180" max="180" value="0"></label>
+            <label class="range">세로<input id="dy" type="range" min="-180" max="180" value="0"></label>
+            <label class="range">회전<input id="rotation" type="range" min="-180" max="180" value="0"></label>
+            <label class="range">크기<input id="scale" type="range" min="0.3" max="2" step="0.1" value="1"></label>
+            <label class="check"><input type="checkbox" id="hide">이 파츠 숨기기</label>
+            <label class="check"><input type="checkbox" id="clip">눈·입의 원 밖 획 숨기기</label>
+          </details>
+          <button id="samples" class="link-btn" type="button"><svg><use href="#i-wand"/></svg>그리기가 어렵다면 참고 예시 불러오기</button>
+          <div class="editor-actions">
+            <button id="saveFace" class="gbtn" type="button"><svg><use href="#i-check"/></svg>저장하기</button>
+            <button id="traits" class="gbtn gbtn-blue" type="button">성격 고르기 <span aria-hidden="true">→</span></button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section id="traitPanel" class="screen" hidden>
+    <div class="screen-head">
+      <button id="back" class="gbtn gbtn-round" type="button" aria-label="그림으로"><svg><use href="#i-back"/></svg></button>
+      <h2><svg><use href="#i-sparkle"/></svg>이 친구는 어떤 성격일까요?</h2>
+    </div>
+    <div class="screen-body">
+      <div class="trait-layout">
+        <div class="panel trait-preview">
+          <canvas id="traitCanvas" width="256" height="256" aria-label="폰 미리보기"></canvas>
+          <strong id="traitLabel">직접 조합</strong>
+          <p id="preview" class="hint"></p>
+        </div>
+        <div class="panel trait-form">
+          <h3>성격 프리셋</h3>
+          <div id="presets" class="chips"></div>
+          <button id="random" class="gbtn gbtn-sm" type="button"><svg><use href="#i-wand"/></svg>무작위 조합</button>
+          <h3>세 가지 성향</h3>
+          <div id="axes"></div>
+          <p class="hint">정답은 없어요. 실제 행동은 상황·기억·관계에 따라 달라집니다.</p>
+          <details class="soft qa"><summary>저장 점검 도구</summary><label class="check"><input type="checkbox" id="failSave">다음 저장 실패 재현</label></details>
+          <div class="editor-actions">
+            <button id="save" class="gbtn gbtn-blue gbtn-lg" type="button"><svg><use href="#i-check"/></svg>저장하고 월드에 배치하기</button>
+            <button id="retry" class="gbtn" type="button" hidden>동일 명령 결과 확인·재시도</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="relationPanel" class="screen" hidden>
+    <div class="screen-head">
+      <button id="relationBack" class="gbtn gbtn-round" type="button" aria-label="월드로"><svg><use href="#i-back"/></svg></button>
+      <h2><svg><use href="#i-heart"/></svg>관계와 기억</h2>
+    </div>
+    <div class="screen-body">
+      <div class="panel relation-panel">
+        <div class="pair-row">
+          <label class="field">평가하는 폰<select id="from"></select></label>
+          <span class="pair-heart"><svg><use href="#i-heart"/></svg></span>
+          <label class="field">대상 폰<select id="to"></select></label>
+        </div>
+        <details class="soft qa"><summary>공개 범위 점검</summary><label class="check"><input type="checkbox" id="restricted">타인 비공개 방향</label></details>
+        <div id="relationship"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="workshopPanel" class="screen" hidden aria-label="보존된 이전 선택형 시험">
+    <div class="screen-head"><button id="workshopBack" class="gbtn gbtn-round" type="button" aria-label="월드로"><svg><use href="#i-back"/></svg></button><h2><svg><use href="#i-hammer"/></svg>공동 공방 · 세 번의 선택</h2></div>
+    <div class="screen-body">
+      <div class="panel">
+        <p class="hint">비용은 테스트 포인트입니다. 실제 재화나 시간 단위가 아닙니다.</p>
+        <button id="begin" class="gbtn gbtn-sm gbtn-blue" type="button">새 공방 시작</button>
+        <details class="soft qa"><summary>시나리오 점검 도구</summary>
+          <fieldset><legend>로컬 시나리오 확인</legend>
+            <label class="check"><input type="checkbox" id="consent" checked>새 역할·전환 제안 수락</label>
+            <label class="check"><input type="checkbox" id="delivery" checked>정정 기록·고객 전달 확인</label>
+            <label class="check"><input type="checkbox" id="connected" checked>연결 상태 정상</label>
+            <label class="check"><input type="checkbox" id="aware" checked>당사자 사건 인지</label>
+            <label class="check"><input type="checkbox" id="learned" checked>대안 학습 완료</label>
+            <label class="check"><input type="checkbox" id="settlement" checked>인계·정산 합의</label>
+          </fieldset>
+        </details>
+        <div id="round"></div>
+        <div id="choices" class="choice-cards"></div>
+        <button id="exit" class="gbtn gbtn-sm" type="button">본인 즉시 퇴장</button>
+        <div id="result" aria-live="polite"></div>
+        <details class="soft qa"><summary>갈등 해결하기</summary>
+          <fieldset><legend>실질 복구 확인</legend>
+            <p class="hint">공로 정정만으로 실질 복구가 완료되지는 않습니다.</p>
+            <label class="check"><input type="checkbox" id="repairDone">새 복구 계획 실행 확인</label>
+            <label class="check"><input type="checkbox" id="repairAccepted">대상자 수용 확인</label>
+            <button id="repair" class="gbtn gbtn-sm" type="button">대상 갈등 복구 확정</button>
+          </fieldset>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section id="comparePanel" class="screen" hidden>
+    <div class="screen-head"><button id="compareBack" class="gbtn gbtn-round" type="button" aria-label="월드로"><svg><use href="#i-back"/></svg></button><h2><svg><use href="#i-compare"/></svg>공간 표현 비교</h2></div>
+    <div class="screen-body">
+      <div class="panel">
+        <p class="hint">현재 자율 생활은 2D 바닥을 기준으로 검증합니다. 아래는 같은 폰을 3D 기하 공간에 합성하는 기술 비교이며 최종 아트가 아닙니다.</p>
+        <canvas id="compareCanvas" width="900" height="500" aria-label="3D 기하 공간과 2D 폰 비교"></canvas>
+        <p class="hint">2D: 편집·경로·원형 가독성에 유리합니다. 3D 공간: 카메라·깊이·가림·가구 자산 제작이 추가됩니다. 초기 제작은 2D를 추천합니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <p id="notice" class="toast" role="status" aria-live="polite"></p>
+  <div id="pawns" hidden></div>
+</div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
