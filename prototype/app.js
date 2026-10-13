@@ -851,6 +851,10 @@ lifeUI = mountLifeUI({
 await lifeUI.render();
 // 계정(PO-AUTH-001): 로그인 과정 중에는 생활을 멈춘다. 다시 시작은 사용자가 ▶ 로(자동 재개 없음)
 mountAccountUI({
+  store,
+  storeKey: STORE_KEY,
+  // 계정에서 불러올 저장본은 파일 불러오기와 같은 검증기로 먼저 확인한다(실패하면 로컬은 그대로)
+  validateText: (text) => createLocalStore({ getItem: () => text, setItem() {} }),
   pauseLife: () => {
     try {
       if (!store.life().paused) store.lifePause(crypto.randomUUID(), true);

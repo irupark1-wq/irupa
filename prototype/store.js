@@ -25,6 +25,7 @@ function validateState(state){
  if(state.life)validateLife(state.life);
  if(state.relation_baseline!==undefined){if(!state.relation_baseline||typeof state.relation_baseline!=='object'||Object.keys(state.relation_baseline).length>12)throw Error('save.invalid_baseline');for(const v of Object.values(state.relation_baseline))for(const [k,n] of Object.entries(v))if(!(k in base)||!Number.isSafeInteger(n)||n<1||n>1000)throw Error('save.invalid_baseline');}
  if(state.credit!==undefined)validateCredit(state.credit);
+ if(state.lineage_id!==undefined&&(typeof state.lineage_id!=='string'||!/^[A-Za-z0-9_-]{8,64}$/.test(state.lineage_id)))throw Error('save.invalid_data');
  if(state.save_format!==undefined&&(!Number.isSafeInteger(state.save_format)||state.save_format<1))throw Error('save.invalid_data');
  if(state.ledger_checkpoints!==undefined){if(!state.ledger_checkpoints||typeof state.ledger_checkpoints!=='object'||Object.keys(state.ledger_checkpoints).length>12)throw Error('save.invalid_checkpoint');for(const c of Object.values(state.ledger_checkpoints))if(!c||!Number.isSafeInteger(c.folded)||c.folded<1||!Array.isArray(c.rewarded_actions)||c.rewarded_actions.length>200)throw Error('save.invalid_checkpoint');}
  if(state.init_rule!==undefined&&(state.init_rule!==INIT_RULE||typeof state.world_seed!=='string'||state.world_seed.length>64))throw Error('save.invalid_init');
@@ -210,6 +211,8 @@ export function createLocalStore(storage,options={}){
    const l=ledger(next,row.event.observer_id,row.event.target_id);const result=l.revise(sourceId,knowledge);
    if(result.status==='revised'){row.knowledge=structuredClone(knowledge);const memory=next.memories.find(m=>m.id===sourceId);if(memory){memory.known=knowledge.known;if(memory.topic==='credit_attribution')memory.reason_known=knowledge.delay_reason==='proven_concealment';}rebuildTagHistory(next);}
    return {status:result.status,action_reexecutions:0,reward_reexecutions:0,quota_changes:0};});},
+  /** 로컬 월드 계보 id(PO-DEC-006 §4): 계정 월드와 짝을 짓는 고정 id. 없으면 한 번 만든다. fresh=true 는 "이 월드를 계정에 새 월드로" 명령용 새 계보 */
+  ensureLineage(commandId,fresh=false){if(state.lineage_id&&!fresh)return state.lineage_id;return commit(commandId,{kind:'lineage',fresh},next=>{const b=new Uint8Array(15);globalThis.crypto.getRandomValues(b);next.lineage_id='w'+[...b].map(x=>x.toString(36).padStart(2,'0')).join('').slice(0,24);return next.lineage_id;});},
   lifePause(commandId,paused){if(typeof paused!=='boolean')throw Error('life.invalid_pause');return commit(commandId,{kind:'life-pause',paused},next=>{next.life.paused=paused;return {paused};});},
   lifeStep(expectedTick){
    if(!Number.isSafeInteger(expectedTick)||expectedTick<1)throw Error('life.invalid_tick');

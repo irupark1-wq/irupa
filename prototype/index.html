@@ -228,6 +228,21 @@
             </form>
           </div>
           <div id="authSigned" class="auth-signed" hidden>
+            <div class="account-worlds">
+              <div class="auth-actions">
+                <button id="worldSave" class="gbtn gbtn-sm gbtn-blue" type="button">이 월드를 계정에 저장</button>
+                <button id="worldList" class="gbtn gbtn-sm" type="button">계정 월드 목록</button>
+              </div>
+              <div id="worldConfirm" class="world-panel" hidden>
+                <p id="worldConfirmText"></p>
+                <div class="auth-actions"><button id="worldConfirmYes" class="gbtn gbtn-sm gbtn-blue" type="button">저장</button><button id="worldConfirmNo" class="gbtn gbtn-sm" type="button">취소</button></div>
+              </div>
+              <div id="worldConflict" class="world-panel warn" hidden>
+                <p id="worldConflictText"></p>
+                <div class="auth-actions"><button id="worldUseAccount" class="gbtn gbtn-sm" type="button">계정 월드 불러오기</button><button id="worldSaveNew" class="gbtn gbtn-sm" type="button">이 월드를 새 월드로 저장</button><button id="worldConflictCancel" class="link-btn" type="button">취소</button></div>
+              </div>
+              <ul id="worldRows" class="world-rows" hidden></ul>
+            </div>
             <form id="authPwForm" class="auth-form" novalidate>
               <label>새 비밀번호 <input id="authNewPassword" type="password" autocomplete="new-password" minlength="10" maxlength="72"></label>
               <div class="auth-actions">
@@ -236,7 +251,7 @@
               </div>
             </form>
           </div>
-          <p class="hint small">로그인해도 월드는 이 기기에 저장돼요. 계정에 월드를 저장하는 기능은 다음 단계에서 열려요. 계정 없이도 계속 놀 수 있어요.</p>
+          <p class="hint small">로그인만으로는 월드가 계정에 저장되지 않아요. "이 월드를 계정에 저장"을 눌러야 저장돼요. 계정 없이도 이 기기에서 계속 놀 수 있어요.</p>
         </div>
         <div class="save-grid">
           <div class="save-tile">

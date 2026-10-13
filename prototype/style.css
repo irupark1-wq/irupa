@@ -402,3 +402,13 @@ legend { font-size: 12px; color: var(--ink-3); padding: 0 6px; }
 .auth-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .link-btn { padding: 2px 0; border: 0; background: none; color: #3f6fa8; font: inherit; font-size: 13px; font-weight: 800; text-decoration: underline; cursor: pointer; }
 .link-btn:disabled { opacity: 0.5; }
+
+/* 계정 월드 저장(SB-0004) */
+.account-worlds { display: grid; gap: 8px; margin-bottom: 10px; }
+.world-panel { padding: 8px 10px; border-radius: 10px; background: #eef2f7; font-size: 13px; }
+.world-panel.warn { background: #fbe9e3; }
+.world-panel p { margin: 0 0 6px; font-weight: 700; }
+.world-rows { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.world-rows li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 6px 8px; border-radius: 10px; background: #f6eedc; font-size: 13px; }
+.world-rows li span { flex: 1 1 160px; font-weight: 700; overflow-wrap: anywhere; }
+.world-rows li.empty { background: none; color: var(--ink-2); }
