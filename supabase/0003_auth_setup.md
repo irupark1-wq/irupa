@@ -1,6 +1,6 @@
 # SB-0003 로그인 설정 안내 (구글·이메일) — 김PO 직접 입력용 v1.1
 
-- 문서번호: SB-0003 / 작성: 김도현 / 받는 사람: 김PO / 날짜: 2026-10-13 / 상태: 입력 대기
+- 문서번호: SB-0003 / 작성: 김도현 / 받는 사람: 김PO / 날짜: 2026-10-13 / 상태: **입력 완료 2026-10-13** (아래 적용 기록)
 - 판 기록: v1.0(DEV-25) → **v1.1: PO-DEC-006 §3 반영** — 복귀 주소를 정확한 주소 2개로 한정, DNS 는 기존 레코드 대조 후 추가(현재 레코드 조사 결과 포함), 익명 로그인은 영향 확인 후 끔, Free 요금제 명시
 - 근거: PO-AUTH-001, PO-DEC-006, DEV-25 3절
 - 이 파일에는 SQL 이 없습니다. 계정 월드 저장 SQL 은 SB-0004 로 드립니다.
@@ -159,3 +159,17 @@ Reset Password — 제목 `동그란 사이 비밀번호 재설정`
 - Supabase Google 로그인: https://supabase.com/docs/guides/auth/social-login/auth-google
 - Supabase 계정 연결: https://supabase.com/docs/guides/auth/auth-identity-linking
 - Resend SMTP: https://resend.com/docs/send-with-smtp
+
+## 적용 기록 (2026-10-13, 김PO 입력·보고, 비밀값은 받지 않음)
+
+| 단계 | 결과 | 확인 방법 |
+|---|---|---|
+| 1 Google OAuth 클라이언트 | 새 프로젝트 `neinom-game1`, 웹 클라이언트, 원본·리디렉션 URI 입력. 앱 게시 안 함(테스트 상태) | 김PO 보고·화면 캡처 |
+| 2 Supabase Google 제공자 | 켬, ID·secret 입력 | 김PO 보고 |
+| 3·4 Resend + DNS | Resend Free, 도메인 neinom.com(Tokyo). dotname 에 `resend._domainkey` TXT, `rsend`·`send` CNAME 3개만 추가. DMARC·MX 미추가, Receiving 끔. 공개 DNS(1.1.1.1·8.8.8.8)에서 3개 모두 값 일치 확인, 웹 A 레코드 4개 그대로. Resend 상태 **Verified** | 김도현 공개 DNS 조회 + 김PO 보고 |
+| 5 Supabase SMTP | smtp.resend.com:465, 사용자 resend, 발신 noreply@neinom.com / 동그란 사이 | 김PO 보고 |
+| 6 이메일 규칙 | Confirm email 켬, 최소 10자, 소문자·대문자·숫자, 유출 비밀번호 차단 **사용 안 함(Free)** | 김PO 보고·화면 캡처 |
+| 7 URL·메일 문구 | Site URL https://neinom.com, Redirect URLs 2개(`https://neinom.com/auth/`, `http://localhost:4199/auth/`), 가입 확인·재설정 한국어 문구 | 김PO 보고 |
+| 8 익명 로그인 | 사용자 0명 확인 후 끔. manual linking 끔(PO-DEC-006 보류) | 김PO 보고·화면 캡처 |
+
+아직 검증하지 않은 것: 실제 Google 로그인·가입 확인 메일·재설정 메일 수신은 로그인 코드(`/auth/` 페이지)를 만든 뒤 AUTH01~04 로 시험한다. 브라우저 코드에 필요한 **공개용(publishable) 키**는 아직 받지 않았다(비밀값 아님, 제작 시작 때 요청).
