@@ -26,6 +26,7 @@ npm start        # http://127.0.0.1:4173 (Node 24+). 처음이면 node scripts/g
 npm test         # 140개 통과해야 함 (core/·store·life·layout·A2 기반·대사 계약)
 ```
 - 브라우저 확인은 PC 가로(1440×900)와 폰 세로(375×812) 둘 다. 서버 CSP 가 `style-src 'self'` 라 **인라인 `style=` 속성 금지**(JS 의 `element.style` 은 됨), 외부 폰트·이미지 링크 금지(모든 파일은 레포 안).
+- **GitHub 자동 점검(CI)은 영어 로케일**로 돈다. 화면 문구를 검사하는 시험은 한국어 문자열이 아니라 `T("한국어")` 결과와 비교한다. 로컬에서 영어로 돌려 보기: `node --import <navigator 를 en-US 로 바꾸는 preload> --test tests/*.test.mjs`.
 - 변경 후: `node --check` + `npm test` + HTML id ↔ JS `$("id")` 대조 + 브라우저 스크린샷을 `docs/evidence/` 에 남기고 `docs/planning/replies/NN_*.md` 에 기록.
 
 ## 코드 지도 (`prototype/`)
