@@ -109,3 +109,14 @@ test('AUTH: 비밀번호 정하기 일반 실패 때 참고 코드가 상태에 
   assert.equal(r.key,'generic');assert.equal(a.state().ref,'unexpected_failure · 500');
   const r2=await a.updatePassword('short');assert.equal(r2.key,'password_short');assert.equal(a.state().ref,null);
 });
+
+test('AUTH: 이미 비밀번호가 있는 계정은 지금 비밀번호를 함께 보낸다', async () => {
+  assert.equal(errorKey({code:'current_password_required',status:400}),'current_password_needed');
+  assert.equal(errorKey({code:'current_password_mismatch',status:400}),'current_password_wrong');
+  const sent=[];
+  const client={auth:{onAuthStateChange(){},async updateUser(b){sent.push(Object.keys(b).sort().join(','));return b.current_password?{error:null}:{error:{code:'current_password_required',status:400}}}}};
+  const a=createAccount({client,returnUrl:'http://localhost:4199/auth/'});
+  const r1=await a.updatePassword('GoodPass1234');assert.equal(r1.key,'current_password_needed');assert.equal(a.state().ref,null);
+  const r2=await a.updatePassword('GoodPass1234','OldPass1234');assert.equal(r2.key,'password_updated');
+  assert.deepEqual(sent,['password','current_password,password']);
+});

@@ -16,6 +16,8 @@ export const AUTH_MESSAGES = {
   password_weak: "더 안전한 비밀번호를 써 주세요.",
   password_same: "지금 쓰는 비밀번호와 달라야 해요.",
   password_updated: "새 비밀번호로 바꿨어요.",
+  current_password_needed: "이 계정에는 이미 비밀번호가 있어요. 지금 비밀번호도 함께 넣어 주세요. 기억나지 않으면 로그아웃한 뒤 '비밀번호 재설정'을 이용해 주세요.",
+  current_password_wrong: "지금 비밀번호가 맞지 않아요. 기억나지 않으면 로그아웃한 뒤 '비밀번호 재설정'을 이용해 주세요.",
   reauth_needed: "보안을 위해 로그아웃 후 다시 로그인한 뒤 바꿔 주세요.",
   login_failed: "로그인하지 못했어요. 이메일과 비밀번호를 확인해 주세요.",
   email_format: "이메일 주소를 확인해 주세요.",
@@ -103,6 +105,7 @@ export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
       line.textContent = T("이 기기에 저장됨");
     }
   }
+  let needCurrent = false; // 서버가 이 계정에 지금 비밀번호를 요구한 적이 있음(로그아웃하면 초기화)
   const render = (s) => {
     document.dispatchEvent(new CustomEvent("game1-auth", { detail: { status: s.status, user_id: s.user_id } })); // 시작 화면이 잠금 여부를 판단
     $("authLine").textContent = STATUS_LINE[s.status](s);
@@ -114,10 +117,15 @@ export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
     const signed = s.status === "signed_in";
     $("authGuest").hidden = signed;
     $("authSigned").hidden = !signed;
-    $("authSetPassword").textContent = s.providers.includes("email") ? T("비밀번호 바꾸기") : T("비밀번호 정하기");
+    // 이메일 로그인이 있거나 서버가 지금 비밀번호를 요구한 계정이면 "지금 비밀번호" 칸을 보인다
+    if (s.message === "current_password_needed" || s.message === "current_password_wrong") needCurrent = true;
+    if (!signed) needCurrent = false;
+    const hasPw = needCurrent || s.providers.includes("email");
+    $("authCurrentWrap").hidden = !hasPw;
+    $("authSetPassword").textContent = hasPw ? T("비밀번호 바꾸기") : T("비밀번호 정하기");
     $("authResend").hidden = s.status !== "email_pending";
     const off = s.status === "busy" || s.status === "unavailable" || s.status === "checking";
-    for (const id of ["authGoogle", "authSignIn", "authSignUp", "authReset", "authResend", "authSetPassword", "authSignOut", "authEmail", "authPassword", "authNewPassword"]) $(id).disabled = off;
+    for (const id of ["authGoogle", "authSignIn", "authSignUp", "authReset", "authResend", "authSetPassword", "authSignOut", "authEmail", "authPassword", "authNewPassword", "authCurrentPassword"]) $(id).disabled = off;
   };
   account.subscribe(render);
 
@@ -157,7 +165,10 @@ export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
   $("authResend").onclick = () => act((a) => a.resendConfirm($("authEmail").value));
   $("authPwForm").onsubmit = (e) => {
     e.preventDefault();
-    act((a) => a.updatePassword($("authNewPassword").value)).then(() => ($("authNewPassword").value = ""));
+    act((a) => a.updatePassword($("authNewPassword").value, $("authCurrentWrap").hidden ? "" : $("authCurrentPassword").value)).then(() => {
+      $("authNewPassword").value = "";
+      $("authCurrentPassword").value = "";
+    });
   };
   // 로그아웃(PO-DEC-007 §4): 계정에서 불러온 월드가 이 기기에 있으면 남길지 지울지 사용자가 고른다
   const doSignOut = () => act((a) => a.signOut());

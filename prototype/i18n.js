@@ -436,6 +436,9 @@ const en = {
   "아직 월드 없음": "No world yet",
   "시작하면 이 기기에 저장돼요": "Starting saves to this device",
   "(오류 코드: {ref})": "(Error code: {ref})",
+  "지금 비밀번호": "Current password",
+  "이 계정에는 이미 비밀번호가 있어요. 지금 비밀번호도 함께 넣어 주세요. 기억나지 않으면 로그아웃한 뒤 '비밀번호 재설정'을 이용해 주세요.": "This account already has a password. Please enter your current password too. If you don't remember it, sign out and use 'Reset password'.",
+  "지금 비밀번호가 맞지 않아요. 기억나지 않으면 로그아웃한 뒤 '비밀번호 재설정'을 이용해 주세요.": "The current password doesn't match. If you don't remember it, sign out and use 'Reset password'.",
 };
 
 const ja = {
@@ -848,6 +851,9 @@ const ja = {
   "아직 월드 없음": "まだワールドなし",
   "시작하면 이 기기에 저장돼요": "始めるとこの端末に保存されます",
   "(오류 코드: {ref})": "(エラーコード: {ref})",
+  "지금 비밀번호": "現在のパスワード",
+  "이 계정에는 이미 비밀번호가 있어요. 지금 비밀번호도 함께 넣어 주세요. 기억나지 않으면 로그아웃한 뒤 '비밀번호 재설정'을 이용해 주세요.": "このアカウントにはすでにパスワードがあります。現在のパスワードも入力してください。思い出せない場合は、ログアウトして「パスワード再設定」を使ってください。",
+  "지금 비밀번호가 맞지 않아요. 기억나지 않으면 로그아웃한 뒤 '비밀번호 재설정'을 이용해 주세요.": "現在のパスワードが一致しません。思い出せない場合は、ログアウトして「パスワード再設定」を使ってください。",
 };
 
 const DICT = { ko: null, en, ja };

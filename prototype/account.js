@@ -33,6 +33,9 @@ export function errorKey(error) {
   if (code === "signup_disabled") return "signup_closed";
   if (code === "same_password") return "password_same";
   if (code === "reauthentication_needed") return "reauth_needed";
+  // 이미 비밀번호가 있는 계정은 바꿀 때 지금 비밀번호를 함께 요구한다(서버 설정). 재설정 메일로 들어온 경우는 면제
+  if (code === "current_password_required") return "current_password_needed";
+  if (code === "current_password_mismatch") return "current_password_wrong";
   // 이 기기의 로그인 세션이 끊긴 경우(만료·다른 곳에서 로그아웃): 다시 로그인 안내
   if (["session_not_found", "session_expired", "refresh_token_not_found", "refresh_token_already_used", "bad_jwt"].includes(code) || error.name === "AuthSessionMissingError") return "session_expired";
   if (error.name === "AuthRetryableFetchError" || status === 0 || code === "network") return "network";
@@ -169,15 +172,15 @@ export function createAccount({ client, returnUrl, lazy = false, checking = fals
         return { ok: true, key: "reset_sent" };
       });
     },
-    /** 로그인한 사용자가 새 비밀번호 정하기(재설정 메일로 들어온 경우 포함) */
-    updatePassword(password) {
+    /** 로그인한 사용자가 새 비밀번호 정하기(재설정 메일로 들어온 경우 포함). 이미 비밀번호가 있으면 current 도 보낸다 */
+    updatePassword(password, current = "") {
       return run(async (before) => {
         const p = passwordProblem(password);
         if (p) {
           set({ status: before, message: p });
           return { ok: false, key: p };
         }
-        const { error } = await client.auth.updateUser({ password });
+        const { error } = await client.auth.updateUser(current ? { password, current_password: current } : { password });
         if (error) throw error;
         set({ status: before, message: "password_updated" });
         return { ok: true, key: "password_updated" };
