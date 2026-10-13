@@ -236,3 +236,7 @@ details.arrange-fields[open] summary { flex-basis: 100%; }
 #lifeStage.compact .life-place .label { display: none; }
 #lifeStage.compact .state-chip { font-size: 9.5px; padding: 1px 6px; }
 #lifeStage.compact .state-chip img { width: 13px; height: 13px; }
+/* 폰 걷기(2026-10-13 모션 수정): 한 칸 = tick 간격 동안 등속 이동. 뒤뚱거림 2번/칸, 걷는 방향으로 살짝 기울기 */
+.life-pawn.moving canvas { animation-duration: calc(var(--step, 1000ms) / 2); rotate: var(--lean, 0deg); }
+.life-pawn canvas { transition: rotate 0.2s ease; }
+@media (prefers-reduced-motion: reduce) { .life-pawn { transition: none !important; } .life-pawn canvas { rotate: 0deg; } }

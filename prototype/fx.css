@@ -77,3 +77,7 @@
 
 .dock-btn span { white-space: nowrap; letter-spacing: -0.3px; }
 @container game (max-width: 820px) { .dock-btn span { font-size: 9.5px; } .dock-btn { width: 48px; } }
+/* DES-06: 그림 속 빛 위치에 맞춘 밤 조명. 바닥에 그려진 빛이 이미 있으니 약하게(이중 밝아짐 방지).
+   깜빡임 애니메이션이 opacity 를 덮어쓰므로 밝기는 filter 로 낮춘다 */
+.glow.anchored { filter: opacity(0.6); }
+.scene[data-tod="dusk"] .glow.anchored { filter: opacity(0.35); }

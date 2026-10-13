@@ -1,0 +1,12 @@
+폰 움직임 측정 (2026-10-13, 같은 시드 'm-seed-0..2' 폰 3명, PC 1440x900, Claude 앱 내장 브라우저)
+화면 갱신 1회 = 생활 시계가 바뀐 1회. 브라우저 창이 가려진 상태라 document.hidden 을 측정용으로 false 로 두고 셈.
+
+이전(커밋 2d6228d)
+{"speed":1,"screenUpdates":20,"pawnMoves":33,"movesSkippingCells":0,"maxCellsPerUpdate":1,"bubblesRecreatedPerUpdate":3,"facesRecreatedPerUpdate":3}
+{"speed":4,"screenUpdates":20,"pawnMoves":32,"movesSkippingCells":17,"maxCellsPerUpdate":4,"bubblesRecreatedPerUpdate":3,"facesRecreatedPerUpdate":3}
+
+수정 후
+{"speed":1,"screenUpdates":20,"pawnMoves":33,"movesSkippingCells":0,"maxCellsPerUpdate":1,"bubblesRecreatedPerUpdate":0.5,"facesRecreatedPerUpdate":0}
+{"speed":4,"screenUpdates":40,"pawnMoves":39,"movesSkippingCells":0,"maxCellsPerUpdate":1,"bubblesRecreatedPerUpdate":0.47,"facesRecreatedPerUpdate":0}
+
+×1 이동 33회가 두 판에서 같음 = 시뮬레이션 규칙은 그대로.

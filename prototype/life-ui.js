@@ -31,8 +31,9 @@ const TOPIC = { conversation: T("이야기를 나눴어요"), help: T("도움을
    가구는 그림에 없고 칸 위에 따로 놓는다. 파일이 없으면 temp(기존 그림)로 대체한다. */
 const floorRect = (iw, ih, x, y, w, h) => ({ x: x / iw, y: y / ih, w: w / iw, h: h / ih });
 const BACKGROUNDS = {
-  portrait: { src: "./assets/background/room-portrait-empty.png", floor: floorRect(941, 1672, 140, 660, 660, 840) },
-  landscape: { src: "./assets/background/room-landscape-empty.png", floor: floorRect(1672, 941, 138, 560, 1392, 304) },
+  // DES-06: 벽 장식이 들어간 배경. 이동 바닥 사각형은 빈 방과 픽셀 단위로 같다. lights = 빛나는 곳 중심(그림 픽셀, 밤 조명 효과 위치)
+  portrait: { src: "./assets/background/room-portrait-decorated.png", floor: floorRect(941, 1672, 140, 660, 660, 840), lights: [{ x: 470, y: 425, r: 150 }, { x: 470, y: 175, r: 110 }] },
+  landscape: { src: "./assets/background/room-landscape-decorated.png", floor: floorRect(1672, 941, 138, 560, 1392, 304), lights: [{ x: 440, y: 300, r: 190 }, { x: 836, y: 238, r: 120 }] },
   temp: { src: "./assets/game1-cozy-room-v1.png", floor: { x: 0.07, y: 0.38, w: 0.86, h: 0.55 } },
 };
 
@@ -101,6 +102,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     showAllLogs = false,
     detailOpen = !isMobile();
   let lastReserve = "";
+  const pawnViews = new Map(); // 폰 id → 계속 쓰는 화면 요소
   const cache = new Map(),
     previousPositions = new Map();
   let lastSeq = null;
@@ -186,6 +188,16 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     const top = clamp(0, hudTop - FLOOR.y * imgH, H - bottom - (FLOOR.y + FLOOR.h) * imgH);
     scene.classList.toggle("diorama", imgW < W - 40 || top > 4 || top + imgH < H - dock);
     art.style.transform = "translate(" + left + "px," + top + "px) scale(" + scale + ")";
+    // 밤 조명: 그림 속 창·조명 위치에 맞춘다(배경과 같은 변환). 광원 정보가 없는 배경은 CSS 기본 위치
+    document.querySelectorAll(".glow").forEach((g, i) => {
+      const L = bg.lights?.[i];
+      g.classList.toggle("anchored", !!L);
+      if (!L) return;
+      const d = L.r * 2 * scale;
+      g.style.left = left + L.x * scale - d / 2 + "px";
+      g.style.top = top + L.y * scale - d / 2 + "px";
+      g.style.width = g.style.height = d + "px";
+    });
     stage.style.left = left + FLOOR.x * imgW + "px";
     stage.style.top = top + FLOOR.y * imgH + "px";
     stage.style.width = FLOOR.w * imgW + "px";
@@ -200,7 +212,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     stage.dataset.cell = cell.toFixed(1);
     stage.dataset.row = row.toFixed(1);
     stage.classList.toggle("compact", row < 24);
-    previousPositions.clear();
+    for (const v of pawnViews.values()) v.pos = null;
   }
   new ResizeObserver(frameScene).observe(scene);
   frameScene();
@@ -439,56 +451,93 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       $("arrangeLife").classList.toggle("on", layout);
       pause.disabled = layout;
       renderSpace(life);
-      $("lifeActors").replaceChildren();
+      /* 폰은 한 번 만든 요소를 계속 쓴다(매 tick 새로 만들면 숨쉬기·말풍선 애니메이션이 매번 처음부터 다시 시작해 어색하다).
+         한 tick 에 최대 한 칸만 움직이므로, tick 간격과 같은 시간 동안 일정한 속도로 이어 걷게 한다. */
+      const reducedMotion = reduced(),
+        stepMs = Math.round(1000 / speed),
+        now = performance.now(),
+        alive = new Set();
+      stage.style.setProperty("--step", stepMs + "ms");
       for (const p of all) {
+        alive.add(p.id);
         const a = life.actors[p.id] || { x: 3 + state.pawns.indexOf(p) * 2, y: 6, mode: "idle" },
           art = await artwork(p),
-          b = node("button", "life-pawn " + a.mode + (p.local_double ? " visitor" : "") + (p.id === selected ? " chosen" : ""));
-        b.type = "button";
-        b.dataset.id = p.id;
-        b.style.left = ((a.x + 0.5) / GRID.width) * 100 + "%";
-        b.style.top = ((a.y + 0.5) / GRID.height) * 100 + "%";
+          artKey = p.id + "-" + (p.appearance_version || 0);
+        let v = pawnViews.get(p.id);
+        if (!v) {
+          const el = node("button", "life-pawn");
+          el.type = "button";
+          el.dataset.id = p.id;
+          const say = node("span", "say"),
+            canvas = node("canvas"),
+            name = node("span", "name");
+          canvas.width = canvas.height = 160;
+          el.append(say, canvas, name);
+          el.onclick = () => {
+            selected = p.id;
+            detailOpen = true;
+            if (layout) toggleLayout(false);
+            else render();
+          };
+          $("lifeActors").append(el);
+          v = { el, say, canvas, name, bubble: null, bubbleKey: "", artKey: "", pos: null, mode: null, landUntil: 0, lean: 0 };
+          pawnViews.set(p.id, v);
+        }
+        if (v.artKey !== artKey) {
+          paint(v.canvas, art.imgs, art.transforms);
+          v.artKey = artKey;
+        }
+        // 위치: 한 칸 이동이면 tick 간격 동안 직선 등속, 그보다 크게 바뀌면(입장·복구·배치) 바로 옮긴다
+        const prev = v.pos,
+          moved = !!prev && (prev.x !== a.x || prev.y !== a.y),
+          step = !!prev && Math.abs(prev.x - a.x) + Math.abs(prev.y - a.y) === 1;
+        v.el.style.transition = reducedMotion ? "none" : !step ? "transform 250ms ease" : "left " + stepMs + "ms linear, top " + stepMs + "ms linear, transform 250ms ease";
+        v.el.style.left = ((a.x + 0.5) / GRID.width) * 100 + "%";
+        v.el.style.top = ((a.y + 0.5) / GRID.height) * 100 + "%";
+        if (moved) v.lean = a.x > prev.x ? 1 : a.x < prev.x ? -1 : v.lean; // 옆으로 걸을 때만 기울기 방향을 바꾼다
+        v.el.style.setProperty("--lean", (a.mode === "moving" ? v.lean * 6 : 0) + "deg");
         // 가구 칸에서 활동 중이면 가구 바로 뒤(한 단계 낮은 z)로, 조금 위로 올려 가구가 보이게 한다
         const atPlace = life.places.some((q) => q.x === a.x && q.y === a.y);
-        b.classList.toggle("at-place", atPlace);
-        b.style.zIndex = atPlace ? 3 + a.y : 4 + a.y;
-        const c = node("canvas");
-        c.width = c.height = 160;
-        paint(c, art.imgs, art.transforms);
-        const recent = a.mode === "idle" ? recentSign(life, p.id) : null;
-        const bubble = pic(A + "bubbles/" + (recent || BUBBLE_KEY[a.mode] || (MODE[a.mode] ? a.mode : "idle")) + ".png", "bubble " + (recent || a.mode));
-        bubble.title = recent ? SIGN_TEXT[recent] : modeOf(a).text;
-        b.append(node("span", "say", modeOf(a).text), bubble, c, node("span", "name", T(p.name)));
-        b.setAttribute("aria-label", T(p.name) + " · " + modeOf(a).text + T(" · 상세 보기"));
-        b.onclick = () => {
-          selected = p.id;
-          detailOpen = true;
-          if (layout) toggleLayout(false);
-          else render();
-        };
-        $("lifeActors").append(b);
-        const prev = previousPositions.get(p.id);
-        if (prev && !matchMedia("(prefers-reduced-motion: reduce)").matches && (prev.x !== a.x || prev.y !== a.y)) {
-          const r = stage.getBoundingClientRect();
-          b.animate(
-            [
-              { transform: "translate(-50%,-82%) translate(" + ((prev.x - a.x) / GRID.width) * r.width + "px," + ((prev.y - a.y) / GRID.height) * r.height + "px)" },
-              { transform: "translate(-50%,-82%)" },
-            ],
-            { duration: Math.min(700, 900 / speed), easing: "ease-in-out" },
-          );
+        // 아래로 걸어갈 때는 도착 행 기준, 위로 걸어갈 때는 출발 행 기준으로 앞뒤를 정해 가구를 뚫고 지나가 보이지 않게 한다
+        const row = prev && step ? Math.max(prev.y, a.y) : a.y;
+        v.el.style.zIndex = atPlace ? 3 + a.y : 4 + row;
+        // 멈춰 선 순간에만 착지 눌림 한 번, 걷기 시작·멈춤에만 먼지(매 칸마다 일지 않게)
+        if (v.mode === "moving" && a.mode !== "moving") {
+          v.landUntil = now + 450;
+          puffAt(a.x, a.y);
         }
-        if (prev && (prev.x !== a.x || prev.y !== a.y)) puffAt(prev.x, prev.y);
-        if (prevModes.get(p.id) === "moving" && a.mode !== "moving") b.classList.add("land");
-        prevModes.set(p.id, a.mode);
-        previousPositions.set(p.id, { x: a.x, y: a.y });
+        if (v.mode !== null && v.mode !== "moving" && a.mode === "moving" && prev) puffAt(prev.x, prev.y);
+        v.el.className = "life-pawn " + a.mode + (p.local_double ? " visitor" : "") + (p.id === selected ? " chosen" : "") + (atPlace ? " at-place" : "") + (now < v.landUntil ? " land" : "");
+        if (now < v.landUntil) setTimeout(() => v.el.classList.remove("land"), v.landUntil - now + 20);
+        // 말풍선: 바뀔 때만 새로 붙여 '뽁' 등장 효과가 한 번만 나오게
+        const recent = a.mode === "idle" ? recentSign(life, p.id) : null,
+          bubbleKey = recent || BUBBLE_KEY[a.mode] || (MODE[a.mode] ? a.mode : "idle");
+        if (bubbleKey !== v.bubbleKey) {
+          const bubble = pic(A + "bubbles/" + bubbleKey + ".png", "bubble " + (recent || a.mode));
+          if (v.bubble) v.bubble.replaceWith(bubble);
+          else v.say.after(bubble);
+          v.bubble = bubble;
+          v.bubbleKey = bubbleKey;
+        }
+        v.bubble.title = recent ? SIGN_TEXT[recent] : modeOf(a).text;
+        if (v.say.textContent !== modeOf(a).text) v.say.textContent = modeOf(a).text;
+        if (v.name.textContent !== T(p.name)) v.name.textContent = T(p.name);
+        v.el.setAttribute("aria-label", T(p.name) + " · " + modeOf(a).text + T(" · 상세 보기"));
+        v.pos = { x: a.x, y: a.y };
+        v.mode = a.mode;
         if (!life.paused && !document.hidden) {
-          const r = Math.random();
+          // 그리기 횟수가 속도만큼 늘었으니 확률을 나눠 초당 빈도는 그대로
+          const r = Math.random() * speed;
           if (a.mode === "resting" && r < 0.35) floatAt(a.x, a.y, "zz", "z", { dx: 18, up: 1.05, d: 2.2 });
           else if ((a.mode === "talking" || a.mode === "listening") && r < 0.3) floatAt(a.x, a.y, "note", r < 0.15 ? "♪" : pic(A + "relation/affection.png"), { dx: -14, up: 1.1 });
           else if ((a.mode === "working" || a.mode === "assisting" || a.mode === "repairing") && r < 0.28) floatAt(a.x, a.y, "spark", "✦", { dx: 16, up: 0.8, d: 1.3 });
         }
       }
+      for (const [id, v] of pawnViews)
+        if (!alive.has(id)) {
+          v.el.remove();
+          pawnViews.delete(id);
+        }
       spawnEffects(state);
       await renderDetails(state, all);
       const reserve = $("pawnDetails").hidden + "|" + $("arrangePanel").hidden;
@@ -1048,23 +1097,28 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
         notify(T("방문 허용 상태를 저장하지 못했어요."));
       }
     };
-  const timer = setInterval(async () => {
-    if (document.hidden || document.querySelector(".screen:not([hidden])") || rendering || faulted || store.life().paused || !store.read().pawns.length) return;
-    try {
-      for (let i = 0; i < speed; i++) store.lifeStep(store.life().tick + 1);
-      await render();
-    } catch {
-      faulted = true;
-      notify(T("저장 충돌 또는 저장 실패로 생활을 멈췄어요. 현재 기록을 보존한 채 새로고침해 주세요."));
+  /* 생활 시계: ×N 이면 1/N 초마다 1 tick. 한 번에 여러 칸을 건너뛰지 않아 걷기가 끊기지 않는다(논리 tick 수는 같다). */
+  let timer = null;
+  async function lifeTick() {
+    if (!(document.hidden || document.querySelector(".screen:not([hidden])") || rendering || faulted || store.life().paused || !store.read().pawns.length)) {
+      try {
+        store.lifeStep(store.life().tick + 1);
+        await render();
+      } catch {
+        faulted = true;
+        notify(T("저장 충돌 또는 저장 실패로 생활을 멈췄어요. 현재 기록을 보존한 채 새로고침해 주세요."));
+      }
     }
-  }, 1000);
+    timer = setTimeout(lifeTick, Math.round(1000 / speed));
+  }
+  timer = setTimeout(lifeTick, Math.round(1000 / speed));
   window.addEventListener("storage", (event) => {
     if (event.key === "game1-local-a-v1") {
       faulted = true;
       notify(T("다른 창의 변경을 확인했어요. 현재 생활을 멈추고 새로고침해 주세요."));
     }
   });
-  window.addEventListener("pagehide", () => clearInterval(timer), { once: true });
+  window.addEventListener("pagehide", () => clearTimeout(timer), { once: true });
   try {
     const saved = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "null");
     sessionStorage.removeItem(DRAFT_KEY);
