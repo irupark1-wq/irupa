@@ -1,6 +1,6 @@
 // 로그인 로직(PO-AUTH-001 AUTH01~04·11·12 중 로컬 mock 으로 검산 가능한 부분). 범위: 로컬 mock — 실제 Google·메일 통과가 아니다.
 import test from 'node:test';import assert from 'node:assert/strict';
-import {createAccount,readAuthReturn,passwordProblem,errorKey,maskEmail} from '../prototype/account.js';
+import {createAccount,readAuthReturn,passwordProblem,errorKey,errorRef,maskEmail} from '../prototype/account.js';
 import {authReturnUrl} from '../prototype/supabase-client.js';
 const RETURN='https://neinom.com/auth/';
 function fake(o={}){
@@ -92,4 +92,20 @@ test('START (mock) a device with a stored session shows "checking" (not guest) u
  await a.restore();assert.equal(a.state().status,'signed_in');
  const g=fake(),b=createAccount({client:g.client,returnUrl:RETURN,checking:true});await b.restore();assert.equal(b.state().status,'guest');
  const h=fake(),c=createAccount({client:h.client,returnUrl:RETURN,checking:true});c.notice('auth_slow');assert.equal(c.state().status,'guest');assert.equal(c.state().message,'auth_slow');
+});
+
+test('AUTH: 세션 끊김은 다시 로그인 안내, 일반 오류는 고정 코드만 참고로 보인다', () => {
+  assert.equal(errorKey({code:'session_not_found',status:403}),'session_expired');
+  assert.equal(errorKey({name:'AuthSessionMissingError',status:400}),'session_expired');
+  assert.equal(errorRef({code:'unexpected_failure',status:500,message:'secret detail ir@x.com'}),'unexpected_failure · 500');
+  assert.equal(errorRef({name:'AuthApiError',status:422}),'AuthApiError · 422');
+  assert.equal(errorRef({code:'Bad Code!',message:'x'}),null);
+  assert.equal(errorRef(null),null);
+});
+test('AUTH: 비밀번호 정하기 일반 실패 때 참고 코드가 상태에 한 번만 남는다', async () => {
+  const client={auth:{onAuthStateChange(){},async updateUser(){return {error:{code:'unexpected_failure',status:500}}}}};
+  const a=createAccount({client,returnUrl:'http://localhost:4199/auth/'});
+  const r=await a.updatePassword('GoodPass1234');
+  assert.equal(r.key,'generic');assert.equal(a.state().ref,'unexpected_failure · 500');
+  const r2=await a.updatePassword('short');assert.equal(r2.key,'password_short');assert.equal(a.state().ref,null);
 });

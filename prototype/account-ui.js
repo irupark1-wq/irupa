@@ -104,7 +104,7 @@ export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
     renderWorldLine();
     const msg = s.message || (s.status === "unavailable" ? "unavailable" : null);
     $("authMsg").hidden = !msg;
-    $("authMsg").textContent = msg ? T(AUTH_MESSAGES[msg] || AUTH_MESSAGES.generic) : "";
+    $("authMsg").textContent = msg ? T(AUTH_MESSAGES[msg] || AUTH_MESSAGES.generic) + (s.ref ? " " + T("(오류 코드: {ref})", { ref: s.ref }) : "") : "";
     $("authMsg").className = "auth-msg" + (["signed_in", "resent", "reset_sent", "password_updated", "signed_out", "check_email"].includes(msg) ? " ok" : msg ? " warn" : "");
     const signed = s.status === "signed_in";
     $("authGuest").hidden = signed;

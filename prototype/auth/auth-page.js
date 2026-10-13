@@ -1,7 +1,7 @@
 // 로그인 복귀 페이지(SB-0003 의 정확한 복귀 주소 /auth/). Google·메일 확인·비밀번호 재설정 링크가 여기로 온다.
 // 코드를 세션으로 바꾸고 게임으로 돌려보낸다. 결과는 ?auth=<결과 키> 로만 전한다(토큰·코드는 주소에 남기지 않음).
 import { t as T, applyStatic } from "../i18n.js";
-import { readAuthReturn, passwordProblem, errorKey } from "../account.js";
+import { readAuthReturn, passwordProblem, errorKey, errorRef } from "../account.js";
 import { loadClient, authConfigured } from "../supabase-client.js";
 import { AUTH_MESSAGES } from "../account-ui.js";
 
@@ -38,7 +38,10 @@ async function main() {
     $("recoverSave").disabled = true;
     const { error: err } = await client.auth.updateUser({ password: pw });
     $("recoverSave").disabled = false;
-    if (err) return ($("authStatus").textContent = T(AUTH_MESSAGES[errorKey(err)] || AUTH_MESSAGES.generic));
+    if (err) {
+      const key = errorKey(err);
+      return ($("authStatus").textContent = T(AUTH_MESSAGES[key] || AUTH_MESSAGES.generic) + (key === "generic" && errorRef(err) ? " " + T("(오류 코드: {ref})", { ref: errorRef(err) }) : ""));
+    }
     home("password_updated");
   };
 }

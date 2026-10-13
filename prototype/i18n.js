@@ -435,6 +435,7 @@ const en = {
   "그림 속 장식 자리라 쓸 수 없어요.": "That spot is decoration in the picture.",
   "아직 월드 없음": "No world yet",
   "시작하면 이 기기에 저장돼요": "Starting saves to this device",
+  "(오류 코드: {ref})": "(Error code: {ref})",
 };
 
 const ja = {
@@ -846,6 +847,7 @@ const ja = {
   "그림 속 장식 자리라 쓸 수 없어요.": "絵の中の飾りの場所なので使えません。",
   "아직 월드 없음": "まだワールドなし",
   "시작하면 이 기기에 저장돼요": "始めるとこの端末に保存されます",
+  "(오류 코드: {ref})": "(エラーコード: {ref})",
 };
 
 const DICT = { ko: null, en, ja };

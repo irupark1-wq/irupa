@@ -33,8 +33,19 @@ export function errorKey(error) {
   if (code === "signup_disabled") return "signup_closed";
   if (code === "same_password") return "password_same";
   if (code === "reauthentication_needed") return "reauth_needed";
+  // 이 기기의 로그인 세션이 끊긴 경우(만료·다른 곳에서 로그아웃): 다시 로그인 안내
+  if (["session_not_found", "session_expired", "refresh_token_not_found", "refresh_token_already_used", "bad_jwt"].includes(code) || error.name === "AuthSessionMissingError") return "session_expired";
   if (error.name === "AuthRetryableFetchError" || status === 0 || code === "network") return "network";
   return "generic";
+}
+
+/** 일반 오류일 때 함께 보여 줄 짧은 참고 코드(원인 확인용). 서버가 주는 고정 코드·이름·상태 번호만 쓰고 자유 문장(메시지)은 쓰지 않는다 */
+export function errorRef(error) {
+  if (!error) return null;
+  const code = typeof error.code === "string" && /^[a-z0-9_]{1,40}$/.test(error.code) ? error.code : null;
+  const name = !code && typeof error.name === "string" && /^[A-Za-z]{1,40}$/.test(error.name) ? error.name : null;
+  const status = Number.isInteger(error.status) && error.status > 0 && error.status < 600 ? String(error.status) : null;
+  return [code || name, status].filter(Boolean).join(" · ") || null;
 }
 
 /**
@@ -45,11 +56,11 @@ export function errorKey(error) {
 export function createAccount({ client, returnUrl, lazy = false, checking = false }) {
   // lazy: 설정은 됐지만 라이브러리를 아직 안 불러온 상태(게스트로 보이고, 첫 동작 때 실제 클라이언트로 바뀐다)
   // checking: 이 기기에 로그인 기록이 있어 확인하는 중(게스트로 잘못 보이지 않게)
-  let state = { status: (client || lazy) && returnUrl ? (checking ? "checking" : "guest") : "unavailable", email: null, providers: [], message: null, user_id: null };
+  let state = { status: (client || lazy) && returnUrl ? (checking ? "checking" : "guest") : "unavailable", email: null, providers: [], message: null, ref: null, user_id: null };
   let signingOut = false;
   const listeners = new Set();
   const set = (patch) => {
-    state = { ...state, ...patch };
+    state = { ...state, ref: null, ...patch }; // 참고 코드는 그 오류를 알린 한 번만
     for (const f of listeners) f(snapshot());
   };
   const snapshot = () => ({ ...state, providers: [...state.providers], email_masked: maskEmail(state.email) });
@@ -65,7 +76,7 @@ export function createAccount({ client, returnUrl, lazy = false, checking = fals
       return await fn(before);
     } catch (e) {
       const key = errorKey(e);
-      set({ status: before === "busy" ? "guest" : before, message: key });
+      set({ status: before === "busy" ? "guest" : before, message: key, ref: key === "generic" ? errorRef(e) : null });
       return { ok: false, key };
     }
   }
