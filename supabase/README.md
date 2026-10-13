@@ -15,8 +15,8 @@
 | `0003_auth_setup.md` | v1.1 로그인 설정 안내(Google OAuth·이메일+비밀번호·SMTP·URL·한국어 메일 문구·익명 로그인 끄기). SQL 없음 | **입력 완료 2026-10-13** (김PO, Resend Verified, 익명 끔. 실제 로그인 시험은 코드 후) |
 | `migrations/0004_game1_account_worlds.sql` | 계정 월드 저장(SB-0004): `game1_account_worlds`(계정당 최대 3, 로컬 계보 1개 = 계정 월드 1개), RLS 4정책(조회·추가·수정·삭제 본인만), 트리거(버전·소유자·계보 고정, 사용자 잠금으로 3개 상한), RPC 3개(`game1_create_account_world` 멱등 생성 / `game1_update_account_world` 낙관적 잠금·멱등 재전송 / `game1_list_account_worlds` 요약 목록). 기존 `game1_worlds` 는 그대로 두고 쓰지 않음 | **적용됨 2026-10-13** (김PO 실행. 적용 후 anon 의 목록 함수 호출은 42501 로 거부됨을 공개 API 로 확인) |
 | `tests/0004_account_worlds_check.sql` | 0004 시험 28건(anon 거부, 생성·재전송 복제 0, 같은 계보 다른 지문 거절, 갱신·재전송·충돌, 3개 상한, 지원 안 하는 형식·잘못된 저장본 거절, user_id 위조 거부, 다른 사용자 조회·갱신·삭제 불가, 계정 분리). BEGIN…ROLLBACK | **실행 완료 2026-10-13: 28/28 PASS, fail_total 0** (증거 `docs/evidence/auth/sb0004-test-28-pass.png`) |
-| `migrations/0005_game1_save_format3.sql` | 저장 형식 3(두 번째 방 + 성격 카드 빈 자리) 허용: 형식 판정 함수 `game1_supported_save_format`(1·2·3) 한 곳으로 모으고, 표 제약·RPC 2개가 그 함수를 씀. 기존 행·RLS·상한·멱등 규칙 그대로 | **적용 대기** (PO-HAND-011 §2) |
-| `tests/0005_save_format3_check.sql` | 0005 시험 9건(형식 1·2·3 허용, 4 거절, 형식 3 저장·갱신, 옛 클라이언트 형식 2 계속 저장, 다른 사용자 차단, 기존 계정 월드 변경 없음). BEGIN…ROLLBACK | **실행 대기** |
+| `migrations/0005_game1_save_format3.sql` | 저장 형식 3(두 번째 방 + 성격 카드 빈 자리) 허용: 형식 판정 함수 `game1_supported_save_format`(1·2·3) 한 곳으로 모으고, 표 제약·RPC 2개가 그 함수를 씀. 기존 행·RLS·상한·멱등 규칙 그대로 | **적용됨 2026-10-13** (김PO 실행. anon 의 형식 함수 호출은 42501 거부 확인) |
+| `tests/0005_save_format3_check.sql` | 0005 시험 10건(형식 1·2·3 허용, 4 거절, 형식 3 저장·갱신, 옛 클라이언트 형식 2 계속 저장, 다른 사용자 차단, 기존 계정 월드 변경 없음). BEGIN…ROLLBACK | **실행 완료 2026-10-13: 10/10 PASS, fail_total 0** |
 
 ## 0002 적용 순서 (김PO) — 2026-10-13 전부 완료 (Advisors Security 경고 0건, Anonymous sign-ins 켬, Site URL neinom.com 확인. Email provider 는 이메일 연결 기능 구현 전에 재확인)
 
