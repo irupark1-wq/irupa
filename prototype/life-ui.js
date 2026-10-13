@@ -35,8 +35,9 @@ const TOPIC = { conversation: T("이야기를 나눴어요"), help: T("도움을
 const floorRect = (iw, ih, x, y, w, h) => ({ x: x / iw, y: y / ih, w: w / iw, h: h / ih });
 const BACKGROUNDS = {
   // DES-06: 벽 장식이 들어간 배경. 이동 바닥 사각형은 빈 방과 픽셀 단위로 같다. lights = 빛나는 곳 중심(그림 픽셀, 밤 조명 효과 위치)
-  portrait: { src: "./assets/background/room-portrait-decorated.png", floor: floorRect(941, 1672, 140, 660, 660, 840), lights: [{ x: 470, y: 425, r: 150 }, { x: 470, y: 175, r: 110 }] },
-  landscape: { src: "./assets/background/room-landscape-decorated.png", floor: floorRect(1672, 941, 138, 560, 1392, 304), lights: [{ x: 440, y: 300, r: 190 }, { x: 836, y: 238, r: 120 }] },
+  // view = 카메라가 함께 보여 주려는 구역(바닥 + 창·시계·액자가 있는 벽). 바닥은 항상 전부, 벽은 가능한 만큼
+  portrait: { src: "./assets/background/room-portrait-decorated.png", floor: floorRect(941, 1672, 140, 660, 660, 840), view: floorRect(941, 1672, 120, 300, 700, 1200), lights: [{ x: 470, y: 425, r: 150 }, { x: 470, y: 175, r: 110 }] },
+  landscape: { src: "./assets/background/room-landscape-decorated.png", floor: floorRect(1672, 941, 138, 560, 1392, 304), view: floorRect(1672, 941, 130, 140, 1410, 724), lights: [{ x: 440, y: 300, r: 190 }, { x: 836, y: 238, r: 120 }] },
   temp: { src: "./assets/game1-cozy-room-v1.png", floor: { x: 0.07, y: 0.38, w: 0.86, h: 0.55 } },
 };
 
@@ -313,14 +314,21 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     }
     const availW = Math.max(120, W - right - 16),
       availH = Math.max(120, H - hudTop - bottom),
-      scale = Math.min(availW / (FLOOR.w * iw), availH / (FLOOR.h * ih), 1.25);
+      VIEW = bg.view || FLOOR,
+      floorFit = Math.min(availW / (FLOOR.w * iw), availH / (FLOOR.h * ih), 1.25),
+      // 벽 장식까지 보이게: 바닥+벽 구역이 HUD 아래가 아니라 화면 위끝~독 사이에 들어오는 배율. 바닥만 맞춘 배율보다 최대 15% 작게까지
+      viewFit = Math.min(availW / (VIEW.w * iw), (H - bottom) / (VIEW.h * ih), 1.25),
+      // 단, 바닥 한 줄이 16px 아래로 작아지면(폰 가로) 벽보다 바닥 조작을 우선한다
+      scale = Math.max(Math.min(floorFit, viewFit), floorFit * 0.85, Math.min(floorFit, (16 * GRID.height) / (FLOOR.h * ih)));
     const imgW = iw * scale,
       imgH = ih * scale,
       clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
     let left = (W - right) / 2 - (FLOOR.x + FLOOR.w / 2) * imgW;
     if (imgW >= W) left = clamp(left, W - imgW, 0);
     left = clamp(left, 8 - FLOOR.x * imgW, W - right - 8 - (FLOOR.x + FLOOR.w) * imgW);
-    const top = clamp(0, hudTop - FLOOR.y * imgH, H - bottom - (FLOOR.y + FLOOR.h) * imgH);
+    const viewH = VIEW.h * imgH,
+      wanted = Math.min(0, (H - bottom - viewH) / 2 - VIEW.y * imgH),
+      top = clamp(wanted, hudTop - FLOOR.y * imgH, H - bottom - (FLOOR.y + FLOOR.h) * imgH);
     scene.classList.toggle("diorama", imgW < W - 40 || top > 4 || top + imgH < H - dock);
     art.style.transform = "translate(" + left + "px," + top + "px) scale(" + scale + ")";
     // 밤 조명: 그림 속 창·조명 위치에 맞춘다(배경과 같은 변환). 광원 정보가 없는 배경은 CSS 기본 위치
