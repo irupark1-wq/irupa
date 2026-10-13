@@ -5,7 +5,8 @@
       "name": "donggeuran",
       "runtimeExecutable": "node",
       "runtimeArgs": ["scripts/game1_prototype_server.mjs"],
-      "port": 4173
+      "env": { "GAME1_PROTOTYPE_PORT": "4199" },
+      "port": 4199
     }
   ]
 }
