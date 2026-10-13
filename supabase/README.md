@@ -13,6 +13,8 @@
 | `migrations/0002_game1_core.sql` | `game1_profiles`(소유자 1행), `game1_worlds`(월드 저장본 jsonb + 서버 버전), RLS 6정책, 트리거 2개(`game1_private`), 저장 함수 `public.game1_save_world(jsonb, integer)` | **적용됨 2026-10-13** (김PO 가 SQL Editor 에서 실행, "Success. No rows returned") |
 | `tests/0002_rls_check.sql` | 0002 거부·허용 테스트 31건(anon 거부, 타인 행 차단, 버전 충돌, 입력 검증). BEGIN…ROLLBACK 이라 흔적 없음 | **실행 완료 2026-10-13: 31/31 PASS, fail_total 0** |
 | `0003_auth_setup.md` | v1.1 로그인 설정 안내(Google OAuth·이메일+비밀번호·SMTP·URL·한국어 메일 문구·익명 로그인 끄기). SQL 없음 | **입력 완료 2026-10-13** (김PO, Resend Verified, 익명 끔. 실제 로그인 시험은 코드 후) |
+| `migrations/0004_game1_account_worlds.sql` | 계정 월드 저장(SB-0004): `game1_account_worlds`(계정당 최대 3, 로컬 계보 1개 = 계정 월드 1개), RLS 4정책(조회·추가·수정·삭제 본인만), 트리거(버전·소유자·계보 고정, 사용자 잠금으로 3개 상한), RPC 3개(`game1_create_account_world` 멱등 생성 / `game1_update_account_world` 낙관적 잠금·멱등 재전송 / `game1_list_account_worlds` 요약 목록). 기존 `game1_worlds` 는 그대로 두고 쓰지 않음 | **적용 대기** (PO-AUTH-001 §4, PO-DEC-006 §4) |
+| `tests/0004_account_worlds_check.sql` | 0004 시험 24건(anon 거부, 생성·재전송 복제 0, 같은 계보 다른 지문 거절, 갱신·재전송·충돌, 3개 상한, 지원 안 하는 형식·잘못된 저장본 거절, user_id 위조 거부, 다른 사용자 조회·갱신·삭제 불가, 계정 분리). BEGIN…ROLLBACK | **실행 대기** |
 
 ## 0002 적용 순서 (김PO) — 2026-10-13 전부 완료 (Advisors Security 경고 0건, Anonymous sign-ins 켬, Site URL neinom.com 확인. Email provider 는 이메일 연결 기능 구현 전에 재확인)
 
@@ -54,3 +56,13 @@ order by 1, 2;
 ```
 
 0002 적용 후 기대 결과: `schema game1_private`, `table public.game1_profiles`, `table public.game1_worlds`, `function game1_private.game1_profiles_before_write`, `function game1_private.game1_worlds_before_write`, `function public.game1_save_world`.
+
+## 0004 적용 순서 (김PO)
+
+1. 대시보드 → SQL Editor → New query → `migrations/0004_game1_account_worlds.sql` 전체를 붙여 넣고 **Run**. "Success. No rows returned" 류가 나오면 됩니다. 중간에 실패하면 아무것도 남지 않습니다(begin…commit).
+2. 새 query 에 `tests/0004_account_worlds_check.sql` 전체를 붙여 넣고 **Run**. 마지막 결과표의 **fail_total 이 0** 이어야 합니다. 끝이 `rollback;` 이라 시험 자료는 남지 않습니다.
+   - `permission denied for table users` 가 나오면 SB-0002 시험 때와 같이 실제 사용자 uuid 2개로 바꿔 실행합니다.
+3. Advisors → Security 경고 수를 봅니다(새 경고 0 기대).
+4. 결과(fail_total, 실패한 줄이 있으면 그 줄, Advisors 경고 수)를 김도현에게 알려 줍니다.
+
+로컬 검증(김도현, 2026-10-13): PostgreSQL 파서(libpg-query 18.1.5, 레포 밖 임시 설치)로 0004 문장 38개 + plpgsql 본문 4개, 시험 문장 24개 + DO 본문 4개 문법 오류 0. 일부러 깨뜨린 본문은 잡힘. 실행 검증(권한·RLS·트리거 동작)은 위 2번 시험이 처음이다.

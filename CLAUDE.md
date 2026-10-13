@@ -45,6 +45,7 @@ npm test         # 140개 통과해야 함 (core/·store·life·layout·A2 기�
 | `dialogue.js` | 폰 위 대화 말풍선 대사(개발용 임시, 김플레이 대사팩으로 교체). 기록→대사, 말투(친밀 지향)·따뜻함(애정·신뢰) 분리 |
 | `relation-text.js` | 기억의 사실/해석/사유/해결 문구, 8축 이름·설명 |
 | `accept.js` | 행동별 수락(PO-HAND-005): 대화=애정·친밀, 협력=존중, 위임=신뢰. 독립 거절 조건(바쁨·피로·경계·길막·비공개). seed 재현 `roll()` |
+| `account.js`·`account-ui.js`·`supabase-client.js`·`auth/` | 로그인(PO-AUTH-001). Supabase Auth(이 게임 전용 프로젝트), 라이브러리는 `vendor/` 에 고정 버전·필요할 때만 로드. 복귀 주소는 `/auth/` 두 개만. 로그인 상태와 월드 저장 위치는 별개 줄 |
 | `credit.js` | 제3자 기록 흐름: 도움 원천 → C 기록(목격 3칸) → B 열람 → 확인 부탁(OpenIssue) → 정정 → 전달 → B→C EVT-09. 실제 Conflict 는 만들지 않음(blocked). 저장 `state.credit` |
 | `layout.js` | A1 배치 판정 순수 함수(경계·겹침·폰 칸·30칸·통로/고립)와 장소 변경 시 활동 중지. 미리보기·저장이 같은 판정을 쓴다 |
 | `life.js`, `store.js`, `core/*` | 시뮬레이션·저장소·계약(core 는 `src/contracts/*.ts` 에서 생성). **UI 작업으로 건드리지 않는다** |
@@ -76,7 +77,7 @@ npm test         # 140개 통과해야 함 (core/·store·life·layout·A2 기�
 
 1. (완료 2026-10-13) 상대 경로 전환, `prototype/.nojekyll`·`CNAME`, `pages.yml`, CSP 메타, 계정 문서 교체. 배포 기록은 `docs/planning/replies/17_*.md`.
 2. (완료 2026-10-13) SB-0002 계정·월드 저장 테이블 적용, RLS 테스트 31/31 (DEV-18). 브라우저 연결(익명 로그인·저장/복구, CSP `connect-src`)은 DEV-19 의 B0.5 단계에서.
-3. **진행(2026-10-13 기준)**: A1 납품(DEV-20, 판정 대기) → A2 기반 납품(DEV-22) → PO-REQ-001 말풍선·관계창 기반(DEV-23) → PO-HAND-005 행동별 수락·제3자 기록 흐름·초기 관계 편차(DEV-24) → 저장·이력 보완(DEV-25: 원장 접기·save_format·credit pinning) → **다음: A1-10 → 로그인(PO-AUTH-001, SB-0003 설정 대기) → 계정 월드 저장(SB-0004) → 두 방(PO-ROOM-001) → 국소 공로 분쟁 250(정연우 검수 대기)** → STORY-C(PO-15 v1.1) → 두 번째 방 → A3 → B-ACCOUNT → B1.
+3. **진행(2026-10-13 기준)**: A1 납품(DEV-20, 판정 대기) → A2 기반 납품(DEV-22) → PO-REQ-001 말풍선·관계창 기반(DEV-23) → PO-HAND-005 행동별 수락·제3자 기록 흐름·초기 관계 편차(DEV-24) → 저장·이력 보완(DEV-25: 원장 접기·save_format·credit pinning) → A1-10 칸 판(완료) → 로그인 1단계 코드(account.js·account-ui.js·auth/, SB-0003 설정 완료, **publishable 키 대기**) → **다음: 계정 월드 저장(SB-0004 적용 대기 + 클라이언트) → 두 방(PO-ROOM-001) → 국소 공로 분쟁 250(정연우 검수 대기)** → STORY-C(PO-15 v1.1) → 두 번째 방 → A3 → B-ACCOUNT → B1.
    - store.js 의 `applyLifeCompletions` 가 완료 사건 → 반복 자격 → 원장·기억·태그를 한 commit 에서 처리(시험도 같은 함수 사용). 상한 대화는 `life.neutral_activity`(원장 아님). 정정 시 `rebuildTagHistory`.
    - 진단: `node scripts/game1_life_diagnostics.mjs 2000` (단계별 개수, 성격만/관계만 비교).
    - 기록 흐름 진단: `node scripts/game1_credit_diagnostics.mjs 2000 4` (변형 A/B × 배치, 도움→기록→누락→열람→정정→EVT-09).
