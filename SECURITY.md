@@ -60,3 +60,4 @@ DB 변경 후 Supabase security advisors와 실제 anon/authenticated 역할 권
 
 ## 2026-10-13 Supabase 0002 코어 마이그레이션 초안(미적용)
 `supabase/migrations/0002_game1_core.sql` 초안: `game1_profiles`·`game1_worlds` 는 생성과 동시에 RLS 활성, 정책은 `to authenticated` 본인 행만(select/insert/update, UPDATE 는 USING·WITH CHECK), anon·service_role 권한 없음, 열 단위 GRANT 로 `version`·시각은 트리거만 설정. 저장 함수 `public.game1_save_world` 는 SECURITY INVOKER·`search_path=''`·스키마 한정, 낙관적 잠금(버전 불일치 예외). 내부 트리거 함수는 `game1_private`. 거부·허용 테스트는 `supabase/tests/0002_rls_check.sql`(anon/sub 없음/본인/타인/프로필 없는 사용자, BEGIN…ROLLBACK). 로컬 PostgreSQL 이 없어 PostgreSQL 17 파서로 문법만 확인했고 **운영 DB 에는 적용하지 않았다**. 적용·테스트·Security Advisors 확인은 김PO 가 수행한 뒤 기록한다. 브라우저 코드·배포 변경 없음.
+2026-10-13 적용: 김PO 가 0002 를 운영 Supabase 에 적용했고 `tests/0002_rls_check.sql` 31건이 모두 통과했다(RLS 활성, anon 권한 없음, 타인 행 조회·쓰기 거부, 프로필 없는 월드 INSERT FK 거부, version 열 클라이언트 쓰기 불가, 버전 충돌·입력 검증 예외). Security Advisors 경고 수와 Auth 설정(익명 로그인·이메일·Site URL)은 아직 확인하지 않았다.

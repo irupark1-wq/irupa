@@ -1,10 +1,10 @@
 # 18. Supabase 0002 코어 마이그레이션 초안 (2026-10-13)
 
-받는 사람: 김PO. 작성: Claude(김도현). 상태: **초안 작성 완료, Supabase 미적용(김PO 입력 대기), push 안 함.**
+받는 사람: 김PO. 작성: Claude(김도현). 상태: **2026-10-13 김PO 가 적용 완료, RLS 테스트 31/31 통과. push 는 아직.**
 
 ## 한 줄 요약
 
-익명 로그인 → 이메일 연결 전제로 `game1_profiles`(소유자 1행)·`game1_worlds`(월드 저장본 + 서버 버전) 테이블, 본인 행만 허용하는 RLS, 낙관적 잠금 저장 함수 `game1_save_world` 를 `supabase/migrations/0002_game1_core.sql` 로 만들고, 거부·허용 테스트 24건을 `supabase/tests/0002_rls_check.sql` 로 붙였습니다. 적용 순서와 확인 방법은 `supabase/README.md` 에 있습니다.
+익명 로그인 → 이메일 연결 전제로 `game1_profiles`(소유자 1행)·`game1_worlds`(월드 저장본 + 서버 버전) 테이블, 본인 행만 허용하는 RLS, 낙관적 잠금 저장 함수 `game1_save_world` 를 `supabase/migrations/0002_game1_core.sql` 로 만들고, 거부·허용 테스트 31건을 `supabase/tests/0002_rls_check.sql` 로 붙였습니다. 적용 순서와 확인 방법은 `supabase/README.md` 에 있습니다.
 
 ## 만든 파일
 
@@ -35,3 +35,9 @@
 1. 김PO: README 의 0002 적용 순서 1~6 수행 → 결과 회신.
 2. Claude: 적용 확인 후 `prototype/` 에 Supabase 클라이언트 연결(publishable key 만, CSP `connect-src` 추가), 익명 로그인·저장/복구 UI, 다국어 문구.
 3. 후속 설계: 친구 방문용 공개 DTO 뷰(비공개 욕구·성격 제외), 저장 요청 제한, 계정 삭제.
+
+## 적용 결과 (2026-10-13, 김PO 실행)
+
+- 0002 적용: Success. No rows returned.
+- `tests/0002_rls_check.sql`: 31건 전부 pass, fail_total 0. anon 거부·sub 없는 토큰 거부·타인 행 차단·FK·버전 충돌·입력 검증 모두 기대대로.
+- 남은 확인: Advisors → Security 경고 수, Auth 설정(Anonymous sign-ins·Email·Site URL neinom.com). README 4~6단계.
