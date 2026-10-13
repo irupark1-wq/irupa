@@ -2,12 +2,18 @@
 // 원칙: 게스트 플레이를 숨기지 않는다. 로그인 성공 ≠ 계정 저장. 늦은 로그인 응답이 고른 월드를 바꾸지 않는다(자동 불러오기 없음).
 // 계정 칸(#accountBlock)은 더보기와 같은 것을 잠시 이 화면으로 옮겨 쓴다(같은 버튼·같은 규칙).
 import { t as T } from "./i18n.js";
+import { readOrigin, forgetAccountCopy } from "./account-worlds.js";
 
 const $ = (id) => document.getElementById(id);
 
 /** 시작 화면 종류: 로컬 월드 유무 × 로그인 여부(로그인 상태는 화면 안 계정 칸이 따로 보여 준다) */
 export function startVariant({ localPawns = 0 } = {}) {
   return localPawns > 0 ? "returning" : "first";
+}
+/** 계정에서 불러온 월드는 그 계정으로 로그인한 경우에만 이어할 수 있다(PO-AUTH-001 §6, PO-START-001 §4) */
+export function accountCopyLocked(origin, auth) {
+  if (!origin) return false;
+  return !(auth && auth.status === "signed_in" && auth.user_id === origin.user_id);
 }
 
 /** 로컬 월드 요약(제목·폰 수·마지막 확정 저장 시점=생활 시간) */
@@ -42,10 +48,33 @@ export function mountStart({ store, storeKey, enterGame }) {
   $("startLocal").hidden = variant !== "returning";
   $("startGuest").hidden = variant === "returning";
   $("startNewWorld").hidden = variant !== "returning";
-  if (variant === "returning") {
-    $("startLocalTitle").textContent = T(sum.title);
-    $("startLocalMeta").textContent = T("폰 {n}명 · 생활 Day {day} {clock}까지 이 기기에 저장됨", { n: sum.pawns, day: sum.day, clock: sum.clock });
+  const origin = readOrigin(localStorage);
+  let auth = null;
+  function paintLocal() {
+    if (variant !== "returning") return;
+    const locked = accountCopyLocked(origin, auth);
+    // 잠긴 계정 사본: 제목·폰 이름을 보이지 않고, 이어하기 대신 로그인 안내
+    $("startLocalTitle").textContent = locked ? T("계정에서 불러온 월드") : T(sum.title);
+    $("startLocalMeta").textContent = locked
+      ? auth?.status === "checking"
+        ? T("로그인 확인 중…")
+        : T("불러온 계정으로 로그인하면 이어할 수 있어요.")
+      : T("폰 {n}명 · 생활 Day {day} {clock}까지 이 기기에 저장됨", { n: sum.pawns, day: sum.day, clock: sum.clock });
+    $("startContinue").hidden = locked;
+    $("startForget").hidden = !locked;
+    $("startNewWorld").hidden = locked;
   }
+  paintLocal();
+  const onAuth = (e) => {
+    auth = e.detail;
+    paintLocal();
+  };
+  document.addEventListener("game1-auth", onAuth);
+  $("startForget").onclick = () => {
+    if (!confirm(T("이 기기의 계정 사본을 지울까요? 계정에 저장된 월드는 그대로예요. 불러오기 전에 있던 이 기기 월드가 있으면 되돌려요."))) return;
+    forgetAccountCopy(localStorage, storeKey);
+    location.reload();
+  };
   // 계정 칸을 시작 화면으로 옮긴다. 이메일 입력은 "이메일로 계속하기"를 누르면 펼친다(Google 이 첫 선택)
   $("startAccountSlot").append(block);
   screen.classList.remove("email-open");
@@ -55,6 +84,7 @@ export function mountStart({ store, storeKey, enterGame }) {
   async function leave() {
     if (leaving) return;
     leaving = true;
+    document.removeEventListener("game1-auth", onAuth);
     home.insertBefore(block, homeNext); // 더보기로 돌려놓는다
     screen.hidden = true;
     await enterGame();
@@ -77,6 +107,7 @@ export function mountStart({ store, storeKey, enterGame }) {
     }
     localStorage.removeItem(storeKey);
     localStorage.removeItem("game1-draft-v1");
+    localStorage.removeItem("game1-world-origin");
     location.reload();
   };
   return { variant, leave };
@@ -108,6 +139,7 @@ export function showUnreadable({ storeKey, reason }) {
       return;
     }
     localStorage.removeItem(storeKey);
+    localStorage.removeItem("game1-world-origin");
     location.reload();
   };
 }

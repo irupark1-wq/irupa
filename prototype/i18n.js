@@ -398,6 +398,14 @@ const en = {
   "로그인 확인 중…": "Checking sign-in…",
   "로그인 확인이 늦어지고 있어요. 이 기기의 월드로 계속할 수 있어요.": "Sign-in check is taking a while. You can continue with this device's world.",
   "시작": "Start",
+  "이 기기의 월드는 계정에서 불러온 것이에요. 로그아웃하면서 어떻게 할까요?": "The world on this device was loaded from your account. What should happen when you sign out?",
+  "이 기기에 사본 남기기": "Keep a copy on this device",
+  "이 기기에서 지우기(계정에는 그대로)": "Remove from this device (account copy stays)",
+  "이 기기의 계정 사본 지우기": "Remove the account copy from this device",
+  "이 월드는 다른 계정에서 불러온 것이라 이 계정에 저장하지 않아요. 원래 계정으로 로그인해 주세요.": "This world was loaded from a different account, so it won't be saved to this one. Please sign in to the original account.",
+  "계정에서 불러온 월드": "World loaded from an account",
+  "불러온 계정으로 로그인하면 이어할 수 있어요.": "Sign in to the account it came from to continue.",
+  "이 기기의 계정 사본을 지울까요? 계정에 저장된 월드는 그대로예요. 불러오기 전에 있던 이 기기 월드가 있으면 되돌려요.": "Remove the account copy from this device? The world saved in the account stays. If there was a device world before loading, it comes back.",
 };
 
 const ja = {
@@ -772,6 +780,14 @@ const ja = {
   "로그인 확인 중…": "ログインを確認中…",
   "로그인 확인이 늦어지고 있어요. 이 기기의 월드로 계속할 수 있어요.": "ログイン確認に時間がかかっています。この端末のワールドで続けられます。",
   "시작": "スタート",
+  "이 기기의 월드는 계정에서 불러온 것이에요. 로그아웃하면서 어떻게 할까요?": "この端末のワールドはアカウントから読み込んだものです。ログアウト時にどうしますか?",
+  "이 기기에 사본 남기기": "この端末にコピーを残す",
+  "이 기기에서 지우기(계정에는 그대로)": "この端末から削除(アカウントには残る)",
+  "이 기기의 계정 사본 지우기": "この端末のアカウントのコピーを削除",
+  "이 월드는 다른 계정에서 불러온 것이라 이 계정에 저장하지 않아요. 원래 계정으로 로그인해 주세요.": "このワールドは別のアカウントから読み込んだため、このアカウントには保存しません。元のアカウントでログインしてください。",
+  "계정에서 불러온 월드": "アカウントから読み込んだワールド",
+  "불러온 계정으로 로그인하면 이어할 수 있어요.": "読み込んだアカウントでログインすると続けられます。",
+  "이 기기의 계정 사본을 지울까요? 계정에 저장된 월드는 그대로예요. 불러오기 전에 있던 이 기기 월드가 있으면 되돌려요.": "この端末のアカウントのコピーを削除しますか?アカウントに保存したワールドはそのままです。読み込み前のこの端末のワールドがあれば戻します。",
 };
 
 const DICT = { ko: null, en, ja };

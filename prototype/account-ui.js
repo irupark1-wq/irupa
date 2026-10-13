@@ -2,7 +2,7 @@
 import { t as T } from "./i18n.js";
 import { createAccount } from "./account.js";
 import { loadClient, authReturnUrl, authConfigured, hasStoredSession } from "./supabase-client.js";
-import { createAccountWorlds, forgetAccountLinks } from "./account-worlds.js";
+import { createAccountWorlds, forgetAccountLinks, readOrigin, forgetAccountCopy, keepAsDeviceWorld } from "./account-worlds.js";
 
 const $ = (id) => document.getElementById(id);
 export const AUTH_MESSAGES = {
@@ -48,6 +48,7 @@ export const WORLD_MESSAGES = {
   world_exists: "계정에 같은 월드의 다른 저장본이 있어요. 어떻게 할까요?",
   loaded: "계정 월드를 불러왔어요. 화면을 다시 엽니다.",
   removed: "계정에서 지웠어요. 이 기기 월드는 그대로예요.",
+  other_account: "이 월드는 다른 계정에서 불러온 것이라 이 계정에 저장하지 않아요. 원래 계정으로 로그인해 주세요.",
 };
 const STATUS_LINE = {
   unavailable: () => T("계정 기능 준비 중"),
@@ -96,6 +97,7 @@ export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
     }
   }
   const render = (s) => {
+    document.dispatchEvent(new CustomEvent("game1-auth", { detail: { status: s.status, user_id: s.user_id } })); // 시작 화면이 잠금 여부를 판단
     $("authLine").textContent = STATUS_LINE[s.status](s);
     renderWorldLine();
     const msg = s.message || (s.status === "unavailable" ? "unavailable" : null);
@@ -150,7 +152,25 @@ export function mountAccountUI({ pauseLife, store, storeKey, validateText }) {
     e.preventDefault();
     act((a) => a.updatePassword($("authNewPassword").value)).then(() => ($("authNewPassword").value = ""));
   };
-  $("authSignOut").onclick = () => act((a) => a.signOut());
+  // 로그아웃(PO-DEC-007 §4): 계정에서 불러온 월드가 이 기기에 있으면 남길지 지울지 사용자가 고른다
+  const doSignOut = () => act((a) => a.signOut());
+  $("authSignOut").onclick = () => {
+    const origin = readOrigin(localStorage);
+    if (origin && origin.user_id === account.state().user_id) return ($("signOutChoice").hidden = false);
+    doSignOut();
+  };
+  $("signOutKeep").onclick = () => {
+    keepAsDeviceWorld(localStorage);
+    $("signOutChoice").hidden = true;
+    doSignOut();
+  };
+  $("signOutForget").onclick = async () => {
+    $("signOutChoice").hidden = true;
+    await doSignOut();
+    forgetAccountCopy(localStorage, storeKey);
+    location.reload();
+  };
+  $("signOutCancel").onclick = () => ($("signOutChoice").hidden = true);
 
   /* ───── 계정 월드 저장(SB-0004) ───── */
   const say = (key) => {

@@ -806,6 +806,7 @@ $("importFile").onchange = async () => {
     if (previous) localStorage.setItem(STORE_KEY + ".before-import", previous);
     localStorage.setItem(STORE_KEY, text);
     localStorage.removeItem("game1-draft-v1");
+    localStorage.removeItem("game1-world-origin"); // 파일에서 불러온 월드는 이 기기 월드(계정 사본 표시 없음)
     say(T("저장 데이터를 불러왔어요. 화면을 다시 엽니다."));
     setTimeout(() => location.reload(), 600);
   } catch (e) {

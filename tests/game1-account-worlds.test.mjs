@@ -108,3 +108,17 @@ test('limit and errors: 4th world is refused with the list kept; server errors m
  assert.equal(saveErrorKey({message:'TypeError: Failed to fetch'}),'network');assert.equal(saveErrorKey({message:'boom'}),'generic');
  assert.equal(await fingerprintOf('abc'),await fingerprintOf('abc'));assert.match(await fingerprintOf('abc'),/^[A-Za-z0-9_-]{43}$/);
 });
+
+test('AUTH10 (mock) PO-DEC-007 §4: a loaded account world is marked; another account cannot save it; "forget" restores the earlier device world, "keep" turns it into a device world',async()=>{
+ const {readOrigin,forgetAccountCopy,keepAsDeviceWorld,ORIGIN_KEY}=await import('../prototype/account-worlds.js');
+ const srv=server(),a=device(srv,'user-A');await a.api().save();
+ const other=device(srv,'user-A');const mine=other.disk.getItem(STORE_KEY);
+ await other.api().load(srv.rows[0].world_id);assert.deepEqual(readOrigin(other.disk)?.user_id,'user-A');
+ // 같은 기기에서 B 로 로그인: A 의 사본을 B 계정에 올리지 않는다
+ const asB=createAccountWorlds({client:srv.forUser('user-B'),storage:other.disk,userId:'user-B',storeKey:STORE_KEY,readLocal:()=>other.disk.getItem(STORE_KEY),lineage:()=>'lineage-x-0001',validate(){},writeLocal(){}});
+ assert.equal((await asB.save()).key,'other_account');assert.equal(srv.rows.filter(r=>r.user_id==='user-B').length,0);
+ assert.equal(forgetAccountCopy(other.disk,STORE_KEY),'restored_device_world');assert.equal(other.disk.getItem(STORE_KEY),mine,'the device world from before the load is back');
+ assert.equal(other.disk.getItem(ORIGIN_KEY),null);assert.equal(srv.rows.length,1,'server copy untouched');
+ const third=device(srv,'user-A');await third.api().load(srv.rows[0].world_id);keepAsDeviceWorld(third.disk);assert.equal(readOrigin(third.disk),null);assert.ok(third.disk.getItem(STORE_KEY));
+ const empty=mem();empty.setItem(STORE_KEY,'{}');empty.setItem(ORIGIN_KEY,JSON.stringify({kind:'account',user_id:'u'}));assert.equal(forgetAccountCopy(empty,STORE_KEY),'emptied');assert.equal(empty.getItem(STORE_KEY),null);
+});

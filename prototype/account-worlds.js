@@ -20,6 +20,28 @@ export async function fingerprintOf(text) {
   return b64url(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
 }
 export const linkKey = (userId) => "game1-account-link:" + userId;
+/** 이 기기 월드의 출처(PO-DEC-007 §4). 계정에서 불러온 월드면 {kind:"account", user_id, world_id}. 없으면 이 기기에서 만든 월드 */
+export const ORIGIN_KEY = "game1-world-origin";
+export function readOrigin(storage) {
+  try {
+    const o = JSON.parse(storage.getItem(ORIGIN_KEY) || "null");
+    return o && o.kind === "account" && typeof o.user_id === "string" ? o : null;
+  } catch {
+    return null;
+  }
+}
+/** 이 기기의 계정 사본 지우기: 불러오기 전에 보관한 이 기기 월드가 있으면 되돌리고, 없으면 비운다. 계정(서버) 자료는 그대로 */
+export function forgetAccountCopy(storage, storeKey) {
+  const before = storage.getItem(storeKey + ".before-account-load");
+  if (before) storage.setItem(storeKey, before);
+  else storage.removeItem(storeKey);
+  storage.removeItem(storeKey + ".before-account-load");
+  storage.removeItem("game1-draft-v1");
+  storage.removeItem(ORIGIN_KEY);
+  return before ? "restored_device_world" : "emptied";
+}
+/** 이 기기에 사본 남기기: 출처 표시만 지워 이 기기 월드로 쓴다(서버 자료는 그대로) */
+export const keepAsDeviceWorld = (storage) => storage.removeItem(ORIGIN_KEY);
 
 /**
  * @param {object} o
@@ -72,6 +94,9 @@ export function createAccountWorlds({ client, storage, userId, readLocal, lineag
 
   /** 계정에 저장. 연결이 있으면 갱신, 없으면 새로 만들기. 결과: {ok, key, ...} */
   async function save() {
+    // 다른 계정에서 불러온 월드를 이 계정에 올리지 않는다(실수 업로드 방지)
+    const origin = readOrigin(storage);
+    if (origin && origin.user_id !== userId) return { ok: false, key: "other_account" };
     const lin = lineage(false),
       text = readLocal(),
       fp = await fingerprintOf(text),
@@ -124,6 +149,7 @@ export function createAccountWorlds({ client, storage, userId, readLocal, lineag
     const previous = readLocal();
     if (previous) storage.setItem(storeKey + ".before-account-load", previous);
     writeLocal(text);
+    storage.setItem(ORIGIN_KEY, JSON.stringify({ kind: "account", user_id: userId, world_id: worldId, loaded_at: Date.now() }));
     writeLink(data.lineage_id, { world_id: worldId, version: data.version, fingerprint: await fingerprintOf(text), saved_at: Date.now() });
     return { ok: true, key: "loaded", backup: !!previous, ...summary(text) };
   }

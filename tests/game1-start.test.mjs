@@ -9,3 +9,9 @@ test('START02 local summary uses the saved world only: names, pawn count, Day an
  assert.deepEqual(localSummary({pawns:[{name:'노을'}],life:{tick:1440*2+90}}),{pawns:1,title:'노을',day:3,clock:'09:30'});
  assert.equal(localSummary({}).title,'내 월드');
 });
+test('START08 an account copy is shown only to the same signed-in account; guests, checking, other accounts see it locked',async()=>{
+ const {accountCopyLocked}=await import('../prototype/start.js');const o={kind:'account',user_id:'A'};
+ assert.equal(accountCopyLocked(null,null),false,'device worlds are never locked');
+ assert.equal(accountCopyLocked(o,null),true);assert.equal(accountCopyLocked(o,{status:'checking'}),true);assert.equal(accountCopyLocked(o,{status:'guest'}),true);
+ assert.equal(accountCopyLocked(o,{status:'signed_in',user_id:'B'}),true);assert.equal(accountCopyLocked(o,{status:'signed_in',user_id:'A'}),false);
+});
