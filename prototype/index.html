@@ -59,7 +59,7 @@
   <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="10" r="2.5"/><path d="M15.5 15c2.8 0 5.5 2 5.5 5"/></symbol>
 </svg>
 
-<img class="page-blur" src="./assets/game1-cozy-room-v1.png" alt="" aria-hidden="true" draggable="false">
+<img class="page-blur" alt="" aria-hidden="true" draggable="false">
 <div class="game" id="game">
   <!-- ───────── 준비 화면(PO-START-001 §2): 실제 준비가 끝나면 바로 사라진다. 가짜 진행률 없음 ───────── -->
   <div id="splash" class="splash" role="status" aria-live="polite">
@@ -101,8 +101,8 @@
   </section>
   <!-- ───────── 월드 장면 (전체 화면) ───────── -->
   <div class="scene" id="scene">
-    <img class="scene-blur" id="sceneBlur" src="./assets/game1-cozy-room-v1.png" alt="" draggable="false">
-    <img class="scene-art" id="sceneArt" src="./assets/game1-cozy-room-v1.png" alt="" draggable="false">
+    <img class="scene-blur" id="sceneBlur" alt="" draggable="false">
+    <img class="scene-art" id="sceneArt" alt="" draggable="false">
     <div id="lifeStage" aria-label="12 곱하기 8 자율 생활 바닥">
       <div class="grid-overlay" aria-hidden="true"></div>
       <div id="lifePlaces"></div>
@@ -144,10 +144,10 @@
       </div>
       <p class="hint" id="arrangeHint">옮길 가구나 장애물을 고른 뒤 바닥 칸을 누르세요. 놓기 전에 미리 보여 드려요.</p>
       <div class="tray" id="placeTray">
-        <button type="button" class="tile" data-place="game1-rest"><img src="./assets/furniture/stage-rest.png" alt="" draggable="false"><span>쉼터</span></button>
-        <button type="button" class="tile" data-place="game1-work"><img src="./assets/furniture/stage-work.png" alt="" draggable="false"><span>작업대</span></button>
-        <button type="button" class="tile" data-place="game1-social"><img src="./assets/furniture/stage-social.png" alt="" draggable="false"><span>이야기 자리</span></button>
-        <button type="button" class="tile" id="wallTile" data-place="wall"><img src="./assets/furniture/stage-wall.png" alt="" draggable="false"><span>장애물</span></button>
+        <button type="button" class="tile" data-place="game1-rest"><img src="./assets/legacy-room/furniture-rest.png" alt="" draggable="false"><span>쉼터</span></button>
+        <button type="button" class="tile" data-place="game1-work"><img src="./assets/legacy-room/furniture-work.png" alt="" draggable="false"><span>작업대</span></button>
+        <button type="button" class="tile" data-place="game1-social"><img src="./assets/legacy-room/furniture-social.png" alt="" draggable="false"><span>이야기 자리</span></button>
+        <button type="button" class="tile" id="wallTile" data-place="wall"><img src="./assets/legacy-room/furniture-wall.png" alt="" draggable="false"><span>장애물</span></button>
       </div>
       <details id="boardWrap" class="arrange-board">
         <summary>칸 판으로 고르기</summary>

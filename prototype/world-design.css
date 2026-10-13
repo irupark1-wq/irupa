@@ -319,3 +319,12 @@ details.arrange-board summary { cursor: pointer; padding: 4px 0; }
 
 /* 일시정지: 걷던 폰도 제자리에 가만히 선다(걷기·통통·숨쉬기 모두 멈춤). 재개하면 다시 움직인다 */
 #lifeStage.life-paused .life-pawn canvas { animation: none; }
+
+/* 예전 가구 그림(러그·매트·작업대·화분 상자, 2026-10-13 복원). 그림 바닥이 칸 중심에 오도록 맞춘다 */
+.life-place .stage-art, .life-wall .stage-art { width: calc(200px * var(--fs, 0.8)); left: 0; top: 0; transform: translate(-50%, -76%); }
+.life-wall .stage-art { width: calc(180px * var(--fs, 0.8)); }
+.life-place .stage-art.flat { width: calc(240px * var(--fs, 0.8)); transform: translate(-50%, -56%); }
+/* 평소에는 가구·장애물이 눌리지 않는다(폰 선택 우선). 배치 모드에서만 고를 수 있다 */
+#lifeStage:not(.placing) .life-place, #lifeStage:not(.placing) .life-wall, #lifeStage:not(.placing) .stage-art { pointer-events: none; }
+/* 배치 모드에서는 반대로 폰이 눌리지 않는다(가구를 고르려다 폰이 눌려 배치가 끝나지 않게) */
+#lifeStage.placing .life-pawn, #lifeStage.placing .speech { pointer-events: none; }

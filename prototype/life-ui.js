@@ -490,7 +490,11 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     el.style.top = ((y + 0.5) / GRID.height) * 100 + "%";
     el.style.zIndex = 4 + y; // 앵커(바닥 접점) y 로 가림 순서
   };
-  const furnitureArt = (kind, cls = "") => pic(A + "furniture/stage-" + kind + ".png", "stage-art " + cls);
+  /* 가구 그림(사용자 결정 2026-10-13): 예전 버전의 러그·매트·작업대·화분 상자를 다시 쓴다(assets/legacy-room).
+     flat = 바닥에 깔리는 것(러그·매트) → 폰이 그 위에 올라서 보인다. 판정은 그대로 1칸 */
+  const FURNITURE_ART = { rest: { src: "legacy-room/furniture-rest.png", flat: true }, social: { src: "legacy-room/furniture-social.png", flat: true }, work: { src: "legacy-room/furniture-work.png" }, wall: { src: "legacy-room/furniture-wall.png" } };
+  const furnitureSrc = (kind) => A + (FURNITURE_ART[kind] || FURNITURE_ART.rest).src;
+  const furnitureArt = (kind, cls = "") => pic(furnitureSrc(kind), "stage-art " + (FURNITURE_ART[kind]?.flat ? "flat " : "") + cls);
   function unreachablePlaces(life) {
     const standing = Object.values(life.actors);
     if (!standing.length) return new Set();
@@ -530,8 +534,10 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       cellPos(b, p.x, p.y);
       b.title = T(p.label) + (p.blocked ? " · " + LAYOUT_TEXT.place_closed : isolated.has(p.id) ? " · " + T("길 막힘") : "");
       b.setAttribute("aria-label", b.title);
+      // 가구는 배치 모드(독의 "배치")에서만 누를 수 있다. 평소에는 폰을 누르려다 가구가 눌리지 않게 한다
+      b.tabIndex = layout ? 0 : -1;
       b.onclick = () => {
-        if (!layout) return startLayout(p.id);
+        if (!layout) return;
         chooseTool(p.id);
       };
       root.append(b);
@@ -542,6 +548,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       b.type = "button";
       b.append(furnitureArt("wall"));
       b.setAttribute("aria-label", T("장애물 ") + w.x + "," + w.y);
+      b.tabIndex = layout ? 0 : -1;
       cellPos(b, w.x, w.y);
       b.onclick = () => {
         if (!layout) return;
@@ -678,10 +685,12 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
         if (moved) v.lean = a.x > prev.x ? 1 : a.x < prev.x ? -1 : v.lean; // 옆으로 걸을 때만 기울기 방향을 바꾼다
         v.el.style.setProperty("--lean", (a.mode === "moving" && !life.paused ? v.lean * 6 : 0) + "deg");
         // 가구 칸에서 활동 중이면 가구 바로 뒤(한 단계 낮은 z)로, 조금 위로 올려 가구가 보이게 한다
-        const atPlace = life.places.some((q) => q.x === a.x && q.y === a.y);
+        const placeHere = life.places.find((q) => q.x === a.x && q.y === a.y),
+          atPlace = !!placeHere,
+          onRug = !!FURNITURE_ART[placeHere?.kind]?.flat; // 러그·매트 위에서는 폰이 그림 앞에
         // 아래로 걸어갈 때는 도착 행 기준, 위로 걸어갈 때는 출발 행 기준으로 앞뒤를 정해 가구를 뚫고 지나가 보이지 않게 한다
         const row = prev && step ? Math.max(prev.y, a.y) : a.y;
-        v.el.style.zIndex = atPlace ? 3 + a.y : 4 + row;
+        v.el.style.zIndex = atPlace && !onRug ? 3 + a.y : onRug ? 5 + a.y : 4 + row;
         // 멈춰 선 순간에만 착지 눌림 한 번, 걷기 시작·멈춤에만 먼지(매 칸마다 일지 않게)
         if (v.mode === "moving" && a.mode !== "moving") {
           v.landUntil = now + 450;
@@ -1226,7 +1235,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
   }
   /* 칸 판(PO-DEC-005, A1-10): 폰 가로처럼 바닥 칸이 작아 손가락으로 고르기 어려울 때 쓰는 큰 판.
      칸 하나를 누르는 것은 바닥 칸을 누르는 것과 같다(같은 미리보기·같은 판정·같은 확정). 판 자체는 아무것도 저장하지 않는다. */
-  const BOARD_IMG = { rest: "stage-rest", work: "stage-work", social: "stage-social" };
+  const BOARD_IMG = { rest: "rest", work: "work", social: "social" };
   /** 폰 가로(낮은 가로 화면)에서 배치 중이면 칸 판을 패널 밖 바닥 자리(#boardFloat)로 옮겨 크게 띄운다.
       게임 틀 왼쪽 끝 ~ 패널 사이에 가운데 맞추고 칸 크기를 24~32px 로 정한다. 그 밖에는 패널 안(칸 판으로 고르기)으로 돌려놓는다. */
   $("scene")?.addEventListener("scroll", (e) => {
@@ -1289,10 +1298,10 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       const what = place ? T(place.label) : walls.has(k) ? T("장애물") : pawns.has(k) ? T("폰") : T("빈 칸");
       b.setAttribute("aria-label", T("가로 {x}, 세로 {y}", { x, y }) + " · " + what);
       b.setAttribute("aria-pressed", String(!!pick));
-      const want = place ? BOARD_IMG[place.kind] || "stage-rest" : walls.has(k) ? "stage-wall" : null;
+      const want = place ? BOARD_IMG[place.kind] || "rest" : walls.has(k) ? "wall" : null;
       if ((b.dataset.img || null) !== want) {
         b.replaceChildren();
-        if (want) b.append(pic(A + "furniture/" + want + ".png"));
+        if (want) b.append(pic(furnitureSrc(want)));
         if (want) b.dataset.img = want;
         else delete b.dataset.img;
       }
@@ -1474,8 +1483,8 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       b.className = "cell" + (place ? " place" : "") + (walls.has(k) ? " wall" : "") + (pawns.has(k) ? " pawn" : "") + (pick ? (moveDraft.verdict?.ok ? " pick ok" : " pick bad") : "");
       b.setAttribute("aria-label", T("가로 {x}, 세로 {y}", { x, y }) + " · " + (place ? T(place.label) : walls.has(k) ? T("장애물") : pawns.has(k) ? T("폰") : T("빈 칸")));
       b.replaceChildren();
-      if (place) b.append(pic(A + "furniture/stage-" + place.kind + ".png"));
-      else if (walls.has(k)) b.append(pic(A + "furniture/stage-wall.png"));
+      if (place) b.append(pic(furnitureSrc(place.kind)));
+      else if (walls.has(k)) b.append(pic(furnitureSrc("wall")));
     }
     const v = moveDraft.verdict;
     $("roomMovePreview").hidden = !v;
