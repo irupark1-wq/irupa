@@ -7,7 +7,8 @@ import {DEFAULT_AXES} from '../prototype/core/game1-traits.js';
 const art={layers:{base:'',eyes_pair:'',mouth:'',back_hair:'',front_hair:'',frame_accessory:''},transforms:{}};
 
 /** SB-0004 를 흉내내는 서버(사용자별 행) */
-function server(){
+/** maxFormat: SB-0004 는 2, SB-0005 는 3 */
+function server(maxFormat=3){
  const rows=[];let seq=0;const err=(m,details='')=>({data:null,error:{message:m,details}});
  const forUser=uid=>({
   async rpc(name,a={}){
@@ -16,7 +17,7 @@ function server(){
     const same=mine.find(r=>r.lineage_id===a.p_lineage);
     if(same)return same.fp===a.p_fingerprint?{data:[{world_id:same.world_id,version:same.version,created:false}],error:null}:err('save.world_exists',same.world_id);
     if(mine.length>=3)return err('save.world_limit');
-    if((a.p_world.save_format||1)>2)return err('save.unsupported_format');
+    if((a.p_world.save_format||1)>maxFormat)return err('save.unsupported_format');
     const r={world_id:'w-'+(++seq),user_id:uid,lineage_id:a.p_lineage,title:a.p_title,version:1,fp:a.p_fingerprint,world:structuredClone(a.p_world)};rows.push(r);
     return {data:[{world_id:r.world_id,version:1,created:true}],error:null};}
    if(name==='game1_update_account_world'){
@@ -121,4 +122,9 @@ test('AUTH10 (mock) PO-DEC-007 §4: a loaded account world is marked; another ac
  assert.equal(other.disk.getItem(ORIGIN_KEY),null);assert.equal(srv.rows.length,1,'server copy untouched');
  const third=device(srv,'user-A');await third.api().load(srv.rows[0].world_id);keepAsDeviceWorld(third.disk);assert.equal(readOrigin(third.disk),null);assert.ok(third.disk.getItem(STORE_KEY));
  const empty=mem();empty.setItem(STORE_KEY,'{}');empty.setItem(ORIGIN_KEY,JSON.stringify({kind:'account',user_id:'u'}));assert.equal(forgetAccountCopy(empty,STORE_KEY),'emptied');assert.equal(empty.getItem(STORE_KEY),null);
+});
+
+test('deploy order guard: a format-3 client against a server still on SB-0004 (formats 1-2) is refused cleanly and the local world is untouched',async()=>{
+ const srv=server(2),d=device(srv,'user-A'),before=d.disk.getItem(STORE_KEY);
+ const r=await d.api().save();assert.equal(r.key,'unsupported_format');assert.equal(srv.rows.length,0);const now=JSON.parse(d.disk.getItem(STORE_KEY)),was=JSON.parse(before);assert.deepEqual(now.pawns,was.pawns);assert.deepEqual(now.life,was.life,'world content untouched (only the lineage id is added)');
 });

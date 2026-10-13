@@ -5,19 +5,22 @@ import { GRID, actorState } from "./life.js";
 export const WALL_LIMIT = 30;
 export const LAYOUT_OWNER = "local-owner";
 // 화면 문구(PO-14 §4)와 1:1. 키는 저장 오류 코드 'layout.<reason>' 으로도 쓴다.
-export const LAYOUT_REASONS = ["out_of_bounds", "overlap", "pawn_cell", "path_blocked", "wall_limit", "place_closed", "not_owner", "save_failed", "version_conflict"];
+export const LAYOUT_REASONS = ["out_of_bounds", "overlap", "pawn_cell", "path_blocked", "wall_limit", "place_closed", "not_owner", "save_failed", "version_conflict", "fixed_decor"];
 
 const key = (p) => p.x + "," + p.y;
 const inside = (x, y) => Number.isInteger(x) && Number.isInteger(y) && x >= 0 && y >= 0 && x < GRID.width && y < GRID.height;
 
-/** 저장본에서 폰들이 서 있는(또는 첫 tick 에 설 예정인) 칸. 방문 폰 포함. */
-export function standingCells(state) {
+/** 저장본에서 폰들이 서 있는(또는 첫 tick 에 설 예정인) 칸. 방문 폰 포함. room 을 주면 그 방에 있는 폰만(두 방, PO-ROOM-001) */
+export function standingCells(state, room = null) {
   const life = state.life,
     list = [...state.pawns, ...(life.guest?.present ? [life.guest] : [])];
-  return list.map((p, i) => {
-    const a = life.actors[p.id] || actorState(i);
-    return { id: p.id, x: a.x, y: a.y };
-  });
+  return list
+    .map((p, i) => {
+      const a = life.actors[p.id] || actorState(i);
+      return { id: p.id, x: a.x, y: a.y, room: a.room === "cozy" ? "cozy" : "living" };
+    })
+    .filter((c) => !room || c.room === room)
+    .map(({ id, x, y }) => ({ id, x, y }));
 }
 
 /** 장애물만 막는 4방향 연결 영역. */
@@ -53,7 +56,10 @@ export function connectivity(places, walls, standing) {
  * 배치 한 건을 판정한다. 상태는 바꾸지 않는다.
  * edit: {kind:'move', id, x, y} | {kind:'wall', x, y}(있으면 치우기, 없으면 놓기) | {kind:'close', id, blocked}
  */
-export function evaluateLayout(life, edit, standing) {
+export function evaluateLayout(life, edit, standing, fixed = []) {
+  // fixed: 그림 속 장식이 차지한 칸(아늑한 방). 막힌 칸으로 치되 사용자 장애물 30칸에 넣지 않고, 지우거나 그 위에 놓을 수 없다
+  const fixedSet = new Set(fixed.map(key)),
+    blockedAll = (walls) => [...walls, ...fixed];
   const fail = (reason, extra = {}) => ({ ok: false, reason, ...extra });
   if (!edit || typeof edit !== "object") return fail("out_of_bounds");
   if (edit.kind === "close") {
@@ -64,6 +70,7 @@ export function evaluateLayout(life, edit, standing) {
   if (!inside(edit.x, edit.y)) return fail("out_of_bounds");
   const cell = key(edit),
     onPawn = standing.some((s) => key(s) === cell);
+  if (fixedSet.has(cell)) return fail("fixed_decor");
   if (edit.kind === "wall") {
     const index = life.walls.findIndex((w) => key(w) === cell);
     if (index >= 0) return { ok: true, action: "remove_wall", places: life.places, walls: life.walls.filter((_, i) => i !== index) };
@@ -71,7 +78,7 @@ export function evaluateLayout(life, edit, standing) {
     if (onPawn) return fail("pawn_cell");
     if (life.walls.length >= WALL_LIMIT) return fail("wall_limit");
     const walls = [...life.walls, { x: edit.x, y: edit.y }],
-      link = connectivity(life.places, walls, standing);
+      link = connectivity(life.places, blockedAll(walls), standing);
     if (!link.ok) return fail("path_blocked", { isolated: link.isolated });
     return { ok: true, action: "add_wall", places: life.places, walls };
   }
@@ -82,7 +89,7 @@ export function evaluateLayout(life, edit, standing) {
     if (life.places.some((p) => p.id !== edit.id && key(p) === cell) || life.walls.some((w) => key(w) === cell)) return fail("overlap");
     if (onPawn) return fail("pawn_cell");
     const places = life.places.map((p) => (p.id === edit.id ? { ...p, x: edit.x, y: edit.y } : p)),
-      link = connectivity(places, life.walls, standing);
+      link = connectivity(places, blockedAll(life.walls), standing);
     if (!link.ok) return fail("path_blocked", { isolated: link.isolated });
     return { ok: true, action: "move", places, walls: life.walls };
   }

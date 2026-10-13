@@ -3,8 +3,8 @@ import {createTestLedger} from './core/game1-ledger.js';
 import {deriveAxes,relationshipProjection} from './core/game1-derived.js';
 import {evaluateBasicTags} from './core/game1-tags.js';
 import {createWorkshopTrial,TEST_READY} from './core/game1-workshop.js';
-import {initialLife,advanceLife,validateLife,actorsFor,GRID} from './life.js';
-import {evaluateLayout,releasePlace,standingCells,LAYOUT_OWNER} from './layout.js';
+import {initialLife,advanceLife,validateLife,actorsFor,GRID,ROOMS,roomOf,roomSpace,emptyCozy,route} from './life.js';
+import {evaluateLayout,releasePlace,standingCells,connectivity,LAYOUT_OWNER} from './layout.js';
 import {judge,grant,dayIndex,emptyRepeat,migrateLegacyTalk} from './repeat.js';
 import {creditHooks,applyCredit,emptyCredit,validateCredit,openIssuesFor} from './credit.js';
 import {roll} from './accept.js';
@@ -31,6 +31,7 @@ function validateState(state){
  if(state.init_rule!==undefined&&(state.init_rule!==INIT_RULE||typeof state.world_seed!=='string'||state.world_seed.length>64))throw Error('save.invalid_init');
  if(state.life?.neutral_activity!==undefined&&(!Array.isArray(state.life.neutral_activity)||state.life.neutral_activity.length>NEUTRAL_MAX))throw Error('save.invalid_neutral');
  if(state.life?.neutral_summary!==undefined&&(typeof state.life.neutral_summary!=='object'||Object.keys(state.life.neutral_summary).length>2000))throw Error('save.invalid_neutral');
+ for(const p of state.pawns)if(p.cards!==undefined)validateCards(p.cards);
  const seen=new Set();for(const p of state.pawns){if(typeof p.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(p.id)||seen.has(p.id)||typeof p.name!=='string'||p.name.length>20)throw Error('save.invalid_pawn');seen.add(p.id);validateAxes(p.trait.axis_values);
   for(const layer of Object.values(p.appearance.layers))if(typeof layer!=='string'||(layer!==''&&(!layer.startsWith('data:image/png;base64,')||layer.length>1500000)))throw Error('save.invalid_image');}
  for(const p of state.pawns)for(const other of state.pawns)if(p.id!==other.id)scores(state,p.id,other.id);
@@ -81,7 +82,15 @@ export function rebuildTagHistory(next){
    접는 조건: observer 가 인지함(known) + 어제 이전 action(정정·재전송 창 밖, 같은 action 재전송은 stale 로 거절됨).
    방향마다 앞에서부터만 접는다(접을 수 없는 사건 뒤의 사건은 남김). 접힌 태그 행은 당시 문맥을 그대로 얼린다(frozen).
    점수는 접기 전후가 같아야 한다(시험 game1-history). */
-export const SAVE_FORMAT=2,FOLD_AT=300,FOLD_KEEP=150;
+export const SAVE_FORMAT=3,FOLD_AT=300,FOLD_KEEP=150;
+/* 성격 카드 저장 자리(PO-HAND-011 §2, PO-PERS-001): 형식 3 에서 빈·비활성 계약만 준비한다. 첫 4종의 실제 효과는 계수 확정 전까지 없음.
+   effective_from_order 는 authority 순서(같은 tick 안 여러 변경도 순서 구분). 기존 폰은 빈 목록, 무작위 부여 없음. */
+export const CARD_RULE='game1-cards-inactive-v0',CARD_IDS=['kind','hot_tempered','stubborn','independent'];
+export const emptyCards=order=>({schema:1,rule_version:CARD_RULE,profile_version:1,card_ids:[],effective_from_order:order,active:false});
+function validateCards(c){
+ if(!c||c.schema!==1||typeof c.rule_version!=='string'||c.rule_version.length>64||!Number.isSafeInteger(c.profile_version)||c.profile_version<1||!Number.isSafeInteger(c.effective_from_order)||c.effective_from_order<0||typeof c.active!=='boolean')throw Error('save.invalid_cards');
+ if(!Array.isArray(c.card_ids)||c.card_ids.length>3||new Set(c.card_ids).size!==c.card_ids.length||c.card_ids.some(id=>!CARD_IDS.includes(id))||c.card_ids.join()!==[...c.card_ids].sort().join())throw Error('save.invalid_cards');
+}
 const foldLimit={at:FOLD_AT,keep:FOLD_KEEP};
 /** 시험 전용: 접기 기준을 작게 바꿔 빠르게 검산한다(게임은 기본값). */
 export function configureHistory(o={}){foldLimit.at=o.foldAt??FOLD_AT;foldLimit.keep=o.foldKeep??FOLD_KEEP;}
@@ -181,6 +190,21 @@ export function memoryView(m){
  const conflictKind=kind==='credit_gap'||kind==='correction'||kind==='repair';
  return {id:m.id,kind,target:m.to,reason:conflictKind?(m.reason_known?'known':'unknown'):'not_applicable',resolution:conflictKind?(m.resolution==='resolved'&&m.corrector_known===false?'corrected_by_unknown':m.resolution):'not_applicable'};
 }
+/** 폰 옮기기 판정(순수): 내 폰·다른 방·칸 안·막힌 칸/장식/가구/다른 폰 아님·도착 칸에서 그 방 열린 장소와 폰에 닿음 */
+function roomMoveVerdict(state,pawnId,room,x,y){
+ const fail=reason=>({ok:false,reason});
+ if(!ROOMS.includes(room))return fail('invalid_room');
+ if(!state.pawns.some(p=>p.id===pawnId))return fail('not_own_pawn');
+ const a=state.life.actors[pawnId];if(!a)return fail('not_own_pawn');
+ if(roomOf(a)===room)return fail('same_room');
+ if(!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||x>=GRID.width||y>=GRID.height)return fail('out_of_bounds');
+ const sp=roomSpace(state.life,room),k=x+','+y,has=list=>list.some(p=>p.x+','+p.y===k);
+ if(has(sp.fixed))return fail('fixed_decor');
+ if(has(sp.userWalls)||has(sp.places))return fail('overlap');
+ const standing=standingCells(state,room);if(has(standing))return fail('pawn_cell');
+ const link=connectivity(sp.places,sp.walls,[{id:pawnId,x,y},...standing]);if(!link.ok)return fail('path_blocked');
+ return {ok:true,reason:null};
+}
 export function createLocalStore(storage,options={}){
  const raw=storage.getItem(STORE_KEY);let state=raw?validateState(JSON.parse(raw)):initial();
  // 저장 형식(PO-DEC-005 §3-3): 더 새 형식이면 덮어쓰지 않고 거절. 옛 형식이면 바꾸기 전에 원본을 한 번 따로 보관한다.
@@ -190,6 +214,8 @@ export function createLocalStore(storage,options={}){
  // 새 월드에서만 시작 관계 편차 규칙을 켠다(이미 있는 저장본의 폰·관계는 바꾸지 않음)
  if(!raw&&options.initialSpread){state.init_rule=INIT_RULE;state.world_seed='w-'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
  const previouslyLiving=!!state.life;state.life??=initialLife();if(previouslyLiving&&state.life.tick>0)state.life.paused=true;state.life.layout_version??=0;state.life.repeat??=emptyRepeat();migrateLegacyTalk(state.life);state.life.neutral_activity??=[];state.life.neutral_summary??={};state.credit??=emptyCredit();
+ // 형식 3(PO-HAND-011): 아늑한 방 추가(기존 폰은 생활방 그대로, 복제·관계 재추첨 없음), 폰마다 빈 성격 카드 자리
+ state.life.rooms??={cozy:emptyCozy()};for(const p of state.pawns)p.cards??=emptyCards(state.authority);
  function commit(commandId,command,change,expected=state.version){
   if(typeof commandId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(commandId))throw Error('command.invalid_id');
   const fingerprint=JSON.stringify(command),old=state.receipts[commandId];if(old){if(old.fingerprint!==fingerprint)throw Error('command.payload_conflict');return structuredClone(old.result);}
@@ -228,21 +254,37 @@ export function createLocalStore(storage,options={}){
   },
   /* A1(PO-14): 배치는 판정(layout.js) 통과 + 배치 버전 일치 + 월드 주인일 때만 한 commit 으로 반영한다.
      실패하면 저장본은 그대로이고, 화면은 미리보기 초안을 보존한다. */
-  layoutVersion:()=>state.life.layout_version||0,
-  previewLayout(edit){return evaluateLayout(state.life,edit,standingCells(state));},
+  layoutVersion:(room='living')=>roomSpace(state.life,room).layout_version,
+  previewLayout(edit){const room=edit?.room==='cozy'?'cozy':'living',sp=roomSpace(state.life,room);return evaluateLayout({places:sp.places,walls:sp.userWalls},edit,standingCells(state,room),sp.fixed);},
   applyLayout(commandId,edit,expectedLayout,viewer=LAYOUT_OWNER){
    if(!edit||!['move','wall','close'].includes(edit.kind))throw Error('layout.out_of_bounds');
    return commit(commandId,{kind:'layout',edit,expectedLayout,viewer},next=>{
     if(viewer!==LAYOUT_OWNER)throw Error('layout.not_owner');
-    const current=next.life.layout_version||0;if(expectedLayout!==current)throw Error('layout.version_conflict');
-    const verdict=evaluateLayout(next.life,edit,standingCells(next));if(!verdict.ok)throw Error('layout.'+verdict.reason);
-    next.life.places=structuredClone(verdict.places);next.life.walls=structuredClone(verdict.walls);
+    const room=edit.room==='cozy'?'cozy':'living',sp=roomSpace(next.life,room),current=sp.layout_version;if(expectedLayout!==current)throw Error('layout.version_conflict');
+    const verdict=evaluateLayout({places:sp.places,walls:sp.userWalls},edit,standingCells(next,room),sp.fixed);if(!verdict.ok)throw Error('layout.'+verdict.reason);
+    if(room==='cozy'){next.life.rooms??={cozy:emptyCozy()};next.life.rooms.cozy.places=structuredClone(verdict.places);next.life.rooms.cozy.walls=structuredClone(verdict.walls);}
+    else{next.life.places=structuredClone(verdict.places);next.life.walls=structuredClone(verdict.walls);}
     const stopped=edit.kind==='move'&&verdict.action==='move'?releasePlace(next.life,edit.id,false):edit.kind==='close'&&edit.blocked?releasePlace(next.life,edit.id,true):[];
     for(const id of stopped){next.life.logs.push({id:'life-log-'+(++next.life.sequence),tick:next.life.tick,actor:id,target:null,text:'장소가 바뀌어 하던 일을 멈췄어요',kind:'cancelled'});next.life.logs=next.life.logs.slice(-120);}
-    next.life.layout_version=current+1;
-    return {status:'applied',action:verdict.action,layout_version:next.life.layout_version,stopped};
+    if(room==='cozy')next.life.rooms.cozy.layout_version=current+1;else next.life.layout_version=current+1;
+    return {status:'applied',action:verdict.action,room,layout_version:current+1,stopped};
    });
   },
+  /* 폰 옮기기(PO-ROOM-001 §2): 플레이어 배치 행동. 미리보기와 확정이 같은 판정을 쓴다. 확정은 한 commit(원래 방 활동 해제 + 도착 위치).
+     하던 가벼운 활동은 중립 취소(완료·관계 벌점 없음). 받아들인 약속·역할은 지우지 않는다. 방문 폰은 옮길 수 없다. */
+  previewRoomMove(pawnId,room,x,y){return roomMoveVerdict(state,pawnId,room,x,y);},
+  roomMoveCells(pawnId,room){const out=[];for(let y=GRID.height-1;y>=0;y--)for(let x=0;x<GRID.width;x++)if(roomMoveVerdict(state,pawnId,room,x,y).ok)out.push({x,y});return out;},
+  movePawnRoom(commandId,pawnId,room,x,y,viewer=LAYOUT_OWNER){return commit(commandId,{kind:'room-move',pawnId,room,x,y,viewer},next=>{
+   if(viewer!==LAYOUT_OWNER)throw Error('room.not_owner');
+   const v=roomMoveVerdict(next,pawnId,room,x,y);if(!v.ok)throw Error('room.'+v.reason);
+   const life=next.life,a=life.actors[pawnId],from=roomOf(a);
+   if(a.mode!=='idle'){const partner=a.partner&&life.actors[a.partner];if(partner&&partner.partner===pawnId){partner.mode='idle';partner.partner=null;partner.goal=null;partner.until=0;partner.cooldown=life.tick+3;partner.reason='상대가 다른 방으로 가서 다른 일을 찾아요';}
+    life.logs.push({id:'life-log-'+(++life.sequence),tick:life.tick,actor:pawnId,target:null,text:'다른 방으로 옮겨 하던 일을 멈췄어요',kind:'cancelled'});}
+   Object.assign(a,{x,y,mode:'idle',goal:null,partner:null,until:0,cooldown:life.tick+3,last_place:null,reason:'새 방을 둘러봐요'});delete a.help_witnesses;
+   if(room==='cozy')a.room='cozy';else delete a.room;
+   life.logs.push({id:'life-log-'+(++life.sequence),tick:life.tick,actor:pawnId,target:null,text:room==='cozy'?'아늑한 방으로 옮겼어요':'생활방으로 옮겼어요',kind:'move'});life.logs=life.logs.slice(-120);
+   return {status:'moved',from,room,x,y};
+  });},
   // 이전 호출 형태 유지(테스트·좌표 입력). 같은 판정을 거친다.
   place(commandId,id,x,y,blocked){if(!Number.isInteger(x)||x<0||x>=GRID.width||!Number.isInteger(y)||y<0||y>=GRID.height||typeof blocked!=='boolean')throw Error('life.invalid_place');const place=state.life.places.find(p=>p.id===id);if(!place)throw Error('life.missing_place');let result=null;if(place.x!==x||place.y!==y)result=this.applyLayout(commandId+'-move',{kind:'move',id,x,y},this.layoutVersion());if(place.blocked!==blocked)result=this.applyLayout(commandId+'-close',{kind:'close',id,blocked},this.layoutVersion());return result||{status:'applied',action:'same'};},
   wall(commandId,x,y){if(!Number.isInteger(x)||x<0||x>=GRID.width||!Number.isInteger(y)||y<0||y>=GRID.height)throw Error('life.invalid_wall');return this.applyLayout(commandId,{kind:'wall',x,y},this.layoutVersion());},
@@ -253,7 +295,7 @@ export function createLocalStore(storage,options={}){
   });},
   createPawn(commandId,name,appearance,axes,expected){return commit(commandId,{kind:'create',name,appearance,axes},next=>{
    if(next.pawns.length>=3)throw Error('pawn.limit');const id='pawn-'+commandId;const checked=validateAxes(axes);
-   next.pawns.push({id,name:name.trim().slice(0,20)||['모래','밤','노을'][next.pawns.length],owner:'local-owner',appearance:structuredClone(appearance),appearance_version:1,trait:snapshot(1,checked,position(++next.authority))});seedRelations(next,id);return {status:'applied',pawn_id:id};
+   next.pawns.push({id,name:name.trim().slice(0,20)||['모래','밤','노을'][next.pawns.length],owner:'local-owner',appearance:structuredClone(appearance),appearance_version:1,trait:snapshot(1,checked,position(++next.authority)),cards:emptyCards(next.authority)});seedRelations(next,id);return {status:'applied',pawn_id:id};
   },expected);},
   updatePawn(commandId,pawnId,name,appearance,axes,expected){return commit(commandId,{kind:'appearance',pawnId,name,appearance,axes},next=>{
    const p=next.pawns.find(p=>p.id===pawnId);if(!p)throw Error('pawn.missing');

@@ -67,16 +67,19 @@ export function creditHooks(state) {
     today = dayIndex(life.tick);
   if (!c) return {};
   const v = CREDIT_VARIANTS[c.variant];
+  // 두 방(PO-ROOM-001): 기록판은 방마다 있다. 도움이 일어난 방의 기록판에서만 적고·읽고·고친다
+  const roomOfId = (id) => (life.actors[id]?.room === "cozy" ? "cozy" : "living"),
+    roomOfRecord = (r) => (r.room === "cozy" ? "cozy" : "living");
   return {
     variant: v,
     recordableFor(id) {
       if (!own.has(id)) return null;
-      const h = Object.values(c.helps).find((h) => !h.recorded && h.worker !== id && h.helper !== id && life.tick - h.tick <= RECORD_WINDOW);
+      const h = Object.values(c.helps).find((h) => !h.recorded && h.worker !== id && h.helper !== id && life.tick - h.tick <= RECORD_WINDOW && roomOfRecord(h) === roomOfId(id));
       return h ? h.help_id : null;
     },
     unreadFor(id) {
       return Object.values(c.records)
-        .filter((r) => r.true_contributors.includes(id) && r.writer !== id && (r.readers[id]?.revision || 0) < r.revision)
+        .filter((r) => r.true_contributors.includes(id) && r.writer !== id && (r.readers[id]?.revision || 0) < r.revision && roomOfRecord(r) === roomOfId(id))
         .map((r) => r.record_id);
     },
     checkFor(id) {
@@ -86,7 +89,7 @@ export function creditHooks(state) {
       return i ? { issue_id: i.issue_id, record_id: i.record_id, to: i.to } : null;
     },
     correctionFor(id) {
-      const i = Object.values(c.issues).find((i) => i.to === id && i.state === "verification_accepted");
+      const i = Object.values(c.issues).find((i) => i.to === id && i.state === "verification_accepted" && c.records[i.record_id] && roomOfRecord(c.records[i.record_id]) === roomOfId(id));
       return i ? { issue_id: i.issue_id, record_id: i.record_id } : null;
     },
     deliveryFor(id) {
@@ -105,7 +108,7 @@ export function applyCredit(next, done, helpers) {
     life = next.life;
   if (done.kind === "help") {
     if (c.helps[done.action_id]) return "duplicate";
-    c.helps[done.action_id] = { help_id: done.action_id, worker: done.from, helper: done.to, tick: life.tick, witnesses: [...new Set(done.witnesses || [])], recorded: false };
+    c.helps[done.action_id] = { help_id: done.action_id, worker: done.from, helper: done.to, tick: life.tick, witnesses: [...new Set(done.witnesses || [])], recorded: false, ...(done.room === "cozy" ? { room: "cozy" } : {}) };
     trimCredit(c);
     return "applied";
   }
@@ -128,6 +131,7 @@ export function applyCredit(next, done, helpers) {
       revision: 1,
       corrected_by: null,
       corrected_by_visible: true,
+      ...(h.room === "cozy" ? { room: "cozy" } : {}),
       correction_action_id: null,
       readers: {},
       intent: "unconfirmed",
