@@ -16,9 +16,13 @@ const MODE = {
   repairing: { text: T("함께 문제를 보완해요"), icon: "i-wrench" },
   repairListening: { text: T("보완 기록을 확인해요"), icon: "i-book" },
   waiting: { text: T("잠깐 기다려요"), icon: "i-clock" },
+  recording: { text: T("작업 결과를 적고 있어요"), icon: "i-book" },
+  reading: { text: T("기록판을 읽고 있어요"), icon: "i-book" },
+  correcting: { text: T("기록을 다시 확인해요"), icon: "i-wrench" },
+  checking: { text: T("기록 확인을 부탁해요"), icon: "i-chat" },
 };
 const A = "./assets/";
-const BUBBLE_KEY = { listening: "talking", repairListening: "repairing" };
+const BUBBLE_KEY = { listening: "talking", repairListening: "repairing", recording: "working", reading: "idle", correcting: "repairing", checking: "talking" };
 const pic = (src, className) => {
   const i = document.createElement("img");
   i.src = src;
@@ -916,6 +920,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
   }
 
   /* ───────── 기록 팝업 ───────── */
+  const expandedLogs = new Set();
   function renderLogs(state) {
     const root = $("lifeLog");
     root.replaceChildren();
@@ -925,8 +930,11 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     // 반복된 중립 대화(점수 변화 없음)는 한 줄로 묶어 "몇 번" 으로 보여 준다. 실패·하락처럼 보이지 않게 생활 문장으로.
     for (const l of raw) {
       const prev = rows.at(-1);
-      if (l.kind === "neutral" && prev?.kind === "neutral" && pairOf(prev) === pairOf(l) && clockOf(prev.tick).day === clockOf(l.tick).day) prev.repeat = (prev.repeat || 1) + 1;
-      else rows.push({ ...l });
+      // 묶음 경계(DES-07): 날짜·상대가 바뀌거나 사이에 다른 일(작업·정정·실패 등)이 끼면 새 줄. 저장 실패 시에는 생활이 멈춰 새 기록이 없다.
+      if (l.kind === "neutral" && prev?.kind === "neutral" && pairOf(prev) === pairOf(l) && clockOf(prev.tick).day === clockOf(l.tick).day) {
+        prev.repeat = (prev.repeat || 1) + 1;
+        prev.members.push(l);
+      } else rows.push({ ...l, members: [l] });
     }
     let lastDay = null;
     for (const entry of rows) {
@@ -942,7 +950,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       const txt = node("div");
       txt.append(node("strong", "", actorName(state, entry.actor) + " · " + tLife(entry.text)));
       const subs = [];
-      if (entry.target) subs.push(T(T("{name}와 함께"), { name: actorName(state, entry.target) }));
+      if (entry.target) subs.push(T(T("{name}와(과) 함께"), { name: actorName(state, entry.target) }));
       if (entry.repeat > 1) subs.push(T("오늘 {n}번", { n: entry.repeat }));
       const turn = speechTurns(entry)[0];
       if (turn) subs.push("“" + spoken(state, entry, turn) + "”");
@@ -955,6 +963,26 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       }
       li.append(t, ico, txt);
       root.append(li);
+      if (entry.repeat > 1) {
+        // 펼치기/접기: 묶인 대화의 시각과 실제 대사를 하나씩 본다(새 판정·새 기록 없음)
+        const open = expandedLogs.has(entry.id),
+          more = node("button", "log-more", open ? T("접기") : T("펼치기"));
+        more.type = "button";
+        more.setAttribute("aria-expanded", String(open));
+        more.onclick = () => {
+          if (open) expandedLogs.delete(entry.id);
+          else expandedLogs.add(entry.id);
+          renderLogs(store.read());
+        };
+        txt.append(more);
+        if (open)
+          for (const m of entry.members) {
+            const turn = speechTurns(m)[0],
+              sub = node("li", "log-row log-sub neutral");
+            sub.append(node("time", "", clockOf(m.tick).text), node("span"), node("small", "", turn ? "“" + spoken(state, m, turn) + "”" : tLife(m.text)));
+            root.append(sub);
+          }
+      }
     }
     if (!rows.length) root.append(node("li", "empty", T("작은 하루의 첫 기록을 기다리고 있어요.")));
     $("allLifeLogs").textContent = showAllLogs ? T("최근 기록만") : T("전체 기록");
@@ -1240,10 +1268,12 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     try {
       store.lifePause(crypto.randomUUID(), !store.life().paused);
       faulted = false;
+      saveState("ok");
       render();
     } catch {
       notify(T("저장하지 못해 생활을 멈췄어요. 기존 기록은 유지합니다."));
       faulted = true;
+      saveState("failed");
     }
   };
   document.querySelectorAll(".plate-speed [data-speed]").forEach((b) => {
@@ -1270,15 +1300,29 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
         notify(T("방문 허용 상태를 저장하지 못했어요."));
       }
     };
+  /* 저장 상태 줄(DES-07): 생활 기록이 실제로 저장됐는지 늘 보이게. 실패·충돌이면 생활은 멈춰 있고 마지막 저장본을 유지한다. */
+  const SAVE_TEXT = { ok: T("저장됐어요"), failed: T("저장 실패 · 멈춤"), conflict: T("다른 창 변경 · 멈춤") };
+  const saveState = (k) => {
+    const e = $("saveState");
+    document.body.dataset.save = k;
+    if (!e || e.dataset.state === k) return;
+    e.dataset.state = k;
+    e.textContent = SAVE_TEXT[k];
+  };
+  saveState("ok");
   /* 생활 시계: ×N 이면 1/N 초마다 1 tick. 한 번에 여러 칸을 건너뛰지 않아 걷기가 끊기지 않는다(논리 tick 수는 같다). */
   let timer = null;
   async function lifeTick() {
     if (!(document.hidden || document.querySelector(".screen:not([hidden])") || rendering || faulted || store.life().paused || !store.read().pawns.length)) {
+      let saved = false;
       try {
         store.lifeStep(store.life().tick + 1);
+        saved = true;
+        saveState("ok");
         await render();
       } catch {
         faulted = true;
+        if (!saved) saveState("failed"); // 그리기 오류는 저장 실패가 아니다(저장본은 이미 확정)
         notify(T("저장 충돌 또는 저장 실패로 생활을 멈췄어요. 현재 기록을 보존한 채 새로고침해 주세요."));
       }
     }
@@ -1288,6 +1332,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
   window.addEventListener("storage", (event) => {
     if (event.key === "game1-local-a-v1") {
       faulted = true;
+      saveState("conflict");
       notify(T("다른 창의 변경을 확인했어요. 현재 생활을 멈추고 새로고침해 주세요."));
     }
   });

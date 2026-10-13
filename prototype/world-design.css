@@ -249,3 +249,7 @@ details.arrange-fields[open] summary { flex-basis: 100%; }
 #lifeStage.placing .speech-layer { display: none; }
 @container game (max-width: 820px) { .speech { font-size: 12px; padding: 5px 9px; max-width: 170px; } }
 .speech { width: max-content; }
+/* DES-09 말풍선: 본체 PNG 는 단순 둥근 사각형이라 브라우저 9-slice 이음선(조각 사이 가는 줄)이 보여
+   본체는 PNG 에서 잰 값(외곽선 #624430 2px · 크림 #fcf4e1 · 둥근 모서리)으로 CSS 로 그리고, 꼬리만 PNG 를 쓴다(본체 하단선을 2px 덮어 이음새 없음). */
+.speech { background: #fcf4e1; border: 2px solid #624430; border-radius: 12px; box-shadow: 0 2px 0 rgba(98, 68, 48, 0.18); }
+.speech:after { width: 18px; height: 12px; bottom: -12px; background: url("./assets/ui/speech-tail.png") center / 100% 100% no-repeat; border: 0; transform: translateX(-50%); }

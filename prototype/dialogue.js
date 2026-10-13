@@ -22,6 +22,12 @@ const LINES = {
   repair_accept: { any: ["응, 같이 보자.", "그래, 확인해 보자."] },
   repair_decline: { any: ["그 얘기는 조금 나중에 하자.", "지금은 준비가 안 됐어."] },
   repair_done: { any: ["기록은 고쳤어.", "이제 제대로 적혔네."] },
+  // 제3자 기록 흐름(PO-HAND-005 §3B). 이유·의도를 단정하지 않는다(정연우 DLG-05~08).
+  credit_ask: { warm: ["기록에 내 이름이 없네. 같이 확인해 줄래?", "아까 작업 기록 말인데, 한 번만 봐 줄래?"], plain: ["기록에 내 이름이 없네. 확인해 줄래?", "작업 기록, 한 번 확인해 줄 수 있어?"], reserved: ["…기록, 한 번 봐 줄래?", "작업 기록 확인 좀."] },
+  credit_ask_accept: { any: ["그래, 다시 볼게.", "응, 확인해 볼게."] },
+  credit_ask_pending: { any: ["지금은 어려워, 이따 볼게.", "하던 일 끝나고 볼게."] },
+  credit_fixed: { any: ["기록은 고쳤어.", "작업 기록 다시 적어 뒀어."] },
+  credit_ack: { warm: ["확인했어, 고마워.", "고쳐 줘서 고마워."], plain: ["확인했어.", "응, 봤어."], reserved: ["…확인했어.", "응."] },
 };
 export const ALL_LINES = Object.values(LINES).flatMap((g) => Object.values(g).flat());
 
@@ -32,6 +38,7 @@ const DECLINE = {
   "잠깐 혼자 있고 싶어요": ["greet_offer", "decline_alone"],
   "지금 도움을 받기 어려워요": ["help_offer", "help_decline"],
   "지금은 보완 이야기를 할 준비가 아니에요": ["repair_offer", "repair_decline"],
+  "기록 확인을 부탁했지만 지금은 어렵대요": ["credit_ask", "credit_ask_pending"],
 };
 
 /** 생활 기록 1줄 → [{speaker, situation}] (말할 차례 순서). 해당 없으면 []. */
@@ -47,11 +54,13 @@ export function speechTurns(log) {
     if (/이야기를 수락/.test(log.text)) return [{ speaker: a, listener: b, situation: "greet_offer" }, { speaker: b, listener: a, situation: "greet_accept" }];
     if (/도움 제안을 상대가 수락/.test(log.text)) return [{ speaker: a, listener: b, situation: "help_offer" }, { speaker: b, listener: a, situation: "help_accept" }];
     if (/도움을 수락하고/.test(log.text)) return [{ speaker: a, listener: b, situation: "help_offer" }];
+    if (/기록을 확인해 달라고 부탁했어요/.test(log.text)) return [{ speaker: a, listener: b, situation: "credit_ask" }, { speaker: b, listener: a, situation: "credit_ask_accept" }];
     if (/보완 제안을 수락/.test(log.text)) return [{ speaker: a, listener: b, situation: "repair_offer" }, { speaker: b, listener: a, situation: "repair_accept" }];
   }
   if (log.kind === "completed" && b) {
     if (/이야기를 나눴어요/.test(log.text)) return [{ speaker: a, listener: b, situation: "chat" }, { speaker: b, listener: a, situation: "chat_reply" }];
     if (/함께 작업을 마쳤어요/.test(log.text)) return [{ speaker: a, listener: b, situation: "help_done" }];
+    if (/고친 기록을 전해 듣고/.test(log.text)) return [{ speaker: b, listener: a, situation: "credit_fixed" }, { speaker: a, listener: b, situation: "credit_ack" }];
     if (/보완했어요/.test(log.text)) return [{ speaker: a, listener: b, situation: "repair_done" }];
   }
   if (log.kind === "neutral" && b) return [{ speaker: a, listener: b, situation: "chat_neutral" }];

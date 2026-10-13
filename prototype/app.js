@@ -35,7 +35,8 @@ try {
       }
     : localStorage;
   if (debug) window.game1Debug = { failNextSave: () => (failNextSave = true) };
-  store = createLocalStore(storage);
+  // 새 월드만 시작 관계 편차(PO-DEC-004 §2)를 한 번 만든다. 기존 저장본은 바뀌지 않는다.
+  store = createLocalStore(storage, { initialSpread: true });
 } catch (e) {
   say(T("저장 기록을 읽지 못했습니다. 기존 데이터를 덮어쓰지 않습니다. ") + e.message);
   throw e;
@@ -531,7 +532,9 @@ async function pawnFace(p, size) {
   paint(c, imgs, p.appearance?.transforms || Object.fromEntries(SLOT_ORDER.map((sl) => [sl, { x: 0, y: 0, rotation: 0, scale: 1, visible: true }])), false);
   return c;
 }
+let relRender = 0;
 async function relationship() {
+  const mine = ++relRender; // 빠르게 여러 번 열려도 마지막 호출만 그린다(머리말 중복 방지)
   const from = $("from").value,
     to = $("to").value,
     state = store.read(),
@@ -553,7 +556,12 @@ async function relationship() {
     box.append(el("b", "", T(p.name)), el("small", "", p.local_double ? T("방문 폰 · 로컬 방문 데모") : T("내 폰")));
     return box;
   };
-  head.append(await pawnFace(pf, 72), who(pf), el("span", "rel-arrow", "→"), await pawnFace(pt, 72), who(pt));
+  const faceFrom = await pawnFace(pf, 72),
+    faceTo = await pawnFace(pt, 72);
+  if (mine !== relRender) return;
+  head.replaceChildren();
+  $("relationship").replaceChildren();
+  head.append(faceFrom, who(pf), el("span", "rel-arrow", "→"), faceTo, who(pt));
   if (bothOwn) {
     const swap = el("button", "gbtn gbtn-sm rel-swap", T("반대 방향 보기"));
     swap.type = "button";
@@ -565,6 +573,13 @@ async function relationship() {
     head.append(swap);
   }
   const dto = store.projection(from, to, $("restricted").checked);
+  // 저장 상태(DES-07): 실패·충돌이면 관계 창 맨 위에 알린다. 보이는 수치는 마지막 저장본이다.
+  const save = document.body.dataset.save;
+  if (save === "failed" || save === "conflict") {
+    const warn = el("div", "rel-save-warn");
+    warn.append(el("b", "", save === "failed" ? T("저장하지 못했어요.") : T("다른 창에서 바뀐 기록이 있어요.")), el("small", "", T("마지막 저장 상태를 보여 주고 있어요. 생활은 멈춰 있어요.")));
+    $("relationship").append(warn);
+  }
   if (dto.visibility === "restricted") {
     $("relationship").append(el("p", "empty", T("이 방향은 공개된 정보가 없어요.")));
     return;
@@ -628,12 +643,19 @@ async function relationship() {
   const basis = el("div", "rel-basis");
   basis.append(el("h4", "", T("관계의 근거")));
   const items = [];
+  // 열린 확인사항은 갈등이 아니다(PO-HAND-005 §3B): 따로, 사실만 보여 준다.
+  const ISSUE_STATE = { observed: T("봤지만 아직 말하지 않았어요"), intends_request: T("확인을 부탁하려 해요"), verification_pending: T("확인을 부탁했고 답을 기다려요"), verification_accepted: T("다시 확인하기로 했어요"), correction_published: T("기록은 고쳐졌어요") + " · " + T("아직 전해 듣기 전") };
+  for (const i of dto.basis?.open_issues || []) {
+    const p = el("p", "hint rel-issue");
+    p.append(svgIcon("i-book"), document.createTextNode(T("열린 확인사항: 공동작업 기록 · {state}", { state: ISSUE_STATE[i.state] || i.state })));
+    basis.append(p);
+  }
   for (const c of dto.basis?.conflicts || []) items.push(T("풀리지 않은 갈등: {topic}", { topic: c.topic === "credit_attribution" ? T("공동작업 공로") : c.topic }));
   if (dto.basis?.roles) items.push(T("함께 맡은 역할 {n}개", { n: dto.basis.roles }));
   if (dto.basis?.resources) items.push(T("기대고 있는 자원 {n}개", { n: dto.basis.resources }));
   if (dto.basis?.commitments) items.push(T("받아들인 약속 {n}개", { n: dto.basis.commitments }));
   if (dto.basis_status === "no_active_basis") items.push(T("공동 결정 기록 없음 (권력은 기본값)"));
-  if (!items.length) items.push(T("지금은 따로 기록된 근거가 없어요."));
+  if (!items.length && !dto.basis?.open_issues?.length) items.push(T("지금은 따로 기록된 근거가 없어요."));
   for (const t of items) basis.append(el("p", "hint", t));
   $("relationship").append(basis);
 }

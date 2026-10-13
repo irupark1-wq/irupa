@@ -6,6 +6,8 @@ import {createWorkshopTrial,TEST_READY} from './core/game1-workshop.js';
 import {initialLife,advanceLife,validateLife,actorsFor,GRID} from './life.js';
 import {evaluateLayout,releasePlace,standingCells,LAYOUT_OWNER} from './layout.js';
 import {judge,grant,dayIndex,emptyRepeat,migrateLegacyTalk} from './repeat.js';
+import {creditHooks,applyCredit,emptyCredit,validateCredit,openIssuesFor} from './credit.js';
+import {roll} from './accept.js';
 export const STORE_KEY='game1-local-a-v1';
 const initial=()=>({schema_version:1,version:0,authority:1,pawns:[],events:[],sessions:[],structures:{resources:[],roles:[],commitments:[],conflicts:[]},memories:[],tag_history:{},receipts:{}});
 const position=n=>({authority_stream_id:'game1-local-authority',authority_order_id:n});
@@ -22,6 +24,8 @@ function validateState(state){
  if(!state||state.schema_version!==1||!Number.isSafeInteger(state.version)||state.version<0||!Number.isSafeInteger(state.authority)||state.authority<1||!Array.isArray(state.pawns)||state.pawns.length>3||!Array.isArray(state.events)||state.events.length>500||!Array.isArray(state.sessions)||state.sessions.length>20||!state.receipts)throw Error('save.invalid_data');
  if(state.life)validateLife(state.life);
  if(state.relation_baseline!==undefined){if(!state.relation_baseline||typeof state.relation_baseline!=='object'||Object.keys(state.relation_baseline).length>12)throw Error('save.invalid_baseline');for(const v of Object.values(state.relation_baseline))for(const [k,n] of Object.entries(v))if(!(k in base)||!Number.isSafeInteger(n)||n<1||n>1000)throw Error('save.invalid_baseline');}
+ if(state.credit!==undefined)validateCredit(state.credit);
+ if(state.init_rule!==undefined&&(state.init_rule!==INIT_RULE||typeof state.world_seed!=='string'||state.world_seed.length>64))throw Error('save.invalid_init');
  if(state.life?.neutral_activity!==undefined&&(!Array.isArray(state.life.neutral_activity)||state.life.neutral_activity.length>NEUTRAL_MAX))throw Error('save.invalid_neutral');
  if(state.life?.neutral_summary!==undefined&&(typeof state.life.neutral_summary!=='object'||Object.keys(state.life.neutral_summary).length>2000))throw Error('save.invalid_neutral');
  const seen=new Set();for(const p of state.pawns){if(typeof p.id!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(p.id)||seen.has(p.id)||typeof p.name!=='string'||p.name.length>20)throw Error('save.invalid_pawn');seen.add(p.id);validateAxes(p.trait.axis_values);
@@ -30,6 +34,17 @@ function validateState(state){
  return state;
 }
 
+/* 새 월드의 시작 관계 편차(PO-DEC-004 §2): 애정·신뢰·존중만 기준값 ±20 정수, 방향별 독립.
+   월드 seed·폰 id·규칙 버전으로 한 번 정해 저장하고 다시 뽑지 않는다. 사건·기억·태그 근거를 만들지 않는다. */
+export const INIT_RULE='game1-init-spread-a2-test-v1';
+function seedRelations(state,newId){
+ if(state.init_rule!==INIT_RULE)return;
+ state.relation_baseline??={};
+ for(const q of state.pawns){if(q.id===newId)continue;
+  for(const [a,b] of [[newId,q.id],[q.id,newId]]){const key=a+'->'+b;if(state.relation_baseline[key])continue;
+   const d=axis=>Math.floor(roll(state.world_seed,a,b,axis,INIT_RULE)*41)-20;
+   state.relation_baseline[key]={affection:base.affection+d('affection'),trust:base.trust+d('trust'),respect:base.respect+d('respect')};}}
+}
 /* ───────── A2 기반(PO-15): 완료 사건 → 반복 자격 → 원장·기억·태그 ───────── */
 export const NEUTRAL_MAX=300;
 function append(next,event_id,from,to,actionId,evidence={},knowledge={revision:1,known:true,delay_reason:'unconfirmed'},scope='order-001'){
@@ -71,7 +86,19 @@ function compactNeutral(life){
 export function applyLifeCompletions(next,completed){
  const life=next.life;life.repeat??=emptyRepeat();life.neutral_activity??=[];life.neutral_summary??={};
  const seen=new Set([...next.events.map(r=>r.event.evidence?.action_id).filter(Boolean),...life.neutral_activity.map(n=>n.action_ref)]),outcomes=[];
+ const creditHelpers={
+  log:(actor,text,kind,target)=>{life.logs.push({id:'life-log-'+(++life.sequence),tick:life.tick,actor,target,text,kind});life.logs=life.logs.slice(-120);},
+  memory:m=>{if(!next.memories.some(x=>x.id===m.id))next.memories.push(m);},
+  append:(eventId,from,to,actionRef,evidence)=>{
+   const previous=scores(next,from,to),e=append(next,eventId,from,to,actionRef,evidence,undefined,'life-001');
+   const memory=next.memories.findLast(m=>m.id===e.source_event_id);if(memory){memory.reason_known=false;memory.resolution='resolved';}
+   const key=from+'->'+to;next.tag_history[key]??=[];next.tag_history[key].push({source_event_id:e.source_event_id,tick:e.position.authority_order_id,positive:true,qualifies:true,context:context(next,from,to)});
+   const current=scores(next,from,to);creditHelpers.log(from,'정정 기록을 받아들였어요','completed',to);const log=life.logs.at(-1);log.changes=[{from,to,affection:current.affection-previous.affection,trust:current.trust-previous.trust,respect:current.respect-previous.respect,reciprocity:current.reciprocity-previous.reciprocity}];
+   return e;},
+ };
  for(const done of completed){
+  if(['record','read','deliver','credit_check','correct'].includes(done.kind)){outcomes.push({action_id:done.action_id,status:applyCredit(next,done,creditHelpers)});continue;}
+  if(done.kind==='help')applyCredit(next,done,creditHelpers);
   if(done.limited||next.events.length>490)continue;
   const at=actionTick(done.action_id);
   if(at!==null&&dayIndex(at)<dayIndex(life.tick)-1){outcomes.push({action_id:done.action_id,status:'stale'});continue;}
@@ -111,9 +138,11 @@ export function memoryView(m){
  const conflictKind=kind==='credit_gap'||kind==='correction'||kind==='repair';
  return {id:m.id,kind,target:m.to,reason:conflictKind?(m.reason_known?'known':'unknown'):'not_applicable',resolution:conflictKind?m.resolution:'not_applicable'};
 }
-export function createLocalStore(storage){
+export function createLocalStore(storage,options={}){
  const raw=storage.getItem(STORE_KEY);let state=raw?validateState(JSON.parse(raw)):initial();
- const previouslyLiving=!!state.life;state.life??=initialLife();if(previouslyLiving&&state.life.tick>0)state.life.paused=true;state.life.layout_version??=0;state.life.repeat??=emptyRepeat();migrateLegacyTalk(state.life);state.life.neutral_activity??=[];state.life.neutral_summary??={};
+ // 새 월드에서만 시작 관계 편차 규칙을 켠다(이미 있는 저장본의 폰·관계는 바꾸지 않음)
+ if(!raw&&options.initialSpread){state.init_rule=INIT_RULE;state.world_seed='w-'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+ const previouslyLiving=!!state.life;state.life??=initialLife();if(previouslyLiving&&state.life.tick>0)state.life.paused=true;state.life.layout_version??=0;state.life.repeat??=emptyRepeat();migrateLegacyTalk(state.life);state.life.neutral_activity??=[];state.life.neutral_summary??={};state.credit??=emptyCredit();
  function commit(commandId,command,change,expected=state.version){
   if(typeof commandId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(commandId))throw Error('command.invalid_id');
   const fingerprint=JSON.stringify(command),old=state.receipts[commandId];if(old){if(old.fingerprint!==fingerprint)throw Error('command.payload_conflict');return structuredClone(old.result);}
@@ -142,7 +171,8 @@ export function createLocalStore(storage){
    if(expectedTick!==state.life.tick+1)throw Error('life.tick_gap');
    if(state.life.paused)return {status:'paused',tick:state.life.tick};
    return commit('game1-life-step-'+expectedTick,{kind:'life-step',expectedTick},next=>{
-    const completed=advanceLife(next,(from,to)=>{const value=scores(next,from,to),target=next.structures.conflicts.find(c=>c.active&&c.from_pawn_id===from&&c.to_pawn_id===to&&(c.scope_id==='life-001'||(c.id==='credit-001'&&next.events.some(e=>e.event.event_id==='EVT-09'&&e.event.observer_id===from&&e.event.target_id===to))));return {...value,repair_target:target?{conflict_id:target.id,scope_id:target.scope_id,topic:target.topic}:null};});
+    next.credit??=emptyCredit();
+    const completed=advanceLife(next,(from,to)=>{const value=scores(next,from,to),target=next.structures.conflicts.find(c=>c.active&&c.from_pawn_id===from&&c.to_pawn_id===to&&(c.scope_id==='life-001'||(c.id==='credit-001'&&next.events.some(e=>e.event.event_id==='EVT-09'&&e.event.observer_id===from&&e.event.target_id===to))));return {...value,repair_target:target?{conflict_id:target.id,scope_id:target.scope_id,topic:target.topic}:null};},creditHooks(next));
     const outcomes=applyLifeCompletions(next,completed);
     return {status:'applied',tick:next.life.tick,completed:completed.length,outcomes};
    });
@@ -174,7 +204,7 @@ export function createLocalStore(storage){
   });},
   createPawn(commandId,name,appearance,axes,expected){return commit(commandId,{kind:'create',name,appearance,axes},next=>{
    if(next.pawns.length>=3)throw Error('pawn.limit');const id='pawn-'+commandId;const checked=validateAxes(axes);
-   next.pawns.push({id,name:name.trim().slice(0,20)||['모래','밤','노을'][next.pawns.length],owner:'local-owner',appearance:structuredClone(appearance),appearance_version:1,trait:snapshot(1,checked,position(++next.authority))});return {status:'applied',pawn_id:id};
+   next.pawns.push({id,name:name.trim().slice(0,20)||['모래','밤','노을'][next.pawns.length],owner:'local-owner',appearance:structuredClone(appearance),appearance_version:1,trait:snapshot(1,checked,position(++next.authority))});seedRelations(next,id);return {status:'applied',pawn_id:id};
   },expected);},
   updatePawn(commandId,pawnId,name,appearance,axes,expected){return commit(commandId,{kind:'appearance',pawnId,name,appearance,axes},next=>{
    const p=next.pawns.find(p=>p.id===pawnId);if(!p)throw Error('pawn.missing');
@@ -216,7 +246,7 @@ export function createLocalStore(storage){
    return {status:'applied',source_event_id:e.source_event_id};
   },expected);},
   projection(from,to,otherOwner=false){const internal=scores(state,from,to),c=context(state,from,to);const visitor=state.life.guest?.id;const dto=relationshipProjection({requester_id:'local-owner',observer_owner_id:otherOwner||from===visitor?'another-owner':'local-owner',target_owner_id:to===visitor?'another-owner':'local-owner'},{scores:internal,basis_status:internal.basis_status,memories:state.memories.filter(m=>m.from===from&&m.to===to)});
-   if(dto.visibility!=='restricted'){dto.tags=evaluateBasicTags(state.tag_history[from+'->'+to]||[],c).tags.slice(0,3);dto.memory_views=state.memories.filter(m=>m.from===from&&m.to===to&&m.known).map(memoryView);const mine=x=>x.active!==false&&x.from_pawn_id===from&&x.to_pawn_id===to;dto.basis={conflicts:state.structures.conflicts.filter(c=>c.active&&mine(c)).map(c=>({topic:c.topic,state:c.state})),roles:state.structures.roles.filter(mine).length,resources:state.structures.resources.filter(mine).length,commitments:(state.structures.commitments||[]).filter(mine).length};}return dto;
+   if(dto.visibility!=='restricted'){dto.tags=evaluateBasicTags(state.tag_history[from+'->'+to]||[],c).tags.slice(0,3);dto.memory_views=state.memories.filter(m=>m.from===from&&m.to===to&&m.known).map(memoryView);const mine=x=>x.active!==false&&x.from_pawn_id===from&&x.to_pawn_id===to;dto.basis={open_issues:openIssuesFor(state,from,to),conflicts:state.structures.conflicts.filter(c=>c.active&&mine(c)).map(c=>({topic:c.topic,state:c.state})),roles:state.structures.roles.filter(mine).length,resources:state.structures.resources.filter(mine).length,commitments:(state.structures.commitments||[]).filter(mine).length};}return dto;
   },
  };
 }

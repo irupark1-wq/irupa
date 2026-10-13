@@ -28,3 +28,13 @@ test('memory view keys: kind by event, reason/resolution only for conflict kinds
  assert.equal(v('x-EVT-10',{resolution:'resolved'}).resolution,'resolved');
  assert.equal(josa('모래이(가) 보는 밤과 밤와(과)'),'모래가 보는 밤과 밤과');assert.equal(josa('노을이(가) 작업대을(를)'),'노을이 작업대를');
 });
+
+test('credit flow speech (PO-HAND-005 §3B): ask/accept/pending/fixed/ack turns; no blame, intent or forgiveness words (정연우 DLG-05~08)',()=>{
+ const t=(text,kind)=>speechTurns({actor:'B',target:'C',text,kind}).map(x=>x.speaker+':'+x.situation);
+ assert.deepEqual(t('기록을 확인해 달라고 부탁했어요','accepted'),['B:credit_ask','C:credit_ask_accept']);
+ assert.deepEqual(t('기록 확인을 부탁했지만 지금은 어렵대요 · 관계 벌점 없음','declined'),['B:credit_ask','C:credit_ask_pending']);
+ assert.deepEqual(t('고친 기록을 전해 듣고 확인했어요','completed'),['C:credit_fixed','B:credit_ack']);
+ assert.deepEqual(t('고쳐진 작업 기록을 확인했어요','completed'),[],'reading the board alone is not a conversation');
+ for(const s of ['credit_ask','credit_ask_accept','credit_ask_pending','credit_fixed','credit_ack'])for(const tone of ['warm','plain','reserved'])for(const k of ['a','b','c']){
+  const l=lineFor(s,tone,k);assert.ok(l);assert.doesNotMatch(l,/일부러|훔|용서|오해가 풀|왜 뺐|네 탓|잘못했/);}
+});
