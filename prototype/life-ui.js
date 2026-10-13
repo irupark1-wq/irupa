@@ -1,4 +1,4 @@
-import { actorsFor, GRID } from "./life.js";
+import { actorsFor, GRID, roomOf, roomSpace } from "./life.js";
 import { t as T, tLife } from "./i18n.js";
 import { memoryView } from "./store.js";
 import { memoryText } from "./relation-text.js";
@@ -44,6 +44,22 @@ const BACKGROUNDS = {
   portrait: { src: "./assets/background/room-portrait-decorated.png", floor: floorRect(941, 1672, 140, 660, 660, 840), view: floorRect(941, 1672, 120, 300, 700, 1200), lights: [{ x: 470, y: 425, r: 150 }, { x: 470, y: 175, r: 110 }] },
   landscape: { src: "./assets/background/room-landscape-decorated.png", floor: floorRect(1672, 941, 138, 560, 1392, 304), view: floorRect(1672, 941, 130, 140, 1410, 724), lights: [{ x: 440, y: 300, r: 190 }, { x: 836, y: 238, r: 120 }] },
   temp: { src: "./assets/game1-cozy-room-v1.png", floor: { x: 0.07, y: 0.38, w: 0.86, h: 0.55 } },
+  // 아늑한 방(PO-ROOM-001): 이전 배경. 이동 바닥은 침대·책장·책상 아래 열린 마루(장식은 바닥 칸 밖). 김디자인 검수 전 초안
+  cozy_portrait: { src: "./assets/legacy-room/background-room-portrait.png", floor: floorRect(941, 1672, 70, 450, 810, 610), view: floorRect(941, 1672, 0, 60, 941, 1140), lights: [{ x: 200, y: 272, r: 120 }, { x: 718, y: 160, r: 110 }] },
+  cozy_landscape: { src: "./assets/legacy-room/background-room-landscape.png", floor: floorRect(1672, 941, 330, 375, 1190, 385), view: floorRect(1672, 941, 0, 0, 1672, 860), lights: [{ x: 350, y: 182, r: 130 }, { x: 1100, y: 30, r: 120 }] },
+};
+const ROOM_NAME = { living: T("생활방"), cozy: T("아늑한 방") };
+const MOVE_TEXT = {
+  ok: T("여기로 옮길 수 있어요."),
+  fixed_decor: T("그림 속 장식 자리라 설 수 없어요."),
+  overlap: T("여기는 다른 물건이 있어요. 다른 칸을 골라 주세요."),
+  pawn_cell: T("다른 폰이 있는 칸이에요. 다른 칸을 골라 주세요."),
+  path_blocked: T("여기서는 길이 막혀요. 다른 칸을 골라 주세요."),
+  out_of_bounds: T("방 안을 골라 주세요."),
+  same_room: T("이미 이 방에 있어요."),
+  not_own_pawn: T("내 폰만 옮길 수 있어요."),
+  no_room: T("폰이 설 자리가 없어요. 빈칸과 통로를 만들어 주세요."),
+  failed: T("옮기지 못했어요. 원래 방과 자리는 그대로예요. 다시 시도해 주세요."),
 };
 
 /* 가구 조각: 160×192 로 자른 사본, 바닥 접점 앵커 (80,180), 명목 바닥폭 138px (DES-04 D2) */
@@ -58,6 +74,7 @@ const LAYOUT_TEXT = {
   pawn_cell: T("폰이 있는 칸이에요. 다른 칸을 골라 주세요."),
   path_blocked: T("길이 막혀요. 폰이 지나갈 칸을 남겨 주세요."),
   wall_limit: T("장애물은 30칸까지 놓을 수 있어요. 다른 장애물을 먼저 지워 주세요."),
+  fixed_decor: T("그림 속 장식 자리라 쓸 수 없어요."),
   place_closed: T("이 장소는 지금 닫혀 있어요."),
   not_owner: T("이 월드는 주인만 배치를 바꿀 수 있어요."),
   save_failed: T("배치를 저장하지 못했어요. 다시 시도하거나 취소해 주세요."),
@@ -109,7 +126,9 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     hover = null,
     tab = "now",
     showAllLogs = false,
-    detailOpen = !isMobile();
+    detailOpen = !isMobile(),
+    viewRoom = "living", // 지금 보고 있는 방(보기 전환은 폰을 옮기지 않는다)
+    moveDraft = null; // 폰 옮기기 진행 중 {pawnId, room, x, y, verdict}
   let lastReserve = "";
   const pawnViews = new Map(); // 폰 id → 계속 쓰는 화면 요소
   const cache = new Map(),
@@ -289,7 +308,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     if (!W || !H) return;
     const orientation = W > H ? "landscape" : "portrait";
     scene.dataset.orientation = orientation;
-    const key = missing.has(orientation) ? "temp" : orientation,
+    const key = viewRoom === "cozy" ? "cozy_" + orientation : missing.has(orientation) ? "temp" : orientation,
       bg = BACKGROUNDS[key],
       FLOOR = bg.floor;
     if (art.dataset.key !== key) {
@@ -308,11 +327,11 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     /* 바닥 12×8 전체가 HUD 와 독(배치 중이면 트레이) 사이에 들어오는 가장 큰 배율.
        바닥이 잘리지 않는 것이 먼저, 배경이 화면을 덮는 것은 그다음이다. */
     const dock = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--dock-h")) || 96,
-      hudTop = 64;
+      hudTop = Math.max(64, Math.round(document.querySelector(".hud-top").getBoundingClientRect().bottom - scene.getBoundingClientRect().top + 6)); // 좁은 화면에서 방 전환이 두 번째 줄로 내려가면 그만큼 비운다
     let right = 0,
       bottom = dock + 28;
     // 배치 트레이·폰 상세 패널이 떠 있으면 그 자리를 비켜서 바닥 전체가 보이게 한다
-    for (const panel of [$("arrangePanel"), $("pawnDetails")]) {
+    for (const panel of [$("arrangePanel"), $("pawnDetails"), $("roomMovePanel")]) {
       if (panel.hidden || !panel.offsetParent) continue;
       if (panel.offsetWidth < W * 0.6) right = Math.max(right, W - panel.offsetLeft + 8);
       else bottom = Math.max(bottom, H - panel.offsetTop + 8);
@@ -567,8 +586,20 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     rendering = true;
     try {
       const state = store.read(),
-        life = state.life,
-        all = actorsFor(state);
+        sp = roomSpace(state.life, viewRoom),
+        life = { ...state.life, places: sp.places, walls: sp.userWalls }, // 보고 있는 방의 가구·장애물(고정 장식은 그림에 있음)
+        everyone = actorsFor(state),
+        all = everyone.filter((p) => roomOf(state.life.actors[p.id]) === viewRoom);
+      // 방 전환 버튼: 방별 폰 수·빈 방 안내
+      const counts = { living: 0, cozy: 0 };
+      for (const p of everyone) counts[roomOf(state.life.actors[p.id])]++;
+      $("roomCountLiving").textContent = counts.living;
+      $("roomCountCozy").textContent = counts.cozy;
+      document.querySelectorAll("#roomSwitch [data-room]").forEach((b) => {
+        b.classList.toggle("on", b.dataset.room === viewRoom);
+        b.setAttribute("aria-pressed", String(b.dataset.room === viewRoom));
+      });
+      $("roomEmpty").hidden = counts[viewRoom] > 0 || layout || !!moveDraft;
       selected ??= state.pawns[0]?.id;
       const clock = clockOf(life.tick);
       if (clock.text !== lastClockText) {
@@ -692,16 +723,16 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       spawnEffects(state);
       if (!life.paused) releaseHeldSpeech();
       queueSpeech(state);
-      await renderDetails(state, all);
-      const reserve = $("pawnDetails").hidden + "|" + $("arrangePanel").hidden;
+      await renderDetails(state, everyone);
+      const reserve = $("pawnDetails").hidden + "|" + $("arrangePanel").hidden + "|" + $("roomMovePanel").hidden + "|" + viewRoom;
       if (reserve !== lastReserve) {
         lastReserve = reserve;
         frameScene();
       }
       renderLogs(state);
       await renderChange(state);
-      await renderRelationList(state, all);
-      await renderVisit(state, all);
+      await renderRelationList(state, everyone);
+      await renderVisit(state, everyone);
     } finally {
       rendering = false;
       if (rerender) {
@@ -721,7 +752,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     const root = $("pawnDetails");
     root.replaceChildren();
     const p = all.find((p) => p.id === selected) || state.pawns[0];
-    root.hidden = !p || !detailOpen || layout;
+    root.hidden = !p || !detailOpen || layout || !!moveDraft;
     if (root.hidden) return;
     selected = p.id;
     const a = state.life.actors[p.id],
@@ -833,7 +864,18 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
         relButton.prepend(pic(A + "ui/icon/book-open.png"));
         relButton.disabled = !other;
         relButton.onclick = () => other && openRelations(p.id, other.id);
-        actions.append(editButton, relButton);
+        // 다른 방으로 옮기기(PO-ROOM-001 §2): 내 폰만. 방문 폰은 옮기지 않는다
+        const here = roomOf(state.life.actors[p.id]),
+          there = here === "cozy" ? "living" : "cozy",
+          moveButton = gbtn(T("{room}으로 옮기기", { room: ROOM_NAME[there] }), null);
+        moveButton.prepend(pic(A + "ui/icon/place-ok.png"));
+        moveButton.onclick = () => startRoomMove(p.id, there);
+        actions.append(editButton, relButton, moveButton);
+        if (here !== viewRoom) {
+          const go = gbtn(T("{room} 보기", { room: ROOM_NAME[here] }), null);
+          go.onclick = () => setViewRoom(here);
+          actions.append(go);
+        }
         body.append(actions);
         const traitBlock = node("div", "block");
         traitBlock.append(node("h4", "", T("성격")));
@@ -1095,7 +1137,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
   }
 
   /* ───────── 배치 조작 (A1 · PO-14 §3): 고르기 → 미리보기 → 놓기/취소 ───────── */
-  const editOf = (t, x, y) => (t === "wall" ? { kind: "wall", x, y } : { kind: "move", id: t, x, y });
+  const editOf = (t, x, y) => (t === "wall" ? { kind: "wall", x, y, room: viewRoom } : { kind: "move", id: t, x, y, room: viewRoom });
   const reasonOf = (e) => {
     const m = String(e?.message || "");
     if (m.startsWith("layout.")) return m.slice(7);
@@ -1148,17 +1190,18 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
   }
   function previewAt(t, x, y, pin) {
     const verdict = store.previewLayout(editOf(t, x, y));
-    if (pin) draft = { tool: t, x, y, version: store.layoutVersion(), verdict, error: null };
+    if (pin) draft = { tool: t, x, y, version: store.layoutVersion(viewRoom), verdict, error: null };
     else hover = { x, y };
     syncPanel();
     render();
   }
   function syncPanel() {
     const life = store.life(),
-      place = life.places.find((p) => p.id === tool);
+      place = roomSpace(life, viewRoom).places.find((p) => p.id === tool);
     document.querySelectorAll("#placeTray [data-place]").forEach((b) => {
-      b.classList.toggle("on", b.dataset.place === tool);
-      b.setAttribute("aria-pressed", String(b.dataset.place === tool));
+      const on = roomPlaceId(b.dataset.place) === tool;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", String(on));
     });
     $("placeBlockedRow").hidden = !place;
     if (place) $("placeBlocked").checked = place.blocked;
@@ -1215,9 +1258,10 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     const board = $("cellBoard");
     if (!board) return;
     const life = store.life(),
-      walls = new Set(life.walls.map((w) => w.x + "," + w.y)),
-      places = new Map(life.places.map((p) => [p.x + "," + p.y, p])),
-      pawns = new Set(Object.values(life.actors).map((a) => a.x + "," + a.y));
+      sp = roomSpace(life, viewRoom),
+      walls = new Set(sp.walls.map((w) => w.x + "," + w.y)), // 고정 장식 칸도 막힌 칸으로 보여 준다
+      places = new Map(sp.places.map((p) => [p.x + "," + p.y, p])),
+      pawns = new Set(Object.values(life.actors).filter((a) => roomOf(a) === viewRoom).map((a) => a.x + "," + a.y));
     if (board.childElementCount !== GRID.width * GRID.height) {
       board.replaceChildren();
       for (let y = 0; y < GRID.height; y++)
@@ -1271,7 +1315,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       else {
         // 그사이 상태가 바뀌어 판정이 달라졌다: 최신 판정으로 다시 보여 준다(저장은 하지 않았다)
         draft.verdict = store.previewLayout(editOf(draft.tool, draft.x, draft.y));
-        draft.version = store.layoutVersion();
+        draft.version = store.layoutVersion(viewRoom);
         draft.commandId = null;
         if (reason === "not_owner") notify(LAYOUT_TEXT.not_owner);
       }
@@ -1279,7 +1323,16 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     syncPanel();
     render();
   }
-  document.querySelectorAll("#placeTray [data-place]").forEach((b) => (b.onclick = () => chooseTool(tool === b.dataset.place ? null : b.dataset.place)));
+  // 트레이 타일은 가구 종류(생활방 id)로 표시돼 있다. 아늑한 방에서는 같은 종류의 그 방 가구 id 로 바꿔 쓴다
+  const roomPlaceId = (base) => {
+    if (base === "wall" || viewRoom === "living") return base;
+    const kind = base.replace("game1-", "");
+    return roomSpace(store.life(), viewRoom).places.find((p) => p.kind === kind)?.id || base;
+  };
+  document.querySelectorAll("#placeTray [data-place]").forEach((b) => (b.onclick = () => {
+    const id = roomPlaceId(b.dataset.place);
+    chooseTool(tool === id ? null : id);
+  }));
   $("previewConfirm").onclick = confirmDraft;
   $("previewCancel").onclick = () => {
     draft = null;
@@ -1294,7 +1347,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     const place = store.life().places.find((p) => p.id === tool);
     if (!place) return;
     try {
-      store.applyLayout(crypto.randomUUID(), { kind: "close", id: place.id, blocked: $("placeBlocked").checked }, store.layoutVersion(), VIEWER);
+      store.applyLayout(crypto.randomUUID(), { kind: "close", id: place.id, blocked: $("placeBlocked").checked, room: viewRoom }, store.layoutVersion(viewRoom), VIEWER);
       notify($("placeBlocked").checked ? LAYOUT_TEXT.place_closed : T("이 장소를 다시 열었어요."));
     } catch (e) {
       $("placeBlocked").checked = place.blocked;
@@ -1339,9 +1392,117 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     }
   });
   stage.onclick = (e) => {
+    if (moveDraft) {
+      const c = cellAt(e);
+      return previewMove(c.x, c.y);
+    }
     if (!layout || !tool) return;
     const c = cellAt(e);
     previewAt(tool, c.x, c.y, true);
+  };
+  /* ───── 방 보기·폰 옮기기(PO-ROOM-001) ───── */
+  function setViewRoom(room) {
+    if (room === viewRoom) return;
+    viewRoom = room;
+    draft = null;
+    hover = null;
+    tool = null;
+    for (const [id, v] of pawnViews) {
+      v.speech?.remove();
+      v.el.remove();
+      pawnViews.delete(id);
+    }
+    render().then(frameScene);
+  }
+  document.querySelectorAll("#roomSwitch [data-room]").forEach((b) => (b.onclick = () => !moveDraft && setViewRoom(b.dataset.room)));
+  function startRoomMove(pawnId, room) {
+    if (layout) endLayout();
+    try {
+      if (!store.life().paused) store.lifePause(crypto.randomUUID(), true); // 미리보기 동안 생활 정지(자동 재개 없음)
+    } catch {}
+    const name = T(store.read().pawns.find((p) => p.id === pawnId)?.name || "폰");
+    moveDraft = { pawnId, room, x: null, y: null, verdict: null };
+    $("roomMoveTitle").textContent = T("{name}을(를) {room}으로 옮기기", { name, room: ROOM_NAME[room] });
+    $("roomMovePanel").hidden = false;
+    setViewRoom(room);
+    // 안전한 빈칸을 하나 제안(아래쪽 가운데에 가까운 칸). 없으면 옮길 수 없다고 안내
+    const cells = store.roomMoveCells(pawnId, room);
+    if (!cells.length) {
+      moveDraft.verdict = { ok: false, reason: "no_room" };
+    } else {
+      const best = cells.sort((a, b) => Math.abs(a.x - 6) + (7 - a.y) - (Math.abs(b.x - 6) + (7 - b.y)))[0];
+      previewMove(best.x, best.y);
+    }
+    renderMoveBoard();
+    render().then(frameScene);
+  }
+  function previewMove(x, y) {
+    if (!moveDraft) return;
+    moveDraft.x = x;
+    moveDraft.y = y;
+    moveDraft.verdict = store.previewRoomMove(moveDraft.pawnId, moveDraft.room, x, y);
+    renderMoveBoard();
+  }
+  function renderMoveBoard() {
+    const board = $("moveBoard");
+    if (!moveDraft) return;
+    const life = store.life(),
+      sp = roomSpace(life, moveDraft.room),
+      key = (p) => p.x + "," + p.y,
+      walls = new Set(sp.walls.map(key)),
+      places = new Map(sp.places.map((p) => [key(p), p])),
+      pawns = new Set(Object.values(life.actors).filter((a) => roomOf(a) === moveDraft.room).map(key));
+    if (board.childElementCount !== GRID.width * GRID.height) {
+      board.replaceChildren();
+      for (let y = 0; y < GRID.height; y++)
+        for (let x = 0; x < GRID.width; x++) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.dataset.x = x;
+          b.dataset.y = y;
+          b.onclick = () => previewMove(x, y);
+          board.append(b);
+        }
+    }
+    for (const b of board.children) {
+      const x = Number(b.dataset.x),
+        y = Number(b.dataset.y),
+        k = x + "," + y,
+        place = places.get(k),
+        pick = moveDraft.x === x && moveDraft.y === y;
+      b.className = "cell" + (place ? " place" : "") + (walls.has(k) ? " wall" : "") + (pawns.has(k) ? " pawn" : "") + (pick ? (moveDraft.verdict?.ok ? " pick ok" : " pick bad") : "");
+      b.setAttribute("aria-label", T("가로 {x}, 세로 {y}", { x, y }) + " · " + (place ? T(place.label) : walls.has(k) ? T("장애물") : pawns.has(k) ? T("폰") : T("빈 칸")));
+      b.replaceChildren();
+      if (place) b.append(pic(A + "furniture/stage-" + place.kind + ".png"));
+      else if (walls.has(k)) b.append(pic(A + "furniture/stage-wall.png"));
+    }
+    const v = moveDraft.verdict;
+    $("roomMovePreview").hidden = !v;
+    $("roomMoveText").textContent = v ? (v.ok ? MOVE_TEXT.ok : MOVE_TEXT[v.reason] || MOVE_TEXT.failed) : "";
+    $("roomMovePreview").className = "arrange-preview " + (v?.ok ? "ok" : "bad");
+    $("roomMoveConfirm").disabled = !v?.ok;
+  }
+  function endRoomMove(stay) {
+    const back = moveDraft && !stay ? roomOf(store.life().actors[moveDraft.pawnId]) : null;
+    moveDraft = null;
+    $("roomMovePanel").hidden = true;
+    if (back) setViewRoom(back);
+    else render().then(frameScene);
+  }
+  $("roomMoveCancel").onclick = () => endRoomMove(false); // 취소: 원래 방·자리 그대로
+  $("roomMoveConfirm").onclick = () => {
+    if (!moveDraft?.verdict?.ok) return;
+    const { pawnId, room, x, y } = moveDraft;
+    try {
+      store.movePawnRoom(moveDraft.commandId || (moveDraft.commandId = crypto.randomUUID()), pawnId, room, x, y, VIEWER);
+      notify(T("{room}으로 옮겼어요. ▶ 를 누르면 생활이 다시 시작돼요.", { room: ROOM_NAME[room] }));
+      endRoomMove(true);
+    } catch (e) {
+      const reason = String(e.message || "").replace(/^room./, "");
+      moveDraft.commandId = null;
+      moveDraft.verdict = MOVE_TEXT[reason] ? { ok: false, reason } : { ok: false, reason: "failed" };
+      renderMoveBoard();
+    }
   };
   $("pauseLife").onclick = () => {
     try {

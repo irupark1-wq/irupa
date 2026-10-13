@@ -300,3 +300,19 @@ details.arrange-board summary { cursor: pointer; padding: 4px 0; }
 
 /* 장면 상자는 절대 스크롤되지 않는다(포커스·scrollIntoView 로 바닥이 밀리던 문제, A1-10 확인 중 발견). clip 미지원 브라우저는 JS 가 0 으로 되돌린다 */
 #scene { overflow: clip; }
+
+/* 두 번째 방(PO-ROOM-001): 방 보기 전환·빈 방 안내·폰 옮기기 */
+.plate-room { display: flex; gap: 4px; padding: 4px; }
+.plate-room button { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 4px 12px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+.plate-room button b { min-width: 20px; padding: 1px 6px; border-radius: 999px; background: rgba(120, 90, 60, 0.12); font-size: 12px; text-align: center; }
+.plate-room button.on { background: #4f86c6; color: #fff; box-shadow: 0 2px 0 #2f5f99; }
+.plate-room button.on b { background: rgba(255, 255, 255, 0.28); }
+.room-empty { position: absolute; left: 50%; top: 52%; z-index: 9; max-width: min(420px, 80%); margin: 0; padding: 12px 16px; transform: translate(-50%, -50%); border-radius: 16px; background: rgba(255, 250, 240, 0.94); box-shadow: 0 6px 18px rgba(80, 50, 20, 0.2); color: var(--ink); font-weight: 800; text-align: center; }
+#roomMovePanel .cell-board { margin: 6px auto; }
+@container game (max-width: 520px) { .plate-room button { padding: 4px 8px; font-size: 12px; min-height: 30px; gap: 4px; } }
+
+/* 칸 판(305px)이 330px 패널 안에 넘치지 않게 */
+#roomMovePanel, #arrangePanel { padding-left: 11px; padding-right: 11px; }
+
+/* 좁은 화면: 방 전환을 두 번째 줄로(시계·속도 버튼이 밀려나지 않게) */
+@container game (max-width: 520px) { .hud-top { flex-wrap: wrap; row-gap: 6px; } .plate-room { order: 10; } }

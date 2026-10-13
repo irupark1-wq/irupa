@@ -107,6 +107,7 @@
       <div id="lifePlaces"></div>
       <div id="lifeActors"></div>
     </div>
+    <p id="roomEmpty" class="room-empty" hidden>아직 이 방에 폰이 없어요. 폰을 옮겨 함께 지내게 할 수 있어요.</p>
     <div class="tod" aria-hidden="true"></div>
     <div class="glow g1" aria-hidden="true"></div>
     <div class="glow g2" aria-hidden="true"></div>
@@ -115,6 +116,11 @@
     <!-- HUD 위 -->
     <div class="hud hud-top">
       <img class="title-plate" src="./assets/brand/title.png" alt="동그란 사이 · 내 월드" draggable="false">
+      <!-- 방 보기(PO-ROOM-001 §5): 현재 방·방별 폰 수. 보기 전환은 폰을 옮기지 않는다 -->
+      <div class="plate plate-room" id="roomSwitch" role="group" aria-label="방 보기">
+        <button type="button" data-room="living" aria-pressed="true"><span>생활방</span><b id="roomCountLiving">0</b></button>
+        <button type="button" data-room="cozy" aria-pressed="false"><span>아늑한 방</span><b id="roomCountCozy">0</b></button>
+      </div>
       <div class="hud-spacer"></div>
       <div class="plate plate-clock" title="자율 생활 시간"><img id="clockIcon" src="./assets/ui/hud/sun.png" alt="" draggable="false"><b id="lifeClock">08:00</b><small id="lifeDay">Day 1</small><small id="saveState" class="save-state" data-state="ok" role="status">저장됐어요</small></div>
       <button id="pauseLife" class="pause-btn" type="button" aria-label="일시정지"><img src="./assets/ui/hud/pause.png" alt="" draggable="false"></button>
@@ -166,6 +172,17 @@
     </div>
 
     <div id="boardFloat" hidden></div>
+    <!-- 폰 옮기기(PO-ROOM-001 §2): 도착 방을 보여 주고 칸을 고른 뒤 확정. 미리보기 동안 생활 정지 -->
+    <div id="roomMovePanel" class="panel tray-panel" hidden>
+      <div class="panel-head">
+        <h3><svg><use href="#i-door"/></svg><span id="roomMoveTitle">다른 방으로 옮기기</span></h3>
+        <button id="roomMoveCancel" class="gbtn gbtn-sm" type="button">취소</button>
+      </div>
+      <p class="hint" id="roomMoveHint">폰이 설 칸을 고르세요. 놓기 전에 미리 보여 드려요.</p>
+      <div id="moveBoard" class="cell-board" role="group" aria-label="도착 칸 고르기"></div>
+      <div id="roomMovePreview" class="arrange-preview" role="status" aria-live="polite" hidden><span id="roomMoveText"></span></div>
+      <div class="arrange-actions"><button id="roomMoveConfirm" class="gbtn gbtn-sm gbtn-blue" type="button" disabled><svg><use href="#i-check"/></svg><span>여기로 옮기기</span></button></div>
+    </div>
 
     <!-- 하단 독 -->
     <nav class="dock" aria-label="게임 메뉴">
