@@ -105,6 +105,11 @@
         <button type="button" class="tile" data-place="game1-social"><img src="./assets/furniture/stage-social.png" alt="" draggable="false"><span>이야기 자리</span></button>
         <button type="button" class="tile" id="wallTile" data-place="wall"><img src="./assets/furniture/stage-wall.png" alt="" draggable="false"><span>장애물</span></button>
       </div>
+      <details id="boardWrap" class="arrange-board">
+        <summary>칸 판으로 고르기</summary>
+        <div id="cellBoard" class="cell-board" role="group" aria-label="바닥 칸 판 (가로 12 × 세로 8)"></div>
+        <p class="board-legend"><span class="lg place"></span>가구 <span class="lg wall"></span>장애물 <span class="lg pawn"></span>폰 <span class="lg pick"></span>고른 칸</p>
+      </details>
       <div id="arrangePreview" class="arrange-preview" role="status" aria-live="polite" hidden>
         <img id="previewIcon" src="./assets/ui/icon/place-ok.png" alt="" draggable="false">
         <span id="previewText"></span>
@@ -122,6 +127,8 @@
       </details>
       <p class="hint small">배치하는 동안 생활을 멈춰요. 끝낸 뒤 ▶ 를 눌러 다시 시작해 주세요.</p>
     </div>
+
+    <div id="boardFloat" hidden></div>
 
     <!-- 하단 독 -->
     <nav class="dock" aria-label="게임 메뉴">

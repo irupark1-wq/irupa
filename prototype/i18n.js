@@ -287,6 +287,12 @@ const en = {
   "누가 고쳤는지는 몰라요": "I don't know who fixed it",
   "기록할 공간이 부족해 이 일의 관계 변화를 남기지 못했어요": "Not enough room to record the relationship change from this",
   "기록은 고쳐졌어요. 누가 고쳤는지는 아직 몰라요.": "The record was fixed. Who fixed it is still unknown.",
+  "칸 판으로 고르기": "Pick on the cell board",
+  "바닥 칸 판 (가로 12 × 세로 8)": "Floor cell board (12 wide × 8 tall)",
+  "가로 {x}, 세로 {y}": "Column {x}, row {y}",
+  "빈 칸": "Empty cell",
+  "가구": "Furniture",
+  "고른 칸": "Picked cell",
 };
 
 const ja = {
@@ -550,6 +556,12 @@ const ja = {
   "누가 고쳤는지는 몰라요": "誰が直したかはわかりません",
   "기록할 공간이 부족해 이 일의 관계 변화를 남기지 못했어요": "記録する場所が足りず、この出来事の関係の変化を残せませんでした",
   "기록은 고쳐졌어요. 누가 고쳤는지는 아직 몰라요.": "記録は直されました。誰が直したかはまだわかりません。",
+  "칸 판으로 고르기": "マス盤で選ぶ",
+  "바닥 칸 판 (가로 12 × 세로 8)": "床のマス盤(横12×縦8)",
+  "가로 {x}, 세로 {y}": "横 {x}、縦 {y}",
+  "빈 칸": "空きマス",
+  "가구": "家具",
+  "고른 칸": "選んだマス",
 };
 
 const DICT = { ko: null, en, ja };

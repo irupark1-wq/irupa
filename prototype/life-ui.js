@@ -1121,10 +1121,13 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       }
     }
     notify(T("배치하는 동안 생활을 멈춰요. 끝낸 뒤 ▶ 를 눌러 다시 시작해 주세요."));
+    // 바닥 한 줄이 24px 보다 낮으면(폰 가로 등) 칸 판을 펼쳐 둔다. 사용자가 접으면 그대로 둔다
+    if (stage.classList.contains("compact")) $("boardWrap").open = true;
     chooseTool(placeId || null);
   }
   function endLayout() {
     layout = false;
+    $("boardFloat").hidden = true;
     tool = null;
     draft = null;
     hover = null;
@@ -1164,6 +1167,7 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
       : tool === "wall"
         ? T("장애물을 놓을 칸이나 치울 장애물을 누르세요.")
         : T("{name}을(를) 옮길 칸을 누르세요.", { name: T(place.label) }) + (place.blocked ? " " + LAYOUT_TEXT.place_closed : "");
+    renderBoard();
     const show = draft;
     $("arrangePreview").hidden = !show;
     $("previewConfirm").disabled = !show || !!(!show.error && !show.verdict.ok) || show.verdict?.action === "same";
@@ -1175,6 +1179,79 @@ export function mountLifeUI({ store, paint, image, edit, notify, openRelations, 
     $("previewIcon").src = A + "ui/icon/" + (LAYOUT_ICON[state] || "place-blocked") + ".png";
     $("previewText").textContent = LAYOUT_TEXT[state] || LAYOUT_TEXT.save_failed;
     $("arrangePreview").className = "arrange-preview " + (!show.error && v.ok ? "ok" : "bad");
+  }
+  /* 칸 판(PO-DEC-005, A1-10): 폰 가로처럼 바닥 칸이 작아 손가락으로 고르기 어려울 때 쓰는 큰 판.
+     칸 하나를 누르는 것은 바닥 칸을 누르는 것과 같다(같은 미리보기·같은 판정·같은 확정). 판 자체는 아무것도 저장하지 않는다. */
+  const BOARD_IMG = { rest: "stage-rest", work: "stage-work", social: "stage-social" };
+  /** 폰 가로(낮은 가로 화면)에서 배치 중이면 칸 판을 패널 밖 바닥 자리(#boardFloat)로 옮겨 크게 띄운다.
+      게임 틀 왼쪽 끝 ~ 패널 사이에 가운데 맞추고 칸 크기를 24~32px 로 정한다. 그 밖에는 패널 안(칸 판으로 고르기)으로 돌려놓는다. */
+  $("scene")?.addEventListener("scroll", (e) => {
+    e.currentTarget.scrollTop = 0;
+    e.currentTarget.scrollLeft = 0;
+  });
+  const SHORT_LANDSCAPE = window.matchMedia("(orientation: landscape) and (max-height: 520px)");
+  function placeBoard(board) {
+    const float = $("boardFloat"),
+      floating = layout && SHORT_LANDSCAPE.matches;
+    float.hidden = !floating;
+    if (!floating) {
+      if (board.parentElement !== $("boardWrap")) $("boardWrap").insertBefore(board, $("boardWrap").querySelector(".board-legend"));
+      board.style.removeProperty("--cell");
+      float.style.left = "";
+      return;
+    }
+    if (board.parentElement !== float) float.append(board);
+    const game = $("game").getBoundingClientRect(),
+      panel = $("arrangePanel").getBoundingClientRect(),
+      room = panel.left - 8 - (game.left + 8),
+      cell = Math.max(24, Math.min(32, Math.floor((room - 6 - 11) / 12))),
+      width = cell * 12 + 11 + 6;
+    board.style.setProperty("--cell", cell + "px");
+    float.style.left = Math.round(8 + Math.max(0, (room - width) / 2)) + "px";
+  }
+  window.addEventListener("resize", () => layout && renderBoard());
+  SHORT_LANDSCAPE.addEventListener?.("change", () => layout && renderBoard());
+  function renderBoard() {
+    const board = $("cellBoard");
+    if (!board) return;
+    const life = store.life(),
+      walls = new Set(life.walls.map((w) => w.x + "," + w.y)),
+      places = new Map(life.places.map((p) => [p.x + "," + p.y, p])),
+      pawns = new Set(Object.values(life.actors).map((a) => a.x + "," + a.y));
+    if (board.childElementCount !== GRID.width * GRID.height) {
+      board.replaceChildren();
+      for (let y = 0; y < GRID.height; y++)
+        for (let x = 0; x < GRID.width; x++) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.dataset.x = x;
+          b.dataset.y = y;
+          b.onclick = () => {
+            if (!tool) return notify(T("먼저 옮길 가구나 장애물을 골라 주세요."));
+            previewAt(tool, x, y, true);
+          };
+          board.append(b);
+        }
+    }
+    placeBoard(board);
+    for (const b of board.children) {
+      const x = Number(b.dataset.x),
+        y = Number(b.dataset.y),
+        k = x + "," + y,
+        place = places.get(k),
+        pick = draft && draft.x === x && draft.y === y;
+      b.className = "cell" + (place ? " place" + (place.blocked ? " closed" : "") : "") + (walls.has(k) ? " wall" : "") + (pawns.has(k) ? " pawn" : "") + (pick ? (draft.error || !draft.verdict.ok ? " pick bad" : " pick ok") : "") + (place && place.id === tool ? " current" : "");
+      const what = place ? T(place.label) : walls.has(k) ? T("장애물") : pawns.has(k) ? T("폰") : T("빈 칸");
+      b.setAttribute("aria-label", T("가로 {x}, 세로 {y}", { x, y }) + " · " + what);
+      b.setAttribute("aria-pressed", String(!!pick));
+      const want = place ? BOARD_IMG[place.kind] || "stage-rest" : walls.has(k) ? "stage-wall" : null;
+      if ((b.dataset.img || null) !== want) {
+        b.replaceChildren();
+        if (want) b.append(pic(A + "furniture/" + want + ".png"));
+        if (want) b.dataset.img = want;
+        else delete b.dataset.img;
+      }
+    }
   }
   function confirmDraft() {
     if (!draft) return;

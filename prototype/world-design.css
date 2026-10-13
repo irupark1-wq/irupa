@@ -253,3 +253,50 @@ details.arrange-fields[open] summary { flex-basis: 100%; }
    본체는 PNG 에서 잰 값(외곽선 #624430 2px · 크림 #fcf4e1 · 둥근 모서리)으로 CSS 로 그리고, 꼬리만 PNG 를 쓴다(본체 하단선을 2px 덮어 이음새 없음). */
 .speech { background: #fcf4e1; border: 2px solid #624430; border-radius: 12px; box-shadow: 0 2px 0 rgba(98, 68, 48, 0.18); }
 .speech:after { width: 18px; height: 12px; bottom: -12px; background: url("./assets/ui/speech-tail.png") center / 100% 100% no-repeat; border: 0; transform: translateX(-50%); }
+
+/* 칸 판(A1-10): 손가락으로 누를 수 있는 24px 칸 12×8. 바닥과 같은 판정·미리보기를 쓴다 */
+details.arrange-board { display: block; margin: 4px 0; font-size: 12.5px; font-weight: 800; color: var(--ink-2); }
+details.arrange-board summary { cursor: pointer; padding: 4px 0; }
+.cell-board { display: grid; grid-template-columns: repeat(12, 24px); grid-auto-rows: 24px; gap: 1px; width: max-content; margin: 4px auto 2px; padding: 3px; border-radius: 10px; background: #d9c39d; }
+.cell-board .cell { position: relative; width: 24px; height: 24px; margin: 0; padding: 0; border: 0; border-radius: 4px; background: #fbf3e2; cursor: pointer; }
+.cell-board .cell:focus-visible { outline: 3px solid #4f86c6; outline-offset: 0; z-index: 1; }
+.cell-board .cell img { width: 22px; height: 22px; object-fit: contain; pointer-events: none; }
+.cell-board .cell.wall { background: #c9b79a; }
+.cell-board .cell.place { background: #f3dfb8; }
+.cell-board .cell.place.closed img { opacity: 0.45; }
+.cell-board .cell.current { box-shadow: inset 0 0 0 2px #4f86c6; }
+.cell-board .cell.pawn:after { content: ""; position: absolute; right: 2px; bottom: 2px; width: 8px; height: 8px; border-radius: 50%; background: #7a5a3a; border: 1px solid #fff; }
+.cell-board .cell.pick.ok { box-shadow: inset 0 0 0 3px #3f9a55; }
+.cell-board .cell.pick.bad { box-shadow: inset 0 0 0 3px #c4473a; }
+.board-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 2px 0 0; font-size: 11px; font-weight: 700; color: var(--ink-2); }
+.board-legend .lg { display: inline-block; width: 11px; height: 11px; margin-right: 3px; border-radius: 3px; vertical-align: -1px; }
+.board-legend .lg.place { background: #f3dfb8; border: 1px solid #c9a86a; }
+.board-legend .lg.wall { background: #c9b79a; }
+.board-legend .lg.pawn { background: #7a5a3a; border-radius: 50%; }
+.board-legend .lg.pick { background: #fff; box-shadow: inset 0 0 0 2px #3f9a55; }
+@media (orientation: landscape) and (max-height: 520px) {
+  /* 폰 가로에서 배치하는 동안: 하단 독을 잠시 숨겨 칸 판이 한 화면에 들어오게 한다(끝내기는 패널 안) */
+  .tray-panel { width: 324px; overflow: auto; }
+  .game:has(#lifeStage.placing) .dock { display: none; }
+  .game:has(#lifeStage.placing) .tray-panel { bottom: 8px; }
+  #placeTray { gap: 6px; }
+  #placeTray .tile { min-height: 0; padding: 4px 2px; }
+  #placeTray .tile img { width: 26px; height: 26px; }
+  #placeTray .tile span { font-size: 11px; line-height: 1.15; }
+  .tray-panel .panel-head { margin-bottom: 4px; }
+  .board-legend { display: none; }
+  /* 편집 중 확대(PO-DEC-005): 패널은 좁게(가구 2×2), 칸 판은 JS 가 #boardFloat(바닥 자리)로 옮겨 크게 띄운다 */
+  .game:has(#lifeStage.placing) .tray-panel { width: 236px; }
+  .game:has(#lifeStage.placing) #placeTray { grid-template-columns: 1fr 1fr; }
+  .game:has(#lifeStage.placing) #boardWrap { display: none; }
+}
+
+/* 바닥 자리에 띄운 칸 판(폰 가로 편집 중 확대). 위치·칸 크기는 placeBoard() 가 정한다 */
+#boardFloat { position: absolute; z-index: 30; top: 50%; transform: translateY(-50%); }
+#boardFloat[hidden] { display: none; }
+#boardFloat .cell-board { grid-template-columns: repeat(12, var(--cell, 28px)); grid-auto-rows: var(--cell, 28px); margin: 0; box-shadow: 0 6px 18px rgba(80, 50, 20, 0.28); }
+#boardFloat .cell-board .cell { width: var(--cell, 28px); height: var(--cell, 28px); }
+#boardFloat .cell-board .cell img { width: calc(var(--cell, 28px) - 3px); height: calc(var(--cell, 28px) - 3px); }
+
+/* 장면 상자는 절대 스크롤되지 않는다(포커스·scrollIntoView 로 바닥이 밀리던 문제, A1-10 확인 중 발견). clip 미지원 브라우저는 JS 가 0 으로 되돌린다 */
+#scene { overflow: clip; }
