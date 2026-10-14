@@ -3,7 +3,7 @@ import {createTestLedger} from './core/game1-ledger.js';
 import {deriveAxes,relationshipProjection} from './core/game1-derived.js';
 import {evaluateBasicTags} from './core/game1-tags.js';
 import {createWorkshopTrial,TEST_READY} from './core/game1-workshop.js';
-import {initialLife,advanceLife,validateLife,actorsFor,GRID,ROOMS,roomOf,roomSpace,emptyCozy,route} from './life.js';
+import {initialLife,advanceLife,validateLife,actorsFor,GRID,ROOMS,roomOf,roomSpace,emptyCozy,route,CARD_RULE_ACTIVE} from './life.js';
 import {evaluateLayout,releasePlace,standingCells,connectivity,LAYOUT_OWNER} from './layout.js';
 import {judge,grant,dayIndex,emptyRepeat,migrateLegacyTalk} from './repeat.js';
 import {creditHooks,applyCredit,emptyCredit,validateCredit,openIssuesFor} from './credit.js';
@@ -87,9 +87,17 @@ export const SAVE_FORMAT=3,FOLD_AT=300,FOLD_KEEP=150;
    effective_from_order 는 authority 순서(같은 tick 안 여러 변경도 순서 구분). 기존 폰은 빈 목록, 무작위 부여 없음. */
 export const CARD_RULE='game1-cards-inactive-v0',CARD_IDS=['kind','hot_tempered','stubborn','independent'];
 export const emptyCards=order=>({schema:1,rule_version:CARD_RULE,profile_version:1,card_ids:[],effective_from_order:order,active:false});
+/** 카드 선택(0~3장, 중복·미지원 거절). 같은 세트면 그대로 두고(버전 유지), 바뀌면 다음 순번부터 적용 */
+export function nextCards(prev,ids,order){
+ if(!Array.isArray(ids)||ids.length>3||new Set(ids).size!==ids.length||ids.some(id=>!CARD_IDS.includes(id)))throw Error('cards.invalid');
+ const sorted=[...ids].sort();if(prev&&prev.card_ids.join()===sorted.join())return prev;
+ return {schema:1,rule_version:sorted.length?CARD_RULE_ACTIVE:CARD_RULE,profile_version:(prev?.profile_version||0)+1,card_ids:sorted,effective_from_order:order,active:sorted.length>0};
+}
 function validateCards(c){
  if(!c||c.schema!==1||typeof c.rule_version!=='string'||c.rule_version.length>64||!Number.isSafeInteger(c.profile_version)||c.profile_version<1||!Number.isSafeInteger(c.effective_from_order)||c.effective_from_order<0||typeof c.active!=='boolean')throw Error('save.invalid_cards');
  if(!Array.isArray(c.card_ids)||c.card_ids.length>3||new Set(c.card_ids).size!==c.card_ids.length||c.card_ids.some(id=>!CARD_IDS.includes(id))||c.card_ids.join()!==[...c.card_ids].sort().join())throw Error('save.invalid_cards');
+ // 카드가 있으면 지금 지원하는 규칙 버전이어야 한다(모르는 규칙의 카드를 조용히 적용하지 않는다)
+ if(c.active!==(c.card_ids.length>0)||(c.active&&c.rule_version!==CARD_RULE_ACTIVE))throw Error('save.invalid_cards');
 }
 const foldLimit={at:FOLD_AT,keep:FOLD_KEEP};
 /** 시험 전용: 접기 기준을 작게 바꿔 빠르게 검산한다(게임은 기본값). */
@@ -293,14 +301,16 @@ export function createLocalStore(storage,options={}){
    else{if(!next.life.guest?.present)throw Error('visit.not_present');if(action==='leave'){next.life.guest.present=false;delete next.life.actors[next.life.guest.id];}else next.life.guest.connected=action==='reconnect';}
    return {status:action,local_double:true};
   });},
-  createPawn(commandId,name,appearance,axes,expected){return commit(commandId,{kind:'create',name,appearance,axes},next=>{
+  createPawn(commandId,name,appearance,axes,expected,cardIds=null){return commit(commandId,{kind:'create',name,appearance,axes,...(cardIds?{card_ids:cardIds}:{})},next=>{
    if(next.pawns.length>=3)throw Error('pawn.limit');const id='pawn-'+commandId;const checked=validateAxes(axes);
-   next.pawns.push({id,name:name.trim().slice(0,20)||['모래','밤','노을'][next.pawns.length],owner:'local-owner',appearance:structuredClone(appearance),appearance_version:1,trait:snapshot(1,checked,position(++next.authority)),cards:emptyCards(next.authority)});seedRelations(next,id);return {status:'applied',pawn_id:id};
+   next.pawns.push({id,name:name.trim().slice(0,20)||['모래','밤','노을'][next.pawns.length],owner:'local-owner',appearance:structuredClone(appearance),appearance_version:1,trait:snapshot(1,checked,position(++next.authority)),cards:cardIds?nextCards(null,cardIds,next.authority):emptyCards(next.authority)});seedRelations(next,id);return {status:'applied',pawn_id:id};
   },expected);},
-  updatePawn(commandId,pawnId,name,appearance,axes,expected){return commit(commandId,{kind:'appearance',pawnId,name,appearance,axes},next=>{
+  updatePawn(commandId,pawnId,name,appearance,axes,expected,cardIds=null){return commit(commandId,{kind:'appearance',pawnId,name,appearance,axes,...(cardIds?{card_ids:cardIds}:{})},next=>{
    const p=next.pawns.find(p=>p.id===pawnId);if(!p)throw Error('pawn.missing');
    p.name=name.trim().slice(0,20)||p.name;p.appearance=structuredClone(appearance);p.appearance_version++;
    if(JSON.stringify(p.trait.axis_values)!==JSON.stringify(validateAxes(axes)))p.trait=snapshot(p.trait.profile_version+1,axes,position(++next.authority));
+   // 카드 변경은 같은 commit 에서. 이미 시작한 행동은 그대로 끝나고, 다음 후보 선택부터 새 카드가 쓰인다
+   if(cardIds){const c=nextCards(p.cards,cardIds,next.authority+1);if(c!==p.cards){next.authority++;p.cards=c;}}
    return {status:'applied',pawn_id:p.id};
   },expected);},
   saveTraits(commandId,pawnId,axes,expected){return commit(commandId,{kind:'traits',pawnId,axes},next=>{const p=next.pawns.find(p=>p.id===pawnId);if(!p)throw Error('pawn.missing');p.trait=snapshot(p.trait.profile_version+1,axes,position(++next.authority));return {status:'applied',reason_key:'traits.saved_future_only'};},expected);},

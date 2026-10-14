@@ -478,3 +478,14 @@ legend { font-size: 12px; color: var(--ink-3); padding: 0 6px; }
 .account-line span svg { width: 16px; height: 16px; padding: 3px; border-radius: 50%; background: #e3efe0; color: #4f7a58; }
 .start-local-note { margin: -4px 0 0; text-align: center; font-size: 13px; font-weight: 700; color: #4f7a58; }
 .plate-room button svg { width: 16px; height: 16px; }
+
+/* 성격 카드(PO-PERS-001): 이름·한 문장·예시. 선택은 민트 테두리(좋고 나쁨 표시 아님) */
+.card-count { margin-left: 6px; font-size: 12px; color: var(--ink-3); font-weight: 800; }
+.card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.pcard { display: grid; gap: 3px; text-align: left; padding: 10px 12px; border-radius: var(--r-md); background: var(--cream); border: 2px solid var(--line); color: var(--ink); min-height: 44px; }
+.pcard strong { font-size: 14px; }
+.pcard span { font-size: 12px; color: var(--ink-2); }
+.pcard small { font-size: 11px; color: var(--ink-3); }
+.pcard.on { border-color: #6f9e7c; background: #eef8f0; box-shadow: 0 2px 0 #6f9e7c; }
+.pcard.on strong:after { content: " ✓"; color: #4f7a58; }
+.pcard:disabled { opacity: 0.45; }

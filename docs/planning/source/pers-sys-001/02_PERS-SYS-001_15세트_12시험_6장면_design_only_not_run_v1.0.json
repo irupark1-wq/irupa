@@ -1,0 +1,738 @@
+{
+  "schema": "pers-sys-001-design-fixtures-v1",
+  "source_docs": [
+    "PO-HAND-015",
+    "PO-PERS-002",
+    "PO-PERS-001 v1.1",
+    "PO-PERS-001 v1.0"
+  ],
+  "author": "김시스템",
+  "prepared_on": "2026-10-14",
+  "scope": "design_only",
+  "production_import_allowed": false,
+  "application_code_executed": false,
+  "fixture_generator_executed": true,
+  "game_test_executed": false,
+  "all_cases_status": "not_run",
+  "rule_proposal": {
+    "rule_version": "pers-score-v1-proposed",
+    "max_cards": 3,
+    "available_ids": [
+      "warm",
+      "quick",
+      "firm",
+      "independent"
+    ],
+    "aggregate": "signed abs descending; if same abs, card ID ascending; coefficients 1, 1/2, 1/4; half away from zero; clamp [-14,14]",
+    "card_boost_matrix": {
+      "rest": {
+        "warm": 0,
+        "quick": 0,
+        "firm": 0,
+        "independent": 12
+      },
+      "work": {
+        "warm": 0,
+        "quick": 0,
+        "firm": 0,
+        "independent": 8
+      },
+      "social": {
+        "warm": 4,
+        "quick": 0,
+        "firm": 0,
+        "independent": -5
+      },
+      "meet": {
+        "warm": 6,
+        "quick": 0,
+        "firm": 0,
+        "independent": -8
+      },
+      "assist_joint_goal": {
+        "warm": 11,
+        "quick": 0,
+        "firm": 0,
+        "independent": 3
+      },
+      "assist_no_joint_goal": {
+        "warm": 11,
+        "quick": 0,
+        "firm": 0,
+        "independent": 0
+      },
+      "repair_authorized": {
+        "warm": 4,
+        "quick": 0,
+        "firm": 2,
+        "independent": 0
+      },
+      "credit_ask_known": {
+        "warm": 3,
+        "quick": 12,
+        "firm": 3,
+        "independent": 0
+      },
+      "credit_review_known": {
+        "warm": 2,
+        "quick": 8,
+        "firm": 10,
+        "independent": 0
+      },
+      "credit_state_standard_valid": {
+        "warm": 0,
+        "quick": 3,
+        "firm": 11,
+        "independent": 0
+      },
+      "credit_accept_explanation_verified": {
+        "warm": 4,
+        "quick": 3,
+        "firm": 2,
+        "independent": 0
+      },
+      "express_discomfort_known": {
+        "warm": 2,
+        "quick": 10,
+        "firm": 2,
+        "independent": 0
+      }
+    },
+    "no_cards_preserve_legacy_baseline": true,
+    "existing_axis_values_unchanged": true,
+    "card_creates_relation_events": false
+  },
+  "set_fixtures": [
+    {
+      "id": "PERS-SET00",
+      "card_ids": [],
+      "display_names": [],
+      "expected_card_delta": {
+        "rest": 0,
+        "work": 0,
+        "social": 0,
+        "meet": 0,
+        "assist_joint_goal": 0,
+        "assist_no_joint_goal": 0,
+        "repair_authorized": 0,
+        "credit_ask_known": 0,
+        "credit_review_known": 0,
+        "credit_state_standard_valid": 0,
+        "credit_accept_explanation_verified": 0,
+        "express_discomfort_known": 0
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET01",
+      "card_ids": [
+        "warm"
+      ],
+      "display_names": [
+        "다정한"
+      ],
+      "expected_card_delta": {
+        "rest": 0,
+        "work": 0,
+        "social": 4,
+        "meet": 6,
+        "assist_joint_goal": 11,
+        "assist_no_joint_goal": 11,
+        "repair_authorized": 4,
+        "credit_ask_known": 3,
+        "credit_review_known": 2,
+        "credit_state_standard_valid": 0,
+        "credit_accept_explanation_verified": 4,
+        "express_discomfort_known": 2
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET02",
+      "card_ids": [
+        "quick"
+      ],
+      "display_names": [
+        "욱하는"
+      ],
+      "expected_card_delta": {
+        "rest": 0,
+        "work": 0,
+        "social": 0,
+        "meet": 0,
+        "assist_joint_goal": 0,
+        "assist_no_joint_goal": 0,
+        "repair_authorized": 0,
+        "credit_ask_known": 12,
+        "credit_review_known": 8,
+        "credit_state_standard_valid": 3,
+        "credit_accept_explanation_verified": 3,
+        "express_discomfort_known": 10
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET03",
+      "card_ids": [
+        "firm"
+      ],
+      "display_names": [
+        "고집 센"
+      ],
+      "expected_card_delta": {
+        "rest": 0,
+        "work": 0,
+        "social": 0,
+        "meet": 0,
+        "assist_joint_goal": 0,
+        "assist_no_joint_goal": 0,
+        "repair_authorized": 2,
+        "credit_ask_known": 3,
+        "credit_review_known": 10,
+        "credit_state_standard_valid": 11,
+        "credit_accept_explanation_verified": 2,
+        "express_discomfort_known": 2
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET04",
+      "card_ids": [
+        "independent"
+      ],
+      "display_names": [
+        "독립적인"
+      ],
+      "expected_card_delta": {
+        "rest": 12,
+        "work": 8,
+        "social": -5,
+        "meet": -8,
+        "assist_joint_goal": 3,
+        "assist_no_joint_goal": 0,
+        "repair_authorized": 0,
+        "credit_ask_known": 0,
+        "credit_review_known": 0,
+        "credit_state_standard_valid": 0,
+        "credit_accept_explanation_verified": 0,
+        "express_discomfort_known": 0
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET05",
+      "card_ids": [
+        "warm",
+        "quick"
+      ],
+      "display_names": [
+        "다정한",
+        "욱하는"
+      ],
+      "expected_card_delta": {
+        "rest": 0,
+        "work": 0,
+        "social": 4,
+        "meet": 6,
+        "assist_joint_goal": 11,
+        "assist_no_joint_goal": 11,
+        "repair_authorized": 4,
+        "credit_ask_known": 14,
+        "credit_review_known": 9,
+        "credit_state_standard_valid": 3,
+        "credit_accept_explanation_verified": 6,
+        "express_discomfort_known": 11
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET06",
+      "card_ids": [
+        "warm",
+        "firm"
+      ],
+      "display_names": [
+        "다정한",
+        "고집 센"
+      ],
+      "expected_card_delta": {
+        "rest": 0,
+        "work": 0,
+        "social": 4,
+        "meet": 6,
+        "assist_joint_goal": 11,
+        "assist_no_joint_goal": 11,
+        "repair_authorized": 5,
+        "credit_ask_known": 5,
+        "credit_review_known": 11,
+        "credit_state_standard_valid": 11,
+        "credit_accept_explanation_verified": 5,
+        "express_discomfort_known": 3
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET07",
+      "card_ids": [
+        "warm",
+        "independent"
+      ],
+      "display_names": [
+        "다정한",
+        "독립적인"
+      ],
+      "expected_card_delta": {
+        "rest": 12,
+        "work": 8,
+        "social": -3,
+        "meet": -5,
+        "assist_joint_goal": 13,
+        "assist_no_joint_goal": 11,
+        "repair_authorized": 4,
+        "credit_ask_known": 3,
+        "credit_review_known": 2,
+        "credit_state_standard_valid": 0,
+        "credit_accept_explanation_verified": 4,
+        "express_discomfort_known": 2
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET08",
+      "card_ids": [
+        "quick",
+        "firm"
+      ],
+      "display_names": [
+        "욱하는",
+        "고집 센"
+      ],
+      "expected_card_delta": {
+        "rest": 0,
+        "work": 0,
+        "social": 0,
+        "meet": 0,
+        "assist_joint_goal": 0,
+        "assist_no_joint_goal": 0,
+        "repair_authorized": 2,
+        "credit_ask_known": 14,
+        "credit_review_known": 14,
+        "credit_state_standard_valid": 13,
+        "credit_accept_explanation_verified": 4,
+        "express_discomfort_known": 11
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET09",
+      "card_ids": [
+        "quick",
+        "independent"
+      ],
+      "display_names": [
+        "욱하는",
+        "독립적인"
+      ],
+      "expected_card_delta": {
+        "rest": 12,
+        "work": 8,
+        "social": -5,
+        "meet": -8,
+        "assist_joint_goal": 3,
+        "assist_no_joint_goal": 0,
+        "repair_authorized": 0,
+        "credit_ask_known": 12,
+        "credit_review_known": 8,
+        "credit_state_standard_valid": 3,
+        "credit_accept_explanation_verified": 3,
+        "express_discomfort_known": 10
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET10",
+      "card_ids": [
+        "firm",
+        "independent"
+      ],
+      "display_names": [
+        "고집 센",
+        "독립적인"
+      ],
+      "expected_card_delta": {
+        "rest": 12,
+        "work": 8,
+        "social": -5,
+        "meet": -8,
+        "assist_joint_goal": 3,
+        "assist_no_joint_goal": 0,
+        "repair_authorized": 2,
+        "credit_ask_known": 3,
+        "credit_review_known": 10,
+        "credit_state_standard_valid": 11,
+        "credit_accept_explanation_verified": 2,
+        "express_discomfort_known": 2
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET11",
+      "card_ids": [
+        "warm",
+        "quick",
+        "firm"
+      ],
+      "display_names": [
+        "다정한",
+        "욱하는",
+        "고집 센"
+      ],
+      "expected_card_delta": {
+        "rest": 0,
+        "work": 0,
+        "social": 4,
+        "meet": 6,
+        "assist_joint_goal": 11,
+        "assist_no_joint_goal": 11,
+        "repair_authorized": 5,
+        "credit_ask_known": 14,
+        "credit_review_known": 14,
+        "credit_state_standard_valid": 13,
+        "credit_accept_explanation_verified": 6,
+        "express_discomfort_known": 12
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET12",
+      "card_ids": [
+        "warm",
+        "quick",
+        "independent"
+      ],
+      "display_names": [
+        "다정한",
+        "욱하는",
+        "독립적인"
+      ],
+      "expected_card_delta": {
+        "rest": 12,
+        "work": 8,
+        "social": -3,
+        "meet": -5,
+        "assist_joint_goal": 13,
+        "assist_no_joint_goal": 11,
+        "repair_authorized": 4,
+        "credit_ask_known": 14,
+        "credit_review_known": 9,
+        "credit_state_standard_valid": 3,
+        "credit_accept_explanation_verified": 6,
+        "express_discomfort_known": 11
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET13",
+      "card_ids": [
+        "warm",
+        "firm",
+        "independent"
+      ],
+      "display_names": [
+        "다정한",
+        "고집 센",
+        "독립적인"
+      ],
+      "expected_card_delta": {
+        "rest": 12,
+        "work": 8,
+        "social": -3,
+        "meet": -5,
+        "assist_joint_goal": 13,
+        "assist_no_joint_goal": 11,
+        "repair_authorized": 5,
+        "credit_ask_known": 5,
+        "credit_review_known": 11,
+        "credit_state_standard_valid": 11,
+        "credit_accept_explanation_verified": 5,
+        "express_discomfort_known": 3
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    },
+    {
+      "id": "PERS-SET14",
+      "card_ids": [
+        "quick",
+        "firm",
+        "independent"
+      ],
+      "display_names": [
+        "욱하는",
+        "고집 센",
+        "독립적인"
+      ],
+      "expected_card_delta": {
+        "rest": 12,
+        "work": 8,
+        "social": -5,
+        "meet": -8,
+        "assist_joint_goal": 3,
+        "assist_no_joint_goal": 0,
+        "repair_authorized": 2,
+        "credit_ask_known": 14,
+        "credit_review_known": 14,
+        "credit_state_standard_valid": 13,
+        "credit_accept_explanation_verified": 4,
+        "express_discomfort_known": 11
+      },
+      "expects_order_independence": true,
+      "expected_save_restore_compatible": true,
+      "runtime_status": "not_run"
+    }
+  ],
+  "contract_test_mapping": [
+    {
+      "id": "PERS-C01",
+      "name": "네 카드 각 단독/없음 대비 후보 차이",
+      "setup": "동일 baseline/욕구/위치/관계/seed, 적격 후보 ≥2; 각 카드 단독와 0장 비교",
+      "expected": "각 카드에 유효 후보 최소 하나의 card_delta!=0; 실제 대표 장면 선택 차이와 target 반응 분리",
+      "negative_case": "대사만 바뀌는 경우 실패",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": false
+    },
+    {
+      "id": "PERS-C02",
+      "name": "다정+욱함 도움과 확인 공존",
+      "setup": "실제 완료 도움을 받을 유효 대상 + 별도의 알게 된 이름 누락 source, 2개 상황 분리",
+      "expected": "assist와 credit_ask 각 유효; card 선택만으로 분쟁 생성0",
+      "negative_case": "source 없는 항의 불가",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": false
+    },
+    {
+      "id": "PERS-C03",
+      "name": "고집과 새 증거 수용",
+      "setup": "기존 해석+정합된 반증자료+대상 실제 인지·공개권한",
+      "expected": "재확인 후보 이후 유효한 설명 수용/해석 변경 가능",
+      "negative_case": "설명 수용 action 미지원 시 blocked_by_definition",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": true
+    },
+    {
+      "id": "PERS-C04",
+      "name": "독립성 + 공동목표",
+      "setup": "충분한 여력 + 동의한 공동 작업 + 수락 가능한 상대; 대조: 자기 휴식 유효",
+      "expected": "rest/work 선호 보정이 있지만 공동목표 assist도 적격·가능",
+      "negative_case": "항상 도움 거절 실패",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": false
+    },
+    {
+      "id": "PERS-C05",
+      "name": "상대 거절과 피로 하드 게이트",
+      "setup": "동일 카드로 피로 높음/낮음, 거절/수락, 같은 방/다른 방, 접근가능/불가능 각각",
+      "expected": "각 하드 게이트를 카드가 우회하지 않음, 거절 벌점0",
+      "negative_case": "임의 거절 후 완료 위장 금지",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": false
+    },
+    {
+      "id": "PERS-C06",
+      "name": "15세트, 순서, 3장 cap, 중복/4장",
+      "setup": "정상15세트 + 같은 ID 역순 입력 + 중복/4장/미지원 카드 입력",
+      "expected": "합성 값과 결과가 순서 불변, -14..14; 잘못된 입력 거절",
+      "negative_case": "실제 저장 및 정합성 검증 not_run",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": false
+    },
+    {
+      "id": "PERS-C07",
+      "name": "기질/관계/기억과 카드 독립",
+      "setup": "같은 카드 세트의 근거known/unknown·다른 관계 및 같은 관계의 다른 카드",
+      "expected": "같은 카드도 상황 차이에 따라 후보 자격·점수/반응이 바뀜; 다른 카드도 성향이 달라짐",
+      "negative_case": "없는 기억 추론 금지",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": false
+    },
+    {
+      "id": "PERS-C08",
+      "name": "과거 snapshot/replay",
+      "setup": "기존 사건 1건 저장 → 카드 변경 → replay",
+      "expected": "old event 당시 profile/rule 참조, source/감정/태그 기존값 불변",
+      "negative_case": "최신 카드로 과거 replay 금지",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": false
+    },
+    {
+      "id": "PERS-C09",
+      "name": "저장/계정/두 방 복원/실패 롤백",
+      "setup": "old save + 로그인/계정 world + 두 room + 실패 injection",
+      "expected": "pawn_id/3축/기억/관계/원장 그대로; 카드 IDs·version 일관; 실패 전 상태 rollback",
+      "negative_case": "현 최신 저장형식 확인 필요",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": false
+    },
+    {
+      "id": "PERS-C10",
+      "name": "정보 격리",
+      "setup": "다른 소유자 일반 관계 DTO, 말풍선, 알림, 진단 trace 각각",
+      "expected": "소유 불가 카드 내적 가중치/지각/관계 역방향/seed 누출 0",
+      "negative_case": "진단자료 일반 DTO 금지",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": false
+    },
+    {
+      "id": "PERS-C11",
+      "name": "반복·중립·인지 보존",
+      "setup": "Day1 네 번 완료 인사, quota/간격, 재인지 경계",
+      "expected": "활동 완료 가능, 제한된 관계증분/긍정source 증가0; card 변경해도 quota 동일",
+      "negative_case": "효과 상한을 접근 차단으로 쓰지 않음",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": false
+    },
+    {
+      "id": "PERS-C12",
+      "name": "성격만으로 갈등/고의 없음",
+      "setup": "갈등 근거/누락/인지 source 0, 욱함/고집 카드 켠 상태",
+      "expected": "갈등250/악의/부정관계기여 0",
+      "negative_case": "실제 Q06 별도 유지",
+      "status": "not_run",
+      "production_import_allowed": false,
+      "requires_supported_action_confirmation": false
+    }
+  ],
+  "scene_fixtures": [
+    {
+      "id": "S1",
+      "title": "배려와 거절",
+      "cards": [
+        "warm"
+      ],
+      "given": "대상 도움 가능, 요청자 충분한 피로/높은 피로 대조",
+      "expect": "여력 있을 때 assist 제안 선택 가능, 피곤할 때 rest·work; 상대 거절하면 종료",
+      "dont": "카드 이유로 도움 수락 강제"
+    },
+    {
+      "id": "S2",
+      "title": "빠른 확인",
+      "cards": [
+        "quick"
+      ],
+      "given": "credit 누락 source를 읽은 것/전혀 모르는 것",
+      "expect": "아는 쪽에만 credit_ask 적격; 모르면 불일치 항의 없음",
+      "dont": "카드만으로 갈등250"
+    },
+    {
+      "id": "S3",
+      "title": "근거에 따른 수정",
+      "cards": [
+        "firm"
+      ],
+      "given": "기존 해석+검증 새 증거+인지",
+      "expect": "credit_review 후 근거 있는 설명 수용 경로",
+      "dont": "사실 자체 거부"
+    },
+    {
+      "id": "S4",
+      "title": "독립적인 협력",
+      "cards": [
+        "independent"
+      ],
+      "given": "휴식 욕구/공동목표·여력·상대 동의 대조",
+      "expect": "개인시간 선호+assist도 가능",
+      "dont": "모든 협력 거절"
+    },
+    {
+      "id": "S5",
+      "title": "싫지만 협력",
+      "cards": [
+        "independent",
+        "firm"
+      ],
+      "given": "낮은 애정, 존중/공동목표/동의·수행 가능",
+      "expect": "거리 유지하면서 협력 가능·관계 자동상승 없음",
+      "dont": "협력=사랑"
+    },
+    {
+      "id": "S6",
+      "title": "회복 후 거리",
+      "cards": [
+        "warm",
+        "independent"
+      ],
+      "given": "쟁점 정정·인지·해결 완료; 여전히 혼자 쉬는 선호",
+      "expect": "기억 유지, 거리 유지와 사건 해결 공존",
+      "dont": "화해=친밀최대·기억삭제"
+    }
+  ],
+  "implementation_dependency": {
+    "legacy_candidates_from_old_snapshot": [
+      "rest",
+      "work",
+      "social",
+      "meet",
+      "assist",
+      "repair"
+    ],
+    "credit_actions_may_be_supported_in_new_code": [
+      "credit_ask"
+    ],
+    "dialogue_keys_not_action_kinds": [
+      "credit_ask_accept",
+      "credit_ask_pending",
+      "credit_fixed",
+      "credit_ack"
+    ],
+    "needs_code_verification": [
+      "credit_review",
+      "credit_state_standard",
+      "credit_accept_explanation",
+      "express_discomfort"
+    ],
+    "dev25_conflict_250": "definition_draft_blocked; do not activate via card"
+  },
+  "static_review_only": {
+    "expected_set_count": 15,
+    "expected_test_count": 12,
+    "expected_scene_count": 6
+  }
+}

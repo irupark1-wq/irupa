@@ -58,6 +58,7 @@ let transforms = {},
   history = [],
   future = [],
   axes = { ...DEFAULT_AXES },
+  cards = [], // 성격 카드(PO-PERS-001·002): 0~3장, 저장 ID
   saveCommand = null,
   editingTrait = null,
   editingPawn = null,
@@ -86,6 +87,7 @@ function blank() {
   history = [];
   future = [];
   axes = { ...DEFAULT_AXES };
+  cards = [];
   $("name").value = "";
   saveCommand = null;
   editingTrait = null;
@@ -171,7 +173,7 @@ function draft() {
   try {
     localStorage.setItem(
       "game1-draft-v1",
-      JSON.stringify({ appearance: appearance(), axes, name: $("name").value, editingPawn, editingTrait }),
+      JSON.stringify({ appearance: appearance(), axes, cards, name: $("name").value, editingPawn, editingTrait }),
     );
   } catch {
     say(T("초안 저장 실패 · 현재 그림은 화면에 유지됩니다."));
@@ -211,6 +213,38 @@ window.addEventListener("keydown", (e) => {
 });
 
 /* ───────── 성격 ───────── */
+// 성격 카드 첫 4종(PO-PERS-001 §3 문구 기준). 카드는 행동 후보의 선호만 바꾸고, 피로·거절·사실 확인은 그대로다
+const CARD_INFO = [
+  { id: "kind", name: T("다정한"), line: T("도움이나 안부를 먼저 떠올려요."), example: T("피곤할 땐 거절하고 쉬기도 해요.") },
+  { id: "hot_tempered", name: T("욱하는"), line: T("알고 있는 어긋남을 빨리 확인하려 해요."), example: T("이유를 들으면 진정하고 받아들일 수 있어요.") },
+  { id: "stubborn", name: T("고집 센"), line: T("자기 기준을 쉽게 바꾸지 않아요."), example: T("확실한 새 근거가 있으면 생각을 고쳐요.") },
+  { id: "independent", name: T("독립적인"), line: T("혼자 하는 활동과 휴식을 좋아해요."), example: T("필요하고 동의한 일이라면 함께해요.") },
+];
+function cardUI() {
+  $("cards").replaceChildren();
+  $("cardCount").textContent = T("{n}/3장", { n: cards.length });
+  for (const c of CARD_INFO) {
+    const on = cards.includes(c.id),
+      b = document.createElement("button");
+    b.type = "button";
+    b.className = "pcard" + (on ? " on" : "");
+    b.setAttribute("aria-pressed", String(on));
+    b.disabled = !on && cards.length >= 3;
+    const name = document.createElement("strong"),
+      line = document.createElement("span"),
+      ex = document.createElement("small");
+    name.textContent = c.name;
+    line.textContent = c.line;
+    ex.textContent = T("이럴 때: {text}", { text: c.example });
+    b.append(name, line, ex);
+    b.onclick = () => {
+      cards = on ? cards.filter((x) => x !== c.id) : [...cards, c.id];
+      cardUI();
+      draft();
+    };
+    $("cards").append(b);
+  }
+}
 const AXIS_NAMES = { fairness_sensitivity: T("공정성 민감도"), closeness_orientation: T("친밀 지향"), risk_aversion: T("위험 회피") };
 const LEVEL_NAMES = [T("낮음"), T("중간"), T("높음")];
 function markPreset() {
@@ -399,6 +433,7 @@ $("samples").onclick = async () => {
 };
 $("traits").onclick = () => {
   axisUI();
+  cardUI();
   paint($("traitCanvas"));
   show("traitPanel");
 };
@@ -414,7 +449,8 @@ async function save() {
     traitTarget = editingTrait,
     name = $("name").value,
     art = appearance(),
-    selectedAxes = { ...axes };
+    selectedAxes = { ...axes },
+    selectedCards = [...cards];
   for (const id of ["save", "saveFace", "retry"]) $(id).disabled = true;
   say(T("저장 중이에요…"));
   try {
@@ -423,9 +459,9 @@ async function save() {
       throw Error(T("시험 저장 실패"));
     }
     const created = !target && !traitTarget;
-    if (target) store.updatePawn(command, target, name, art, selectedAxes);
+    if (target) store.updatePawn(command, target, name, art, selectedAxes, undefined, selectedCards);
     else if (traitTarget) store.saveTraits(command, traitTarget, selectedAxes);
-    else store.createPawn(command, name, art, selectedAxes);
+    else store.createPawn(command, name, art, selectedAxes, undefined, selectedCards);
     try {
       localStorage.removeItem("game1-draft-v1");
     } catch {}
@@ -437,7 +473,7 @@ async function save() {
     try {
       localStorage.setItem(
         "game1-draft-v1",
-        JSON.stringify({ appearance: art, axes: selectedAxes, name, editingPawn: target, editingTrait: traitTarget }),
+        JSON.stringify({ appearance: art, axes: selectedAxes, cards: selectedCards, name, editingPawn: target, editingTrait: traitTarget }),
       );
     } catch {}
     say(
@@ -463,6 +499,7 @@ async function editExisting(p) {
   history = [];
   future = [];
   axes = { ...p.trait.axis_values };
+  cards = [...(p.cards?.card_ids || [])]; // 기존 폰에 카드를 자동으로 붙이지 않는다. 고른 것만
   $("name").value = p.name;
   await loadAppearance(p.appearance);
   $("layer").onchange();
@@ -823,6 +860,7 @@ try {
   if (d) {
     await loadAppearance(d.appearance);
     axes = d.axes;
+    cards = Array.isArray(d.cards) ? d.cards.filter((id) => CARD_INFO.some((c) => c.id === id)).slice(0, 3) : [];
     editingPawn = d.editingPawn || null;
     editingTrait = d.editingTrait || null;
     $("name").value = d.name;

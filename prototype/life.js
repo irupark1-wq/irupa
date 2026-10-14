@@ -58,6 +58,21 @@ export function route(life,start,target,occupied=[]){
 function log(life,actor,text,kind='activity',target=null){life.logs.push({id:'life-log-'+(++life.sequence),tick:life.tick,actor,target,text,kind});life.logs=life.logs.slice(-120);}
 // 대화 수락: 행동별 주요 단서(애정·친밀)와 독립 조건(바쁨·피로·혼자 있고 싶음). 신뢰·갈등 일괄 게이트 없음(accept.js).
 export function reaction(actor,traits,relationship,u=0,ctx={}){return talkResponse(actor,traits,relationship,u,ctx);}
+/* 성격 카드(PO-HAND-016 §2, PO-PERS-002 v1.1 §3, PERS-SYS-001 v1.0 §3~4 시험안).
+   카드는 유효 후보의 선호 점수만 보정한다. 후보 자격·상대 수락·관계 계산·사건 효과는 바꾸지 않는다.
+   저장 ID → 명세 ID(동률 정렬은 명세 ID 순). 점수 단위는 후보 점수(0~150 범위)와 같다. */
+export const CARD_RULE_ACTIVE='game1-cards-score-v1';
+export const CARD_SPEC_ID={kind:'warm',hot_tempered:'quick',stubborn:'firm',independent:'independent'};
+// 후보 kind → 카드별 보정. credit_check = 명세 credit_ask(본인이 알고 있는 기록 누락의 확인 부탁).
+// assist 의 독립적 +3 은 "상대 요청·동의한 공동 목표" 조건이 아직 게임에 없어 적용하지 않는다(조건 미정).
+// credit_review·credit_state_standard·credit_accept_explanation·express_discomfort 는 행동이 아직 없다(G-PERS-2).
+export const CARD_SCORES={rest:{independent:12},work:{independent:8},social:{warm:4,independent:-5},meet:{warm:6,independent:-8},assist:{warm:11},repair:{warm:4,firm:2},credit_check:{warm:3,quick:12,firm:3}};
+/** 0~3장 합성: |w| 내림차순(동률은 명세 ID 순) → w1 + w2/2 + w3/4 → 마지막 1회 0에서 먼 쪽 반올림 → ±14 */
+export function cardDelta(cardIds,kind){
+ const w=(cardIds||[]).map(id=>({id:CARD_SPEC_ID[id]||id,v:CARD_SCORES[kind]?.[CARD_SPEC_ID[id]]||0})).filter(x=>x.v).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v)||(a.id<b.id?-1:a.id>b.id?1:0));
+ const raw=w.reduce((s,x,i)=>s+x.v/2**i,0),r=Math.sign(raw)*Math.round(Math.abs(raw));
+ return Math.max(-14,Math.min(14,r))+0;
+}
 export function candidates(life,id,all,relationship,hooks={}){
  const actor=life.actors[id],pawn=all.find(p=>p.id===id),trait=pawn.trait.axis_values;
  const others=all.filter(p=>p.id!==id&&life.actors[p.id]&&life.tick>=(life.cooldowns[id+'-'+p.id]||0));
@@ -78,6 +93,9 @@ export function candidates(life,id,all,relationship,hooks={}){
  const tell=hooks.deliveryFor?.(id);if(tell&&all.some(p=>p.id===tell.to))result.push({kind:'deliver',target:tell.to,issue_id:tell.issue_id,record_id:tell.record_id,score:65,reason:'고친 기록을 알려 주려 해요'});
  const seedOffset=[...(life.seed||'game1-auto-v06-seed-a')].reduce((s,c)=>s+c.charCodeAt(0),0)%11;
  result.forEach(c=>{if(c.place===actor.last_place)c.score-=18;c.score+=((seedOffset+life.tick+all.indexOf(pawn)*7+(c.place?.length||3))%11)-5;});
+ // 카드 보정은 기본 점수(기질·욕구·관계·기존 변동 포함) 뒤에 더한다. 카드 없는 폰은 점수·순서·난수가 그대로
+ const cards=pawn.cards?.active?pawn.cards.card_ids:null;
+ if(cards?.length)for(const c of result){const d=cardDelta(cards,c.kind);c.base_score=c.score;c.card_delta=d;c.score+=d;}
  return result.sort((a,b)=>b.score-a.score||a.kind.localeCompare(b.kind));
 }
 export function advanceLife(state,relationship,hooks={}){
@@ -141,7 +159,7 @@ export function advanceLife(state,relationship,hooks={}){
    log(life,pawn.id,a.reason);continue;
   }
   if(life.tick<a.cooldown)continue;
-  const options=candidates(V,pawn.id,here,relationship,hooks),choice=options[0];if(choice){a.intent_id='game1-intent-'+life.tick+'-'+pawn.id;a.mode='moving';a.started=life.tick;a.goal=choice;a.reason=choice.reason;life.trace??=[];life.trace.push({tick:life.tick,seed:life.seed,definition_version:life.definition_version,intent_id:a.intent_id,actor:pawn.id,room:roomOf(a),position:{x:a.x,y:a.y},candidates:structuredClone(options),chosen:structuredClone(choice)});life.trace=life.trace.slice(-80);log(life,pawn.id,choice.kind==='record'?'기록판에 결과를 적으러 가요':choice.kind==='read_board'?'작업대 기록판을 보러 가요':choice.kind==='correct_record'?'기록을 다시 확인하러 가요':choice.kind==='credit_check'?'기록 확인을 부탁하러 가요':choice.kind==='deliver'?'고친 기록을 알려 주러 가요':choice.kind==='repair'?'남은 문제를 보완하러 가요':choice.kind==='assist'?'도움을 제안하러 가요':choice.kind==='meet'?'다른 폰에게 다가가요':V.places.find(p=>p.id===choice.place).label+'로 가요','move',choice.target||null);}
+  const options=candidates(V,pawn.id,here,relationship,hooks),choice=options[0];if(choice){a.intent_id='game1-intent-'+life.tick+'-'+pawn.id;a.mode='moving';a.started=life.tick;a.goal=choice;a.reason=choice.reason;life.trace??=[];life.trace.push({tick:life.tick,seed:life.seed,definition_version:life.definition_version,intent_id:a.intent_id,actor:pawn.id,room:roomOf(a),position:{x:a.x,y:a.y},...(pawn.cards?.active?{cards:{card_ids:[...pawn.cards.card_ids],rule_version:pawn.cards.rule_version,profile_version:pawn.cards.profile_version}}:{}),candidates:structuredClone(options),chosen:structuredClone(choice)});life.trace=life.trace.slice(-80);log(life,pawn.id,choice.kind==='record'?'기록판에 결과를 적으러 가요':choice.kind==='read_board'?'작업대 기록판을 보러 가요':choice.kind==='correct_record'?'기록을 다시 확인하러 가요':choice.kind==='credit_check'?'기록 확인을 부탁하러 가요':choice.kind==='deliver'?'고친 기록을 알려 주러 가요':choice.kind==='repair'?'남은 문제를 보완하러 가요':choice.kind==='assist'?'도움을 제안하러 가요':choice.kind==='meet'?'다른 폰에게 다가가요':V.places.find(p=>p.id===choice.place).label+'로 가요','move',choice.target||null);}
  }
  // Only completed, mutually accepted interactions reach the event adapter.
  // 인사·대화(light_social)의 효과 자격은 store 가 방향별로 판정한다(PO-15). 여기서는 도움의 기존 시험 한도만 유지한다(minor_help 매핑 검수 전).
